@@ -1,0 +1,13 @@
+diff --git a/rpcs3/util/vm_native.cpp b/rpcs3/util/vm_native.cpp
+index fa9c386ab..40c5e1484 100644
+--- a/rpcs3/util/vm_native.cpp
++++ b/rpcs3/util/vm_native.cpp
+@@ -13,7 +13,7 @@
+ #include <errno.h>
+ #include <unistd.h>
+ #include <sys/types.h>
+-#include <sys/sysctl.h>
++#include <sys/linux/sysctl.h>
+ #endif
+ 
+ #ifdef __linux__
