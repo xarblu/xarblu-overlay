@@ -1,0 +1,183 @@
+From c181d0a485fc740baffda0dec8a17305406a11a2 Mon Sep 17 00:00:00 2001
+From: Thomas Deutschmann <whissi@gentoo.org>
+Date: Mon, 6 Apr 2020 19:32:39 +0200
+Subject: [PATCH 04/33] bmo#847568: Support system harfbuzz
+
+Allow building against system-wide harfbuzz.
+
+Bug: https://bugzilla.mozilla.org/show_bug.cgi?id=847568
+Signed-off-by: Thomas Deutschmann <whissi@gentoo.org>
+---
+ config/system-headers.mozbuild  | 7 +++++++
+ dom/base/moz.build              | 3 +++
+ gfx/moz.build                   | 4 +++-
+ gfx/skia/generate_mozbuild.py   | 3 +++
+ gfx/skia/moz.build              | 3 +++
+ gfx/thebes/moz.build            | 3 +++
+ intl/unicharutil/util/moz.build | 3 +++
+ netwerk/dns/moz.build           | 3 +++
+ toolkit/library/moz.build       | 3 +++
+ toolkit/moz.configure           | 9 +++++++++
+ 10 files changed, 40 insertions(+), 1 deletion(-)
+
+diff --git a/config/system-headers.mozbuild b/config/system-headers.mozbuild
+index 9018d3e580..a2977231ee 100644
+--- a/config/system-headers.mozbuild
++++ b/config/system-headers.mozbuild
+@@ -1235,6 +1235,13 @@ if CONFIG['OS_TARGET'] == 'Android':
+         'vr/gvr/capi/include/gvr.h',
+     ]
+ 
++if CONFIG['MOZ_SYSTEM_HARFBUZZ']:
++    system_headers += [
++	'harfbuzz/hb-glib.h',
++	'harfbuzz/hb-ot.h',
++	'harfbuzz/hb.h',
++    ]
++
+ if CONFIG['MOZ_JACK']:
+     system_headers += [
+         'jack/jack.h',
+diff --git a/dom/base/moz.build b/dom/base/moz.build
+index fa75996f78..56652f41de 100644
+--- a/dom/base/moz.build
++++ b/dom/base/moz.build
+@@ -559,6 +559,9 @@ FINAL_LIBRARY = "xul"
+ if CONFIG["MOZ_X11"]:
+     CXXFLAGS += CONFIG["TK_CFLAGS"]
+ 
++if CONFIG["MOZ_SYSTEM_HARFBUZZ"]:
++    CXXFLAGS += CONFIG["MOZ_HARFBUZZ_CFLAGS"]
++
+ GeneratedFile(
+     "UseCounterList.h",
+     script="gen-usecounters.py",
+diff --git a/gfx/moz.build b/gfx/moz.build
+index 4d6d63da9d..8222b72333 100644
+--- a/gfx/moz.build
++++ b/gfx/moz.build
+@@ -10,6 +10,9 @@ with Files("**"):
+ with Files("wr/**"):
+     BUG_COMPONENT = ("Core", "Graphics: WebRender")
+ 
++if not CONFIG["MOZ_SYSTEM_HARFBUZZ"]:
++    DIRS += ["harfbuzz/src"]
++
+ DIRS += [
+     "cairo",
+     "2d",
+@@ -20,7 +23,6 @@ DIRS += [
+     "gl",
+     "layers",
+     "graphite2/src",
+-    "harfbuzz/src",
+     "ots/src",
+     "thebes",
+     "ipc",
+diff --git a/gfx/skia/generate_mozbuild.py b/gfx/skia/generate_mozbuild.py
+index 7d6644f65e..ba37dc9f90 100755
+--- a/gfx/skia/generate_mozbuild.py
++++ b/gfx/skia/generate_mozbuild.py
+@@ -97,6 +97,9 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
+         '-Wno-unused-private-field',
+     ]
+ 
++if CONFIG['MOZ_SYSTEM_HARFBUZZ']:
++    CXXFLAGS += CONFIG['MOZ_HARFBUZZ_CFLAGS']
++
+ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk', 'android'):
+     LOCAL_INCLUDES += [
+         "/gfx/cairo/cairo/src",
+diff --git a/gfx/skia/moz.build b/gfx/skia/moz.build
+index 4ff948f567..6e920ff27f 100755
+--- a/gfx/skia/moz.build
++++ b/gfx/skia/moz.build
+@@ -489,6 +489,9 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
+         '-Wno-unused-private-field',
+     ]
+ 
++if CONFIG['MOZ_SYSTEM_HARFBUZZ']:
++    CXXFLAGS += CONFIG['MOZ_HARFBUZZ_CFLAGS']
++
+ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk', 'android'):
+     LOCAL_INCLUDES += [
+         "/gfx/cairo/cairo/src",
+diff --git a/gfx/thebes/moz.build b/gfx/thebes/moz.build
+index 04692dbf30..e1cbefb604 100644
+--- a/gfx/thebes/moz.build
++++ b/gfx/thebes/moz.build
+@@ -290,6 +290,9 @@ LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
+ 
+ DEFINES["GRAPHITE2_STATIC"] = True
+ 
++if CONFIG["MOZ_SYSTEM_HARFBUZZ"]:
++    CXXFLAGS += CONFIG["MOZ_HARFBUZZ_CFLAGS"]
++
+ if CONFIG["CC_TYPE"] == "clang":
+     # Suppress warnings from Skia header files.
+     SOURCES["gfxPlatform.cpp"].flags += ["-Wno-implicit-fallthrough"]
+diff --git a/intl/unicharutil/util/moz.build b/intl/unicharutil/util/moz.build
+index 897bfad92a..5a83cdb2c1 100644
+--- a/intl/unicharutil/util/moz.build
++++ b/intl/unicharutil/util/moz.build
+@@ -25,6 +25,9 @@ UNIFIED_SOURCES += [
+     "nsUnicodeProperties.cpp",
+ ]
+ 
++if CONFIG["MOZ_SYSTEM_HARFBUZZ"]:
++    CXXFLAGS += CONFIG["MOZ_HARFBUZZ_CFLAGS"]
++
+ GeneratedFile(
+     "BaseChars.h",
+     script="base_chars.py",
+diff --git a/netwerk/dns/moz.build b/netwerk/dns/moz.build
+index 1498dd2ceb..026798bf71 100644
+--- a/netwerk/dns/moz.build
++++ b/netwerk/dns/moz.build
+@@ -106,6 +106,9 @@ LOCAL_INCLUDES += [
+     "/netwerk/protocol/http",
+ ]
+ 
++if CONFIG["MOZ_SYSTEM_HARFBUZZ"]:
++    CXXFLAGS += CONFIG["MOZ_HARFBUZZ_CFLAGS"]
++
+ USE_LIBS += ["icu"]
+ 
+ if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+diff --git a/toolkit/library/moz.build b/toolkit/library/moz.build
+index 5e2d8cb4cd..4b7194e9e2 100644
+--- a/toolkit/library/moz.build
++++ b/toolkit/library/moz.build
+@@ -242,6 +242,9 @@ if CONFIG["MOZ_ANDROID_GOOGLE_VR"]:
+         "-lgvr",
+     ]
+ 
++if CONFIG["MOZ_SYSTEM_HARFBUZZ"]:
++    OS_LIBS += CONFIG["MOZ_HARFBUZZ_LIBS"]
++
+ if CONFIG["MOZ_SYSTEM_JPEG"]:
+     OS_LIBS += CONFIG["MOZ_JPEG_LIBS"]
+ 
+diff --git a/toolkit/moz.configure b/toolkit/moz.configure
+index 8bad820dce..39944c4aa1 100644
+--- a/toolkit/moz.configure
++++ b/toolkit/moz.configure
+@@ -460,6 +460,15 @@ add_old_configure_assignment(
+ )
+ set_define("MOZ_HAVE_FREETYPE2", depends_if(freetype2_info)(lambda _: True))
+ 
++# HarfBuzz
++# ==============================================================
++option('--with-system-harfbuzz', help="Use system harfbuzz (located with pkgconfig)")
++
++system_harfbuzz = pkg_check_modules('MOZ_HARFBUZZ', 'harfbuzz >= 2.7.4',
++                                    when='--with-system-harfbuzz')
++
++set_config('MOZ_SYSTEM_HARFBUZZ', depends_if(system_harfbuzz)(lambda _: True))
++
+ # Apple platform decoder support
+ # ==============================================================
+ @depends(toolkit)
+-- 
+2.33.0
+

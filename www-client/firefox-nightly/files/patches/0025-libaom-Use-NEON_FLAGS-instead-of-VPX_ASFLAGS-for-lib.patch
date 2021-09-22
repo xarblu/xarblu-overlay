@@ -1,0 +1,28 @@
+From a4e51488bd2e1d7923f3ad703ada25ace7a410e6 Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh@glandium.org>
+Date: Mon, 26 Nov 2018 09:59:56 +0900
+Subject: [PATCH 25/33] libaom: Use NEON_FLAGS instead of VPX_ASFLAGS for
+ libaom neon code
+
+Bug: https://bugs.gentoo.org/730606
+Signed-off-by: Thomas Deutschmann <whissi@gentoo.org>
+---
+ media/libaom/moz.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/media/libaom/moz.build b/media/libaom/moz.build
+index fd8c7f2b33..db3f9ca6ec 100644
+--- a/media/libaom/moz.build
++++ b/media/libaom/moz.build
+@@ -55,7 +55,7 @@ elif CONFIG['CPU_ARCH'] == 'arm':
+ 
+     for f in SOURCES:
+         if f.endswith('neon.c'):
+-            SOURCES[f].flags += CONFIG['VPX_ASFLAGS']
++            SOURCES[f].flags += CONFIG['NEON_FLAGS']
+ 
+     if CONFIG['OS_TARGET'] == 'Android':
+         # For cpu-features.h
+-- 
+2.33.0
+
