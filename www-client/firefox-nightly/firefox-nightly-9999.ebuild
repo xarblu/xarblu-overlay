@@ -489,8 +489,8 @@ src_prepare() {
 src_configure() {
 	#Replace default icons with custom ones made by 1-UP Nuke
 	if use custom-icons; then
-		rm -r "${S}/browser/branding/nightly" || die
-		cp -r "${FILESDIR}/branding/nightly" "${S}/browser/branding/" || die
+		rm -r "${S}/browser/branding/nightly" || die "Couldn't remove original icons."
+		cp -r "${FILESDIR}/branding/nightly" "${S}/browser/branding/" || die "Couldn't copy custom icons."
 	fi
 
 	# Show flags set at the beginning
