@@ -85,7 +85,7 @@ BDEPEND="${PYTHON_DEPS}
 	x86? ( >=dev-lang/nasm-2.13 )"
 
 CDEPEND="
-	>=dev-libs/nss-3.70
+	>=dev-libs/nss-3.71
 	>=dev-libs/nspr-4.32
 	dev-libs/atk
 	dev-libs/expat
@@ -572,8 +572,7 @@ src_configure() {
 		--with-intl-api \
 		--with-libclang-path="$(llvm-config --libdir)" \
 		--with-system-nspr \
-		#latest version requires >=dev-libs/nss-3.71 but that doesn't exist yet
-		#--with-system-nss \
+		--with-system-nss \
 		--with-system-png \
 		--with-system-zlib \
 		--with-toolchain-prefix="${CHOST}-" \
