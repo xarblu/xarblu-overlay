@@ -88,7 +88,7 @@ FFMPEG_FLAG_MAP=(
 		bs2b:libbs2b chromaprint cuda:cuda-llvm flite:libflite frei0r
 		fribidi:libfribidi fontconfig ladspa libass libtesseract lv2 truetype:libfreetype vidstab:libvidstab
 		rubberband:librubberband zeromq:libzmq zimg:libzimg
-		vmaf
+		vmaf:libvmaf
 		# libswresample options
 		libsoxr
 		# Threads; we only support pthread for now but ffmpeg supports more
@@ -345,6 +345,7 @@ multilib_src_configure() {
 	local ffuse=( "${FFMPEG_FLAG_MAP[@]}" )
 	use openssl && myconf+=( --enable-nonfree )
 	use samba && myconf+=( --enable-version3 )
+	use vmaf && myconf+=( --enable-version3 )
 
 	# Encoders
 	if use encode ; then
@@ -381,12 +382,6 @@ multilib_src_configure() {
 
 	if use openssl ; then
 		myconf+=( --disable-gnutls )
-	fi
-
-	# VMAF
-	if use vmaf; then
-		myconf+=( --enable-libvmaf )
-		myconf+=( --enable-version3 )
 	fi
 
 	# (temporarily) disable non-multilib deps
