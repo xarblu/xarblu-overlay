@@ -573,6 +573,9 @@ src_configure() {
 		--with-libclang-path="$(llvm-config --libdir)" \
 		--with-system-nspr \
 		#--with-system-nss \
+		#Idk how to get that wasm lib, if it becomes available replace with
+		# --with-wasi-sysroot and add wasi/wasm as (build-)dep
+		--without-wasm-sandboxed-libraries \
 		--with-system-png \
 		--with-system-zlib \
 		--with-toolchain-prefix="${CHOST}-" \
