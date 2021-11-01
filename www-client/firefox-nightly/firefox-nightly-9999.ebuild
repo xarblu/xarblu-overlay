@@ -85,7 +85,7 @@ BDEPEND="${PYTHON_DEPS}
 	x86? ( >=dev-lang/nasm-2.13 )"
 
 CDEPEND="
-	>=dev-libs/nss-3.71
+	>=dev-libs/nss-3.72
 	>=dev-libs/nspr-4.32
 	dev-libs/atk
 	dev-libs/expat
@@ -572,16 +572,20 @@ src_configure() {
 		--with-intl-api \
 		--with-libclang-path="$(llvm-config --libdir)" \
 		--with-system-nspr \
-		#--with-system-nss \
-		#Idk how to get that wasm lib, if it becomes available replace with
-		# --with-wasi-sysroot and add wasi/wasm as (build-)dep
-		--without-wasm-sandboxed-libraries \
 		--with-system-png \
 		--with-system-zlib \
 		--with-toolchain-prefix="${CHOST}-" \
 		--with-unsigned-addon-scopes=app,system \
 		--x-includes="${SYSROOT}${EPREFIX}/usr/include" \
 		--x-libraries="${SYSROOT}${EPREFIX}/usr/$(get_libdir)"
+
+	#Sometimes the system lib for nss lags behind in version
+	#(Un-)Comment this line depending on the required version
+	mozconfig_add_options_ac 'Gentoo default' --with-system-nss
+
+	#IDK how to get those wasi/wasm libs. If they do exist at some point
+	#add them with --with-wasi-sysroot="<libdir>"
+	mozconfig_add_options_ac '' --without-wasm-sandboxed-libraries
 
 	# Set update channel
 	mozconfig_add_options_ac '' --update-channel=nightly
