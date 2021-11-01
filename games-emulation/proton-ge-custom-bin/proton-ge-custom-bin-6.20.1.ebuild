@@ -13,7 +13,7 @@ HOMEPAGE="https://github.com/GloriousEggroll/proton-ge-custom"
 SRC_URI="https://github.com/GloriousEggroll/proton-ge-custom/releases/download/${MY_PV}/${MY_P}.tar.gz"
 
 LICENSE="All rights reserved"
-SLOT="6.19"
+SLOT="6.20"
 KEYWORDS="~amd64"
 
 IUSE="gnome kde winetricks"
