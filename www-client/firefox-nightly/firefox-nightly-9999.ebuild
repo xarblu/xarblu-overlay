@@ -326,9 +326,9 @@ pkg_setup() {
 
 		# Ensure we have enough disk space to compile
 		if use pgo || use lto || use debug ; then
-			CHECKREQS_DISK_BUILD="13500M"
+			CHECKREQS_DISK_BUILD="18500M"
 		else
-			CHECKREQS_DISK_BUILD="6400M"
+			CHECKREQS_DISK_BUILD="13400M"
 		fi
 
 		check-reqs_pkg_setup
