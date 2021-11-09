@@ -3,7 +3,7 @@
 
 EAPI="7"
 
-LLVM_MAX_SLOT=12
+LLVM_MAX_SLOT=13
 
 PYTHON_COMPAT=( python3_{7..10} )
 PYTHON_REQ_USE="ncurses,sqlite,ssl"
@@ -113,7 +113,7 @@ CDEPEND="
 	>=dev-libs/libffi-3.0.10:=
 	media-video/ffmpeg
 	x11-libs/libX11
-	x11-libs/xcb
+	x11-libs/libxcb
 	x11-libs/libXcomposite
 	x11-libs/libXdamage
 	x11-libs/libXext
