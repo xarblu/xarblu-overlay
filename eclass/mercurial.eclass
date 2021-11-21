@@ -1,7 +1,7 @@
 # Copyright 2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-# @ECLASS: light-mercurial.eclass
+# @ECLASS: mercurial.eclass
 # @MAINTAINER:
 # Jonas Rakebrandt <xarblu@protonmail.com>
 # @AUTHOR:
@@ -21,19 +21,19 @@ case ${EAPI} in
 	*) die "${ECLASS}: EAPI ${EAPI} unsupported."
 esac
 
-if [[ -z ${_LIGHT_MERCURIAL_ECLASS} ]]; then
-_LIGHT_MERCURIAL_ECLASS=1
+if [[ -z ${_MERCURIAL_ECLASS} ]]; then
+_MERCURIAL_ECLASS=1
 
 PROPERTIES+=" live"
 
 case ${EAPI:-0} in
 	7)
-		# For compatibiilty only (indirect inherits).
+		# For compatibility only (indirect inherits).
 		# Eclass itself doesn't need it.
 		inherit eutils
 		;;
 	8)
-		# For compatibiilty only (indirect inherits).
+		# For compatibility only (indirect inherits).
 		# Eclass itself doesn't need it.
 		inherit eutils
 		;;
@@ -162,7 +162,13 @@ mercurial_fetch() {
 			${EHG_CONFIG:+--config ${EHG_CONFIG}} \
 			--repository="${EHG_STORE_DIR}/${EHG_PROJECT}/${module}" \
 			"${sourcedir}" || die "hg archive failed"
-	einfo "Work directory: ${sourcedir} global (with revision: ${EHG_REVISION})"
+	# An exact revision helps a lot for testing purposes, so have some output...
+	# id           num  branch
+	# fd6e32d61721 6276 default
+	local HG_REVDATA=($(hg identify -b -i -r "${EHG_REVISION}" -R "${EHG_STORE_DIR}/${EHG_PROJECT}/${module}"))
+	export HG_REV_ID=${HG_REVDATA[0]}
+	local HG_REV_BRANCH=${HG_REVDATA[1]}
+	einfo "Work directory: ${sourcedir} global id: ${HG_REV_ID} (was ${EHG_REVISION} branch: ${HG_REV_BRANCH}"
 }
 
 # @FUNCTION: mercurial_bootstrap
@@ -208,7 +214,7 @@ mercurial_bootstrap() {
 # @FUNCTION: mercurial_src_unpack
 # @DESCRIPTION:
 # The mercurial src_unpack function, which will be exported.
-function light-mercurial_src_unpack {
+function mercurial_src_unpack {
 	debug-print-function ${FUNCNAME} "$@"
 
 	mercurial_fetch

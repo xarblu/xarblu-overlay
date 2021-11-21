@@ -18,8 +18,8 @@ MOZ_P="${MOZ_PN}-${MOZ_PV}"
 MOZ_PV_DISTFILES="${MOZ_PV}${MOZ_PV_SUFFIX}"
 MOZ_P_DISTFILES="${MOZ_PN}-${MOZ_PV_DISTFILES}"
 
-inherit autotools check-reqs desktop flag-o-matic gnome2-utils light-mercurial linux-info \
-	llvm multiprocessing pax-utils python-any-r1 toolchain-funcs \
+inherit autotools check-reqs desktop flag-o-matic gnome2-utils linux-info \
+	llvm mercurial multiprocessing pax-utils python-any-r1 toolchain-funcs \
 	virtualx xdg
 
 DESCRIPTION="Firefox Web Browser pulled directly from mozilla-central"
@@ -432,7 +432,7 @@ pkg_setup() {
 }
 
 src_unpack() {
-	light-mercurial_src_unpack
+	mercurial_src_unpack
 	local _lp_dir="${WORKDIR}/language_packs"
 	local _src_file
 
