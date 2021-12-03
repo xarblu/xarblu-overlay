@@ -983,7 +983,7 @@ src_install() {
 	done
 
 	# Install menu
-	local app_name="Mozilla ${MOZ_PN^}"
+	local app_name="${MOZ_PN^} Nightly"
 	local desktop_file="${FILESDIR}/icon/${PN}.desktop"
 	local desktop_filename="${PN}.desktop"
 	local exec_command="${PN}"
