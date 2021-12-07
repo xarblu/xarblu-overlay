@@ -2,8 +2,8 @@
 <!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
 <pkgmetadata>
 <maintainer type="project">
-	<email>mozilla@gentoo.org</email>
-	<name>Gentoo Mozilla Team</name>
+	<email>xarblu@protonmail.com</email>
+	<name>Jonas Rakebrandt</name>
 </maintainer>
 <use>
 	<flag name="clang">Use Clang compiler instead of GCC</flag>
