@@ -87,7 +87,7 @@ BDEPEND="${PYTHON_DEPS}
 	x86? ( >=dev-lang/nasm-2.13 )"
 
 CDEPEND="
-	>=dev-libs/nss-3.72
+	>=dev-libs/nss-3.73
 	>=dev-libs/nspr-4.32
 	dev-libs/atk
 	dev-libs/expat
@@ -582,7 +582,7 @@ src_configure() {
 
 	#Sometimes the system lib for nss lags behind in version
 	#(Un-)Comment this line depending on the required version
-	#mozconfig_add_options_ac 'Gentoo default' --with-system-nss
+	mozconfig_add_options_ac 'Gentoo default' --with-system-nss
 
 	#IDK how to get those wasi/wasm libs. If they do exist at some point
 	#add them with --with-wasi-sysroot="<libdir>"
