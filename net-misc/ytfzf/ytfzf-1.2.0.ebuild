@@ -3,12 +3,13 @@
 
 EAPI=7
 
-inherit git-r3 optfeature
+inherit optfeature
 
 DESCRIPTION="A posix script that helps you find Youtube videos and opens using mpv/youtube-dl"
 HOMEPAGE="https://github.com/pystardust/ytfzf"
 
 if [[ ${PV} == 9999 ]]; then
+	inherit git-r3
 	EGIT_REPO_URI="https://github.com/pystardust/ytfzf.git"
 	KEYWORDS=""
 else
@@ -24,7 +25,7 @@ RDEPEND="
 app-shells/fzf
 app-misc/jq
 media-video/mpv
-net-misc/youtube-dl
+|| ( net-misc/youtube-dl net-misc/yt-dlp )
 "
 
 DOCS=( README.md docs/conf.sh )
