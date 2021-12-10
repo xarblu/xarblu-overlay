@@ -120,7 +120,7 @@ CDEPEND="
 	)
 	screencast? ( media-video/pipewire:0/0.3 )
 	system-av1? (
-		>=media-libs/dav1d-0.9.3:=
+		>=media-libs/dav1d-0.9.1:=
 		>=media-libs/libaom-1.0.0:=
 	)
 	system-harfbuzz? (
