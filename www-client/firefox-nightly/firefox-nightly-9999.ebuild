@@ -12,14 +12,11 @@ WANT_AUTOCONF="2.1"
 
 VIRTUALX_REQUIRED="pgo"
 
-MOZ_PV=
 MOZ_PN="${PN%-nightly}"
 MOZ_P="${MOZ_PN}-${MOZ_PV}"
-MOZ_PV_DISTFILES="${MOZ_PV}${MOZ_PV_SUFFIX}"
-MOZ_P_DISTFILES="${MOZ_PN}-${MOZ_PV_DISTFILES}"
 
 inherit autotools check-reqs desktop flag-o-matic gnome2-utils linux-info \
-	llvm mercurial multiprocessing pax-utils python-any-r1 toolchain-funcs \
+	llvm mercurial multiprocessing pax-utils python-r1 toolchain-funcs \
 	virtualx xdg
 
 DESCRIPTION="Firefox Web Browser pulled directly from mozilla-central"
@@ -28,33 +25,38 @@ HOMEPAGE="https://www.mozilla.com/firefox"
 EHG_REPO_URI="https://hg.mozilla.org/mozilla-central"
 EHG_PROJECT="mozilla-central"
 
-PATCH_URIS=(
-	https://dev.gentoo.org/~{axs,polynomial-c,whissi}/mozilla/patchsets/${FIREFOX_PATCHSET}
-)
-
-#MOZ_SRC_BASE_URI="https://archive.mozilla.org/pub/firefox/releases/${MOZ_PV}"
-
-#SRC_URI="${PATCH_URIS[@]}"
-
 KEYWORDS=""
 
 SLOT="0"
 LICENSE="MPL-2.0 GPL-2 LGPL-2.1"
-IUSE="+clang cpu_flags_arm_neon custom-icons dbus debug eme-free geckodriver +gmp-autoupdate
-	hardened hwaccel jack lto +openh264 pgo pulseaudio screencast sndio selinux
-	+system-av1 +system-harfbuzz +system-icu +system-jpeg +system-libevent
-	+system-libvpx +system-webp wayland wifi"
+
+IUSE="+clang cpu_flags_arm_neon dbus debug eme-free hardened hwaccel"
+IUSE+=" jack lto +openh264 pgo pulseaudio sndio selinux"
+IUSE+=" +system-av1 +system-harfbuzz +system-icu +system-jpeg +system-libevent +system-libvpx +system-webp"
+IUSE+=" wayland wifi"
+IUSE+=" custom-icons"
+
+# Firefox-only IUSE
+IUSE+=" geckodriver"
+IUSE+=" +gmp-autoupdate"
+IUSE+=" screencast"
 
 REQUIRED_USE="debug? ( !system-av1 )
-	screencast? ( wayland )"
+	pgo? ( lto )
+	wayland? ( dbus )
+	wifi? ( dbus )"
+
+# Firefox-only REQUIRED_USE flags
+REQUIRED_USE+=" screencast? ( wayland )"
 
 BDEPEND="${PYTHON_DEPS}
+	dev-vcs/mercurial[${PYTHON_USEDEP}]
 	app-arch/unzip
 	app-arch/zip
 	>=dev-util/cbindgen-0.19.0
 	>=net-libs/nodejs-10.23.1
 	virtual/pkgconfig
-	>=virtual/rust-1.51.0
+	>=virtual/rust-1.53.0
 	|| (
 		(
 			sys-devel/clang:13
@@ -78,14 +80,6 @@ BDEPEND="${PYTHON_DEPS}
 			clang? (
 				=sys-devel/lld-11*
 				pgo? ( =sys-libs/compiler-rt-sanitizers-11*[profile] )
-			)
-		)
-		(
-			sys-devel/clang:10
-			sys-devel/llvm:10
-			clang? (
-				=sys-devel/lld-10*
-				pgo? ( =sys-libs/compiler-rt-sanitizers-10*[profile] )
 			)
 		)
 	)
@@ -118,6 +112,7 @@ CDEPEND="
 	x11-libs/libXdamage
 	x11-libs/libXext
 	x11-libs/libXfixes
+	x11-libs/libXrandr
 	x11-libs/libXrender
 	dbus? (
 		sys-apps/dbus
@@ -125,14 +120,14 @@ CDEPEND="
 	)
 	screencast? ( media-video/pipewire:0/0.3 )
 	system-av1? (
-		>=media-libs/dav1d-0.8.1:=
+		>=media-libs/dav1d-0.9.3:=
 		>=media-libs/libaom-1.0.0:=
 	)
 	system-harfbuzz? (
 		>=media-libs/harfbuzz-2.8.1:0=
 		>=media-gfx/graphite2-1.3.13
 	)
-	system-icu? ( >=dev-libs/icu-70.1:= )
+	system-icu? ( >=dev-libs/icu-69.1:= )
 	system-jpeg? ( >=media-libs/libjpeg-turbo-1.2.1 )
 	system-libevent? ( >=dev-libs/libevent-2.0:0=[threads] )
 	system-libvpx? ( >=media-libs/libvpx-1.8.2:0=[postproc] )
@@ -218,42 +213,6 @@ moz_clear_vendor_checksums() {
 		|| die
 }
 
-#moz_install_xpi() {
-#	debug-print-function ${FUNCNAME} "$@"
-#
-#	if [[ ${#} -lt 2 ]] ; then
-#		die "${FUNCNAME} requires at least two arguments"
-#	fi
-#
-#	local DESTDIR=${1}
-#	shift
-#
-#	insinto "${DESTDIR}"
-#
-#	local emid xpi_file xpi_tmp_dir
-#	for xpi_file in "${@}" ; do
-#		emid=
-#		xpi_tmp_dir=$(mktemp -d --tmpdir="${T}")
-#
-#		# Unpack XPI
-#		unzip -qq "${xpi_file}" -d "${xpi_tmp_dir}" || die
-#
-#		# Determine extension ID
-#		if [[ -f "${xpi_tmp_dir}/install.rdf" ]] ; then
-#			emid=$(sed -n -e '/install-manifest/,$ { /em:id/!d; s/.*[\">]\([^\"<>]*\)[\"<].*/\1/; p; q }' "${xpi_tmp_dir}/install.rdf")
-#			[[ -z "${emid}" ]] && die "failed to determine extension id from install.rdf"
-#		elif [[ -f "${xpi_tmp_dir}/manifest.json" ]] ; then
-#			emid=$(sed -n -e 's/.*"id": "\([^"]*\)".*/\1/p' "${xpi_tmp_dir}/manifest.json")
-#			[[ -z "${emid}" ]] && die "failed to determine extension id from manifest.json"
-#		else
-#			die "failed to determine extension id"
-#		fi
-#
-#		einfo "Installing ${emid}.xpi into ${ED}${DESTDIR} ..."
-#		newins "${xpi_file}" "${emid}.xpi"
-#	done
-#}
-
 mozconfig_add_options_ac() {
 	debug-print-function ${FUNCNAME} "$@"
 
@@ -318,9 +277,9 @@ pkg_pretend() {
 
 		# Ensure we have enough disk space to compile
 		if use pgo || use lto || use debug ; then
-			CHECKREQS_DISK_BUILD="18500M"
+			CHECKREQS_DISK_BUILD="14500M"
 		else
-			CHECKREQS_DISK_BUILD="13400M"
+			CHECKREQS_DISK_BUILD="7400M"
 		fi
 
 		check-reqs_pkg_pretend
@@ -337,9 +296,9 @@ pkg_setup() {
 
 		# Ensure we have enough disk space to compile
 		if use pgo || use lto || use debug ; then
-			CHECKREQS_DISK_BUILD="18500M"
+			CHECKREQS_DISK_BUILD="14500M"
 		else
-			CHECKREQS_DISK_BUILD="13400M"
+			CHECKREQS_DISK_BUILD="7400M"
 		fi
 
 		check-reqs_pkg_setup
@@ -382,7 +341,7 @@ pkg_setup() {
 			die "Set USE=clang or select <gcc-11 to build ${CATEGORY}/${P}."
 		fi
 
-		python-any-r1_pkg_setup
+		python_setup
 
 		# Avoid PGO profiling problems due to enviroment leakage
 		# These should *always* be cleaned up anyway
@@ -397,6 +356,34 @@ pkg_setup() {
 
 		# Build system is using /proc/self/oom_score_adj, bug #604394
 		addpredict /proc/self/oom_score_adj
+
+		if use pgo ; then
+			# Allow access to GPU during PGO run
+			local ati_cards mesa_cards nvidia_cards render_cards
+			shopt -s nullglob
+
+			ati_cards=$(echo -n /dev/ati/card* | sed 's/ /:/g')
+			if [[ -n "${ati_cards}" ]] ; then
+				addpredict "${ati_cards}"
+			fi
+
+			mesa_cards=$(echo -n /dev/dri/card* | sed 's/ /:/g')
+			if [[ -n "${mesa_cards}" ]] ; then
+				addpredict "${mesa_cards}"
+			fi
+
+			nvidia_cards=$(echo -n /dev/nvidia* | sed 's/ /:/g')
+			if [[ -n "${nvidia_cards}" ]] ; then
+				addpredict "${nvidia_cards}"
+			fi
+
+			render_cards=$(echo -n /dev/dri/renderD128* | sed 's/ /:/g')
+			if [[ -n "${render_cards}" ]] ; then
+				addpredict "${render_cards}"
+			fi
+
+			shopt -u nullglob
+		fi
 
 		if ! mountpoint -q /dev/shm ; then
 			# If /dev/shm is not available, configure is known to fail with
@@ -554,6 +541,9 @@ src_configure() {
 	# python/mach/mach/mixin/process.py fails to detect SHELL
 	export SHELL="${EPREFIX}/bin/bash"
 
+	# Set state path
+	export MOZBUILD_STATE_PATH="${BUILD_DIR}"
+
 	# Set MOZCONFIG
 	export MOZCONFIG="${S}/.mozconfig"
 
@@ -686,6 +676,9 @@ src_configure() {
 
 			mozconfig_add_options_ac '+lto' --enable-lto=cross
 		else
+			# ld.gold is known to fail:
+			# /usr/lib/gcc/x86_64-pc-linux-gnu/11.2.1/../../../../x86_64-pc-linux-gnu/bin/ld.gold: internal error in set_xindex, at /var/tmp/portage/sys-devel/binutils-2.37_p1-r1/work/binutils-2.37/gold/object.h:1050
+
 			# ThinLTO is currently broken, see bmo#1644409
 			mozconfig_add_options_ac '+lto' --enable-lto=full
 		fi
@@ -906,17 +899,12 @@ src_install() {
 		rm -v "${ED}${MOZILLA_FIVE_HOME}/llvm-symbolizer" || die
 	fi
 
-	# Install policy (currently only used to disable application updates)
-	#insinto "${MOZILLA_FIVE_HOME}/distribution"
-	#newins "${FILESDIR}"/distribution.ini distribution.ini
-	#newins "${FILESDIR}"/disable-auto-update.policy.json policies.json
-
 	# Install system-wide preferences
 	local PREFS_DIR="${MOZILLA_FIVE_HOME}/browser/defaults/preferences"
 	insinto "${PREFS_DIR}"
-	newins "${FILESDIR}"/gentoo-default-prefs.js all-gentoo.js
+	newins "${FILESDIR}"/gentoo-default-prefs.js gentoo-prefs.js
 
-	local GENTOO_PREFS="${ED}${PREFS_DIR}/all-gentoo.js"
+	local GENTOO_PREFS="${ED}${PREFS_DIR}/gentoo-prefs.js"
 
 	# Set dictionary path to use system hunspell
 	cat >>"${GENTOO_PREFS}" <<-EOF || die "failed to set spellchecker.dictionary_path pref"
@@ -1061,7 +1049,9 @@ pkg_postinst() {
 		elog
 	fi
 
-	local show_doh_information show_normandy_information show_shortcut_information
+	local show_doh_information
+	local show_normandy_information
+	local show_shortcut_information
 
 	if [[ -z "${REPLACING_VERSIONS}" ]] ; then
 		# New install; Tell user that DoH is disabled by default
