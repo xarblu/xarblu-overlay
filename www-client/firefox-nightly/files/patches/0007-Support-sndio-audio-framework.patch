@@ -20,9 +20,9 @@ index e3974613d6..235abf1a8c 100644
      "--cache-file",
      "--datadir",
 +    "--enable-sndio",
-     "--enable-crashreporter",
-     "--enable-dbus",
-     "--enable-debug-js-modules",
+     "--enable-official-branding",
+     "--enable-system-extension-dirs",
+     "--enable-system-pixman",
 diff --git a/media/libcubeb/src/moz.build b/media/libcubeb/src/moz.build
 index 872484c311..28994a693d 100644
 --- a/media/libcubeb/src/moz.build
