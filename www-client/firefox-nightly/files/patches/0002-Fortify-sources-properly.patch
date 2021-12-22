@@ -1,7 +1,7 @@
-From 288e147c84109195b179e45a9c4632d3c4ca1748 Mon Sep 17 00:00:00 2001
+From e9f2525adaa1958f048acee2bd873a5c3aaa0c5b Mon Sep 17 00:00:00 2001
 From: "Jory A. Pratt" <anarchy@gentoo.org>
 Date: Mon, 6 Apr 2020 19:16:36 +0200
-Subject: [PATCH 02/33] Fortify sources properly
+Subject: [PATCH 02/32] Fortify sources properly
 
 Ensure we fortify properly, features.h is pulled in via fortification.
 
@@ -12,7 +12,7 @@ Signed-off-by: Thomas Deutschmann <whissi@gentoo.org>
  2 files changed, 4 deletions(-)
 
 diff --git a/config/system-headers.mozbuild b/config/system-headers.mozbuild
-index e8953cf55b..9018d3e580 100644
+index 4e210b8f0f..e060fd2dcc 100644
 --- a/config/system-headers.mozbuild
 +++ b/config/system-headers.mozbuild
 @@ -229,7 +229,6 @@ system_headers = [
@@ -37,5 +37,5 @@ index 16c9b33329..df38d9336c 100644
  
  #endif /* _SDP_OS_DEFS_H_ */
 -- 
-2.33.0
+2.34.1
 

@@ -1,7 +1,7 @@
-From 7478a4852fc50d8b80f9cfe7ff678ab569858b3e Mon Sep 17 00:00:00 2001
+From 4e0bae4eb9f51834b7010d1ab91844695fb2528c Mon Sep 17 00:00:00 2001
 From: Thomas Deutschmann <whissi@gentoo.org>
 Date: Mon, 6 Apr 2020 20:27:06 +0200
-Subject: [PATCH 21/33] bmo#1516081: Disable watchdog during PGO builds
+Subject: [PATCH 20/32] bmo#1516081: Disable watchdog during PGO builds
 
 Bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1516081
 Signed-off-by: Thomas Deutschmann <whissi@gentoo.org>
@@ -11,10 +11,10 @@ Signed-off-by: Thomas Deutschmann <whissi@gentoo.org>
  2 files changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/build/moz.configure/lto-pgo.configure b/build/moz.configure/lto-pgo.configure
-index 1fe5a1ab73..30b8b27fc4 100644
+index e5a4e6f913..567ccf0ba4 100644
 --- a/build/moz.configure/lto-pgo.configure
 +++ b/build/moz.configure/lto-pgo.configure
-@@ -85,7 +85,7 @@ set_config("PGO_PROFILE_PATH", pgo_profile_path)
+@@ -84,7 +84,7 @@ set_config("PGO_PROFILE_PATH", pgo_profile_path)
  def pgo_flags(compiler, profdata, target_is_windows):
      if compiler.type == "gcc":
          return namespace(
@@ -23,7 +23,7 @@ index 1fe5a1ab73..30b8b27fc4 100644
              gen_ldflags=["-fprofile-generate"],
              use_cflags=["-fprofile-use", "-fprofile-correction", "-Wcoverage-mismatch"],
              use_ldflags=["-fprofile-use"],
-@@ -99,7 +99,7 @@ def pgo_flags(compiler, profdata, target_is_windows):
+@@ -98,7 +98,7 @@ def pgo_flags(compiler, profdata, target_is_windows):
          else:
              gen_ldflags = ["-fprofile-generate"]
  
@@ -33,10 +33,10 @@ index 1fe5a1ab73..30b8b27fc4 100644
              # native llvm-profdata.exe on Windows can't read profile data
              # if name compression is enabled (which cross-compiling enables
 diff --git a/toolkit/components/terminator/nsTerminator.cpp b/toolkit/components/terminator/nsTerminator.cpp
-index f0d2a08c29..c8797bf12d 100644
+index 194bb36e2d..c960d44137 100644
 --- a/toolkit/components/terminator/nsTerminator.cpp
 +++ b/toolkit/components/terminator/nsTerminator.cpp
-@@ -456,6 +456,13 @@ void nsTerminator::StartWatchdog() {
+@@ -466,6 +466,13 @@ void nsTerminator::StartWatchdog() {
    }
  #endif
  
@@ -51,5 +51,5 @@ index f0d2a08c29..c8797bf12d 100644
    const PRIntervalTime ticksDuration =
        PR_MillisecondsToInterval(HEARTBEAT_INTERVAL_MS);
 -- 
-2.33.0
+2.34.1
 

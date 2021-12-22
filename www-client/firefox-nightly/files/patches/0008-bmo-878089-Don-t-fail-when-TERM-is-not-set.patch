@@ -1,7 +1,7 @@
-From 65df0601c51fbb7dc5b0ceb3ed01b046ca63a975 Mon Sep 17 00:00:00 2001
+From 409a51cb5afd1b2fa1abc6953830b98ff3708263 Mon Sep 17 00:00:00 2001
 From: Thomas Deutschmann <whissi@gentoo.org>
 Date: Mon, 6 Apr 2020 19:41:43 +0200
-Subject: [PATCH 08/33] bmo#878089: Don't fail when TERM is not set
+Subject: [PATCH 08/32] bmo#878089: Don't fail when TERM is not set
 
 Link: https://github.com/erikrose/blessings/pull/137
 Bug: https://bugzilla.mozilla.org/show_bug.cgi?id=878089
@@ -32,5 +32,5 @@ index 388cece0b8..1283460cc9 100644
          self.stream = stream
  
 -- 
-2.33.0
+2.34.1
 

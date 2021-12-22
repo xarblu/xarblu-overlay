@@ -1,7 +1,7 @@
-From 393cfd1e73e36540d10e91f8f028000b64c5d98d Mon Sep 17 00:00:00 2001
+From 1e48a24951577ea59ffcfef6aa3b51961b844053 Mon Sep 17 00:00:00 2001
 From: Thomas Deutschmann <whissi@gentoo.org>
 Date: Thu, 29 Apr 2021 18:22:48 +0200
-Subject: [PATCH 29/33] Disable FFVPX with VA-API
+Subject: [PATCH 28/32] Disable FFVPX with VA-API
 
 Signed-off-by: Thomas Deutschmann <whissi@gentoo.org>
 ---
@@ -9,10 +9,10 @@ Signed-off-by: Thomas Deutschmann <whissi@gentoo.org>
  1 file changed, 16 insertions(+), 16 deletions(-)
 
 diff --git a/dom/media/platforms/PDMFactory.cpp b/dom/media/platforms/PDMFactory.cpp
-index 6e84abde70..fab21747f5 100644
+index 9b0342ce82..4e377082ae 100644
 --- a/dom/media/platforms/PDMFactory.cpp
 +++ b/dom/media/platforms/PDMFactory.cpp
-@@ -481,12 +481,6 @@ void PDMFactory::CreateRddPDMs() {
+@@ -486,12 +486,6 @@ void PDMFactory::CreateRddPDMs() {
      CreateAndStartupPDM<AppleDecoderModule>();
    }
  #endif
@@ -25,7 +25,7 @@ index 6e84abde70..fab21747f5 100644
  #ifdef MOZ_FFMPEG
    if (StaticPrefs::media_ffmpeg_enabled() &&
        StaticPrefs::media_rdd_ffmpeg_enabled() &&
-@@ -494,6 +488,12 @@ void PDMFactory::CreateRddPDMs() {
+@@ -499,6 +493,12 @@ void PDMFactory::CreateRddPDMs() {
      mFailureFlags += GetFailureFlagBasedOnFFmpegStatus(
          FFmpegRuntimeLinker::LinkStatusCode());
    }
@@ -38,7 +38,7 @@ index 6e84abde70..fab21747f5 100644
  #endif
    CreateAndStartupPDM<AgnosticDecoderModule>();
  }
-@@ -525,11 +525,6 @@ void PDMFactory::CreateContentPDMs() {
+@@ -535,11 +535,6 @@ void PDMFactory::CreateContentPDMs() {
      CreateAndStartupPDM<OmxDecoderModule>();
    }
  #endif
@@ -50,7 +50,7 @@ index 6e84abde70..fab21747f5 100644
  #ifdef MOZ_FFMPEG
    if (StaticPrefs::media_ffmpeg_enabled() &&
        !CreateAndStartupPDM<FFmpegRuntimeLinker>()) {
-@@ -537,6 +532,11 @@ void PDMFactory::CreateContentPDMs() {
+@@ -547,6 +542,11 @@ void PDMFactory::CreateContentPDMs() {
          FFmpegRuntimeLinker::LinkStatusCode());
    }
  #endif
@@ -62,7 +62,7 @@ index 6e84abde70..fab21747f5 100644
  #ifdef MOZ_WIDGET_ANDROID
    if (StaticPrefs::media_android_media_codec_enabled()) {
      StartupPDM(AndroidDecoderModule::Create(),
-@@ -571,11 +571,6 @@ void PDMFactory::CreateDefaultPDMs() {
+@@ -581,11 +581,6 @@ void PDMFactory::CreateDefaultPDMs() {
      CreateAndStartupPDM<OmxDecoderModule>();
    }
  #endif
@@ -74,7 +74,7 @@ index 6e84abde70..fab21747f5 100644
  #ifdef MOZ_FFMPEG
    if (StaticPrefs::media_ffmpeg_enabled() &&
        !CreateAndStartupPDM<FFmpegRuntimeLinker>()) {
-@@ -583,6 +578,11 @@ void PDMFactory::CreateDefaultPDMs() {
+@@ -593,6 +588,11 @@ void PDMFactory::CreateDefaultPDMs() {
          FFmpegRuntimeLinker::LinkStatusCode());
    }
  #endif
@@ -87,5 +87,5 @@ index 6e84abde70..fab21747f5 100644
    if (StaticPrefs::media_android_media_codec_enabled()) {
      StartupPDM(AndroidDecoderModule::Create(),
 -- 
-2.33.0
+2.34.1
 

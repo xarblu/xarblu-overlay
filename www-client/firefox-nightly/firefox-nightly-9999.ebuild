@@ -166,7 +166,7 @@ DEPEND="${CDEPEND}
 			>=media-sound/apulse-0.1.12-r4[sdk]
 		)
 	)
-	wayland? ( >=x11-libs/gtk+-3.11:3[wayland] )
+	wayland? ( >=x11-libs/gtk+-3.14:3[wayland] )
 	amd64? ( virtual/opengl )
 	x86? ( virtual/opengl )"
 
@@ -440,8 +440,13 @@ src_unpack() {
 }
 
 src_prepare() {
-	use lto && rm -v "${WORKDIR}"/firefox-patches/*-LTO-Only-enable-LTO-*.patch
-	eapply "${FILESDIR}/patches"
+	if [[ -d "${FILESDIR}/patches" ]]; then
+		cp -r "${FILESDIR}/patches" "${WORKDIR}/firefox-patches"
+		use lto && rm -v "${WORKDIR}"/firefox-patches/*-LTO-Only-enable-LTO-*.patch
+		eapply "${WORKDIR}/firefox-patches"
+	else
+		elog "Patch directory not found. Is this intentional?"
+	fi
 
 	# Allow user to apply any additional patches without modifing ebuild
 	eapply_user
@@ -639,7 +644,7 @@ src_configure() {
 	mozconfig_use_with system-harfbuzz system-graphite2
 	mozconfig_use_with system-icu
 	mozconfig_use_with system-jpeg
-	mozconfig_use_with system-libevent system-libevent "${SYSROOT}${EPREFIX}/usr"
+	mozconfig_use_with system-libevent system-libevent
 	mozconfig_use_with system-libvpx
 	mozconfig_use_with system-webp
 

@@ -1,7 +1,7 @@
-From 9aa7b8db9e54663cc4ee3ec996c2d03ada859cc3 Mon Sep 17 00:00:00 2001
+From 461f5af7e1362eac4c751d40c3788d32c2a43572 Mon Sep 17 00:00:00 2001
 From: Thomas Deutschmann <whissi@gentoo.org>
 Date: Fri, 11 Dec 2020 15:37:38 +0100
-Subject: [PATCH 31/33] bmo#1670333: OpenH264: Fix decoding if it starts on non
+Subject: [PATCH 30/32] bmo#1670333: OpenH264: Fix decoding if it starts on non
  IDR I-frame
 
 Signed-off-by: Thomas Deutschmann <whissi@gentoo.org>
@@ -38,7 +38,7 @@ index 59bba16577..0304e3e89f 100644
              NS_WARNING(nsPrintfCString("Frame incorrectly marked as %skeyframe "
                                         "@ pts:%" PRId64 " dur:%" PRId64
 diff --git a/dom/media/platforms/PDMFactory.cpp b/dom/media/platforms/PDMFactory.cpp
-index fab21747f5..cceaa944aa 100644
+index 4e377082ae..e778eb9948 100644
 --- a/dom/media/platforms/PDMFactory.cpp
 +++ b/dom/media/platforms/PDMFactory.cpp
 @@ -58,6 +58,8 @@
@@ -50,7 +50,7 @@ index fab21747f5..cceaa944aa 100644
  namespace mozilla {
  
  #define PDM_INIT_LOG(msg, ...) \
-@@ -526,10 +528,12 @@ void PDMFactory::CreateContentPDMs() {
+@@ -536,10 +538,12 @@ void PDMFactory::CreateContentPDMs() {
    }
  #endif
  #ifdef MOZ_FFMPEG
@@ -67,7 +67,7 @@ index fab21747f5..cceaa944aa 100644
    }
  #endif
  #ifdef MOZ_FFVPX
-@@ -546,8 +550,9 @@ void PDMFactory::CreateContentPDMs() {
+@@ -556,8 +560,9 @@ void PDMFactory::CreateContentPDMs() {
  
    CreateAndStartupPDM<AgnosticDecoderModule>();
  
@@ -92,5 +92,5 @@ index 4fc81c0b37..72f3255b6f 100644
    static void EnsureInit();
  };
 -- 
-2.33.0
+2.34.1
 

@@ -1,7 +1,7 @@
-From 7134ac92ab0e5ec45470c45b617d233ecd487d21 Mon Sep 17 00:00:00 2001
+From 9c7d7aa616c4f29c0c5e907d6c0b27ee926d6762 Mon Sep 17 00:00:00 2001
 From: Thomas Deutschmann <whissi@gentoo.org>
 Date: Thu, 29 Apr 2021 18:48:06 +0200
-Subject: [PATCH 30/33] Enable FLAC on platforms without ffvpx via ffmpeg
+Subject: [PATCH 29/32] Enable FLAC on platforms without ffvpx via ffmpeg
 
 Signed-off-by: Thomas Deutschmann <whissi@gentoo.org>
 ---
@@ -32,5 +32,5 @@ index 2f205c9aae..68847b0952 100644
    return false;
  #endif
 -- 
-2.33.0
+2.34.1
 

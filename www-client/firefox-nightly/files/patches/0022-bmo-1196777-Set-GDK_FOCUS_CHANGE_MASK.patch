@@ -1,7 +1,7 @@
-From a0a25d7d685219a6a05c83bd409c00f7b32a65bf Mon Sep 17 00:00:00 2001
+From a999c252cfc8195e01c566523335a7b6433019cf Mon Sep 17 00:00:00 2001
 From: Thomas Deutschmann <whissi@gentoo.org>
 Date: Mon, 6 Apr 2020 20:47:13 +0200
-Subject: [PATCH 23/33] bmo#1196777: Set GDK_FOCUS_CHANGE_MASK
+Subject: [PATCH 22/32] bmo#1196777: Set GDK_FOCUS_CHANGE_MASK
 
 Bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1196777
 Signed-off-by: Thomas Deutschmann <whissi@gentoo.org>
@@ -10,10 +10,10 @@ Signed-off-by: Thomas Deutschmann <whissi@gentoo.org>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/widget/gtk/nsWindow.cpp b/widget/gtk/nsWindow.cpp
-index f56822bd06..7f777302b8 100644
+index 620e2f47f2..0f6b701441 100644
 --- a/widget/gtk/nsWindow.cpp
 +++ b/widget/gtk/nsWindow.cpp
-@@ -162,7 +162,8 @@ const gint kEvents = GDK_TOUCHPAD_GESTURE_MASK | GDK_EXPOSURE_MASK |
+@@ -161,7 +161,8 @@ const gint kEvents = GDK_TOUCHPAD_GESTURE_MASK | GDK_EXPOSURE_MASK |
                       GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
                       GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
                       GDK_SMOOTH_SCROLL_MASK | GDK_TOUCH_MASK | GDK_SCROLL_MASK |
@@ -24,5 +24,5 @@ index f56822bd06..7f777302b8 100644
  #if !GTK_CHECK_VERSION(3, 22, 0)
  typedef enum {
 -- 
-2.33.0
+2.34.1
 

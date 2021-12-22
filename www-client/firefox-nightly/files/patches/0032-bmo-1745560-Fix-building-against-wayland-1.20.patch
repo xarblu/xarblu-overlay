@@ -1,0 +1,31 @@
+From a7c21dbcda513060e0d69a8bc682c48eb043730f Mon Sep 17 00:00:00 2001
+From: Jan Beich <jbeich@FreeBSD.org>
+Date: Sun, 12 Dec 2021 02:16:02 +0100
+Subject: [PATCH 32/32] bmo#1745560: Fix building against >=wayland-1.20
+
+Signed-off-by: Thomas Deutschmann <whissi@gentoo.org>
+---
+ widget/gtk/mozwayland/mozwayland.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/widget/gtk/mozwayland/mozwayland.c b/widget/gtk/mozwayland/mozwayland.c
+index 7a448e6321..b997c59d78 100644
+--- a/widget/gtk/mozwayland/mozwayland.c
++++ b/widget/gtk/mozwayland/mozwayland.c
+@@ -40,6 +40,13 @@ MOZ_EXPORT void wl_event_queue_destroy(struct wl_event_queue* queue) {}
+ 
+ MOZ_EXPORT void wl_proxy_marshal(struct wl_proxy* p, uint32_t opcode, ...) {}
+ 
++MOZ_EXPORT struct wl_proxy* wl_proxy_marshal_flags(
++    struct wl_proxy* proxy, uint32_t opcode,
++    const struct wl_interface* interface, uint32_t version, uint32_t flags,
++    ...) {
++  return NULL;
++}
++
+ MOZ_EXPORT void wl_proxy_marshal_array(struct wl_proxy* p, uint32_t opcode,
+                                        union wl_argument* args) {}
+ 
+-- 
+2.34.1
+

@@ -1,7 +1,7 @@
-From 521330193e7778c1eee1d106b812c2a78ffc3c94 Mon Sep 17 00:00:00 2001
+From 5afd7721b1433d1d354abd96e2fdc967fe34f8d7 Mon Sep 17 00:00:00 2001
 From: "Jory A. Pratt" <anarchy@gentoo.org>
 Date: Mon, 6 Apr 2020 19:14:26 +0200
-Subject: [PATCH 01/33] Don't use build id
+Subject: [PATCH 01/32] Don't use build id
 
 We must drop build id as it causes conflicts when merging
 thunderbird/firefox/seamonkey on same system when using
@@ -14,7 +14,7 @@ Signed-off-by: Thomas Deutschmann <whissi@gentoo.org>
  2 files changed, 14 deletions(-)
 
 diff --git a/js/src/old-configure.in b/js/src/old-configure.in
-index e96ea982ed..8bfcc8aff3 100644
+index dcc78d3b16..c2633069e2 100644
 --- a/js/src/old-configure.in
 +++ b/js/src/old-configure.in
 @@ -350,13 +350,6 @@ if test "$GNU_CC"; then
@@ -32,7 +32,7 @@ index e96ea982ed..8bfcc8aff3 100644
  fi
  
 diff --git a/old-configure.in b/old-configure.in
-index 8f8ae6eb07..78c358a3b1 100644
+index 9c8cdb462a..1707e98471 100644
 --- a/old-configure.in
 +++ b/old-configure.in
 @@ -337,13 +337,6 @@ if test "$GNU_CC"; then
@@ -50,5 +50,5 @@ index 8f8ae6eb07..78c358a3b1 100644
      HAVE_LINKER_SUPPORT_IGNORE_UNRESOLVED=
      _SAVE_LDFLAGS=$LDFLAGS
 -- 
-2.33.0
+2.34.1
 

@@ -1,7 +1,7 @@
-From 2170ee3acc3b81cd8b1b2fc6794a4dfcad8b2297 Mon Sep 17 00:00:00 2001
+From acd924914e8a6c23ed377f036f80346160b94adf Mon Sep 17 00:00:00 2001
 From: Thomas Deutschmann <whissi@gentoo.org>
 Date: Mon, 28 Sep 2020 20:52:24 +0200
-Subject: [PATCH 28/33] Make elfhack use toolchain
+Subject: [PATCH 27/32] Make elfhack use toolchain
 
 Signed-off-by: Thomas Deutschmann <whissi@gentoo.org>
 ---
@@ -22,5 +22,5 @@ index 08cc3d6852..c2b575d87a 100644
  test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX): DSO_SONAME=$@
  test-array$(DLL_SUFFIX): DT_TYPE=INIT_ARRAY
 -- 
-2.33.0
+2.34.1
 
