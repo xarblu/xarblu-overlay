@@ -30,11 +30,10 @@ KEYWORDS=""
 SLOT="0"
 LICENSE="MPL-2.0 GPL-2 LGPL-2.1"
 
-IUSE="+clang cpu_flags_arm_neon dbus debug eme-free hardened hwaccel"
+IUSE="+clang cpu_flags_arm_neon custom-icons dbus debug eme-free hardened hwaccel"
 IUSE+=" jack lto +openh264 pgo pulseaudio sndio selinux"
 IUSE+=" +system-av1 +system-harfbuzz +system-icu +system-jpeg +system-libevent +system-libvpx +system-webp"
 IUSE+=" wayland wifi"
-IUSE+=" custom-icons"
 
 # Firefox-only IUSE
 IUSE+=" geckodriver"
@@ -169,8 +168,6 @@ DEPEND="${CDEPEND}
 	wayland? ( >=x11-libs/gtk+-3.14:3[wayland] )
 	amd64? ( virtual/opengl )
 	x86? ( virtual/opengl )"
-
-S="${WORKDIR}/${PN}-${PV%_*}"
 
 # Allow MOZ_GMP_PLUGIN_LIST to be set in an eclass or
 # overridden in the enviromnent (advanced hackers only)
@@ -443,6 +440,7 @@ src_prepare() {
 	if [[ -d "${FILESDIR}/patches" ]]; then
 		cp -r "${FILESDIR}/patches" "${WORKDIR}/firefox-patches"
 		use lto && rm -v "${WORKDIR}"/firefox-patches/*-LTO-Only-enable-LTO-*.patch
+		! use system-av1 && rm -v "${WORKDIR}"/firefox-patches/xarblu-001-fix-compatibility-with-current-dav1d.patch
 		eapply "${WORKDIR}/firefox-patches"
 	else
 		elog "Patch directory not found. Is this intentional?"
@@ -589,11 +587,10 @@ src_configure() {
 		--x-libraries="${SYSROOT}${EPREFIX}/usr/$(get_libdir)"
 
 	#Sometimes the system lib for nss lags behind in version
-	#(Un-)Comment this line depending on the required version
-	mozconfig_add_options_ac 'Gentoo default' --with-system-nss
+	#(Un-)Comment this line depending on the required version (requires 3.74 as of 2021-01-02)
+	#mozconfig_add_options_ac 'Gentoo default' --with-system-nss
 
-	#IDK how to get those wasi/wasm libs. If they do exist at some point
-	#add them with --with-wasi-sysroot="<libdir>"
+	#build with wasi sandboxed libs is broken (because of system-libs I guess)
 	mozconfig_add_options_ac '' --without-wasm-sandboxed-libraries
 
 	# Set update channel

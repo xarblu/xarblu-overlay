@@ -35,5 +35,6 @@
 		instead of bundled.</flag>
 	<flag name="system-webp">Use the system-wide <pkg>media-libs/libwebp</pkg>
 		instead of bundled.</flag>
+	<flag name="wasi">Use <pkg>dev-libs/wasi-libc</pkg> to build wasi sandboxed libraries.</flag>
 </use>
 </pkgmetadata>
