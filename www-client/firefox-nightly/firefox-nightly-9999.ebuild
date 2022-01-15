@@ -122,7 +122,7 @@ CDEPEND="
 					media-video/pipewire:0/0.4
 	) )
 	system-av1? (
-		>=media-libs/dav1d-0.9.1:=
+		>=media-libs/dav1d-0.9.3:=
 		>=media-libs/libaom-1.0.0:=
 	)
 	system-harfbuzz? (
@@ -493,8 +493,7 @@ src_prepare() {
 src_configure() {
 	#Replace default icons with custom ones made by 1-UP Nuke
 	if use custom-icons; then
-		rm -r "${S}/browser/branding/nightly" || die "Couldn't remove original icons."
-		cp -r "${FILESDIR}/branding/nightly" "${S}/browser/branding/" || die "Couldn't copy custom icons."
+		cp -rT "${FILESDIR}/branding/nightly" "${S}/browser/branding/nightly" || die "Couldn't copy custom icons."
 	fi
 
 	# Show flags set at the beginning
