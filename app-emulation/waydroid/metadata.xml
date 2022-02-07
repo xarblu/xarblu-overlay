@@ -6,6 +6,6 @@
 		<name>Jonas Rakebrandt</name>
 	</maintainer>
 	<use>
-		<flag=clipboard>Enable clipboard sharing via <pkg>dev-python/pyclip</pkg></flag>
+		<flag name="clipboard">Enable clipboard sharing via <pkg>dev-python/pyclip</pkg></flag>
 	</use>
 </pkgmetadata>

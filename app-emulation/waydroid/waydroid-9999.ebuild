@@ -39,21 +39,28 @@ src_configure() {
 }
 
 src_install() {
+	#Main files
 	insinto /usr/lib/waydroid
 	doins -r "${S}/tools"
 	doins -r "${S}/data"
 	doins "${S}/waydroid.py"
-	fperms +x "/usr/lib/waydroid/waydroid.py"
 	into /usr/bin
 	dosym "/usr/lib/waydroid/waydroid.py" "/usr/bin/waydroid"
 
+	#Adjust permissions
+	fperms +x "/usr/lib/waydroid/waydroid.py"
+	fperms +x "/usr/lib/waydroid/data/scripts/waydroid-net.sh"
+
+	#Desktop
 	domenu "${S}/data/Waydroid.desktop"
 	newicon --size 512 "${S}/data/AppIcon.png" waydroid.png
 
+	#Config files
 	insinto /etc/gbinder.d
 	doins "${S}/gbinder/anbox.conf"
 	insinto /etc
 	doins "${FILESDIR}/gbinder.conf"
 
+	#Systemd service
 	systemd_dounit "${S}/debian/waydroid-container.service"
 }
