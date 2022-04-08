@@ -11,14 +11,15 @@ HOMEPAGE="https://gitlab.freedesktop.org/rncbc/qpwgraph"
 if [[ ${PV} == "9999" ]]; then
 	inherit git-r3
 	EGIT_REPO_URI="https://gitlab.freedesktop.org/rncbc/qpwgraph.git"
+	KEYWORDS=""
 else
 	SRC_URI="https://gitlab.freedesktop.org/rncbc/qpwgraph/-/archive/v${PV}/${PN}-v${PV}.tar.bz2"
 	S="${WORKDIR}/${PN}-v${PV}"
+	KEYWORDS="~amd64 ~x86"
 fi
 
 LICENSE="GPL-2+"
 SLOT="0"
-KEYWORDS="~amd64 ~x86"
 
 IUSE="+alsa +trayicon wayland"
 
