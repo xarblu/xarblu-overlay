@@ -3,19 +3,22 @@
 
 EAPI=7
 
-inherit cmake git-r3
+inherit cmake
 
 DESCRIPTION="Just Yet Another Magic Lamp effect for KWin"
 HOMEPAGE="https://github.com/zzag/kwin-effects-yet-another-magic-lamp"
-EGIT_REPO_URI="https://github.com/zzag/kwin-effects-yet-another-magic-lamp.git"
 
-if [[ $PV != 9999 ]]; then
-	EGIT_BRANCH=Plasma/$PV
+if [[ ${PV} == 9999 ]]; then
+	inherit git-r3
+	EGIT_REPO_URI="https://github.com/zzag/kwin-effects-yet-another-magic-lamp.git"
+	KEYWORDS=""
+else
+	SRC_URI="https://github.com/zzag/${PN}/archive/${PV}.tar.gz -> ${P}.tar.gz"
+	KEYWORDS="~amd64"
 fi
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~amd64"
 
 DEPEND="dev-qt/qtcore:5=
 	kde-plasma/kwin:5=
