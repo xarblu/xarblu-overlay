@@ -8,6 +8,7 @@ EAPI=8
 CRATES="
 	addr2line-0.12.1
 	adler32-1.1.0
+	aho-corasick-0.7.18
 	autocfg-1.0.0
 	backtrace-0.3.49
 	base64-0.13.0
@@ -19,11 +20,10 @@ CRATES="
 	cc-1.0.54
 	cfg-if-0.1.10
 	cfg-if-1.0.0
-	chrono-0.4.19
 	console-0.15.0
 	core-foundation-0.9.3
 	core-foundation-sys-0.8.3
-	dialoguer-0.10.0
+	dialoguer-0.10.1
 	encode_unicode-0.3.6
 	encoding_rs-0.8.23
 	failure-0.1.8
@@ -47,74 +47,72 @@ CRATES="
 	http-body-0.4.0
 	httparse-1.6.0
 	httpdate-1.0.2
-	hyper-0.14.8
+	hyper-0.14.19
 	hyper-tls-0.5.0
 	idna-0.2.0
 	indexmap-1.8.0
-	indicatif-0.15.0
+	indicatif-0.16.2
 	ipnet-2.3.0
 	itoa-0.4.5
 	itoa-1.0.1
 	js-sys-0.3.46
 	lazy_static-1.4.0
 	libc-0.2.119
-	log-0.4.14
+	log-0.4.17
 	matches-0.1.8
-	memchr-2.3.3
+	memchr-2.5.0
 	mime-0.3.16
 	miniz_oxide-0.3.7
-	mio-0.7.7
+	mio-0.8.2
 	miow-0.3.6
 	native-tls-0.2.8
 	ntapi-0.3.6
-	num-integer-0.1.44
-	num-traits-0.2.14
 	num_cpus-1.13.1
-	number_prefix-0.3.0
+	num_threads-0.1.6
+	number_prefix-0.4.0
 	object-0.20.0
 	once_cell-1.5.2
 	openssl-0.10.29
 	openssl-probe-0.1.2
 	openssl-sys-0.9.58
 	percent-encoding-2.1.0
-	pin-project-1.0.3
-	pin-project-internal-1.0.3
 	pin-project-lite-0.2.8
 	pin-utils-0.1.0
 	pkg-config-0.3.17
 	ppv-lite86-0.2.8
-	proc-macro2-1.0.24
+	proc-macro2-1.0.40
 	quote-1.0.7
 	rand-0.7.3
 	rand_chacha-0.2.2
 	rand_core-0.5.1
 	rand_hc-0.2.0
 	redox_syscall-0.1.56
-	regex-1.4.3
-	regex-syntax-0.6.22
+	regex-1.5.6
+	regex-syntax-0.6.26
 	remove_dir_all-0.5.3
-	reqwest-0.11.9
+	reqwest-0.11.11
 	rustc-demangle-0.1.16
 	ryu-1.0.5
 	schannel-0.1.19
 	security-framework-2.3.1
 	security-framework-sys-2.6.1
-	serde-1.0.136
-	serde_derive-1.0.136
-	serde_json-1.0.79
-	serde_urlencoded-0.7.0
-	simplelog-0.11.2
+	serde-1.0.137
+	serde_derive-1.0.137
+	serde_json-1.0.81
+	serde_urlencoded-0.7.1
+	simplelog-0.12.0
 	slab-0.4.2
-	smallvec-1.4.0
+	smallvec-1.8.1
 	socket2-0.3.19
 	socket2-0.4.4
-	syn-1.0.60
+	syn-1.0.98
 	synstructure-0.12.4
 	tempfile-3.1.0
 	termcolor-1.1.2
 	terminal_size-0.1.15
-	time-0.1.44
-	tokio-1.0.1
+	time-0.3.11
+	time-macros-0.2.4
+	tokio-1.19.2
 	tokio-native-tls-0.3.0
 	tokio-stream-0.1.1
 	tokio-util-0.6.0
@@ -123,6 +121,7 @@ CRATES="
 	tracing-core-0.1.17
 	try-lock-0.2.2
 	unicode-bidi-0.3.4
+	unicode-ident-1.0.1
 	unicode-normalization-0.1.12
 	unicode-width-0.1.7
 	unicode-xid-0.2.0
@@ -130,7 +129,7 @@ CRATES="
 	vcpkg-0.2.10
 	want-0.3.0
 	wasi-0.9.0+wasi-snapshot-preview1
-	wasi-0.10.0+wasi-snapshot-preview1
+	wasi-0.11.0+wasi-snapshot-preview1
 	wasm-bindgen-0.2.69
 	wasm-bindgen-backend-0.2.69
 	wasm-bindgen-futures-0.4.19
@@ -142,7 +141,7 @@ CRATES="
 	winapi-i686-pc-windows-gnu-0.4.0
 	winapi-util-0.1.5
 	winapi-x86_64-pc-windows-gnu-0.4.0
-	winreg-0.7.0
+	winreg-0.10.1
 	zeroize-1.5.3
 "
 
@@ -159,9 +158,7 @@ SRC_URI="
 
 S="${WORKDIR}/${PN}-tags-${PV}"
 
-PATCHES="
-	${FILESDIR}/1.7.0-hotfix.1.patch
-	"
+PATCHES=""
 
 # License set may be more restrictive as OR is not respected
 # use cargo-license for a more accurate license picture
