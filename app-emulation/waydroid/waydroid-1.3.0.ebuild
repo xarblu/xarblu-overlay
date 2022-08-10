@@ -21,7 +21,7 @@ fi
 LICENSE="GPL-3"
 SLOT="0"
 
-IUSE="clipboard"
+IUSE="clipboard nftables systemd"
 REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 
 DEPEND="
@@ -39,30 +39,37 @@ RDEPEND="${DEPEND}"
 BDEPEND=""
 
 src_configure() {
+	if use nftables; then
+		sed -i '/LXC_USE_NFT=/ s/false/true/' "${S}/data/scripts/waydroid-net.sh"
+	fi
 	sed -i -e 's:/usr/lib/waydroid/data/AppIcon.png:waydroid:g' "${S}/data/Waydroid.desktop"
 }
 
 src_install() {
 	#Main files
-	python_fix_shebang waydroid.py
-	mv waydroid.py waydroid || die
-	python_doscript waydroid
+	python_newscript waydroid.py waydroid
 	python_domodule tools
 	python_domodule data
 
 	#adjust permissions
-	fperms +x "$(python_get_sitedir)/data/scripts/waydroid-net.sh"
+	fperms +x "$(python_get_sitedir)/waydroid/data/scripts/waydroid-net.sh"
 
 	#Desktop
 	domenu "${S}/data/Waydroid.desktop"
 	newicon --size 512 "${S}/data/AppIcon.png" waydroid.png
 
 	#Config files
-	insinto /etc/gbinder.d
-	doins "${S}/gbinder/anbox.conf"
 	insinto /etc
 	doins "${FILESDIR}/gbinder.conf"
 
 	#Systemd service
-	systemd_dounit "${S}/debian/waydroid-container.service"
+	if use systemd; then
+		systemd_dounit "${S}/systemd/waydroid-container.service"
+	fi
+}
+
+pkg_postinst() {
+	einfo "Waydroid currently doesn't work with AppArmor."
+	einfo "You have to either configure rules yourself or"
+	einfo "disable AppArmor while running the container."
 }
