@@ -9,7 +9,7 @@ DESCRIPTION="Automatically move wireless interface into firewalld zone based on 
 HOMEPAGE="https://github.com/techhazard/iwd-firewalld-zone"
 SRC_URI="https://github.com/techhazard/iwd-firewalld-zone/archive/${PV}.tar.gz -> ${P}.tar.gz"
 
-LICENSE=""
+LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 
