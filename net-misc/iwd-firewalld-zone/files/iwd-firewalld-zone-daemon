@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+
+from gi.repository import GLib
+import dbus
+import dbus.mainloop.glib
+import re
+import sys
+import subprocess
+
+def set_firewalld_zone(net_device):
+    subprocess.call(['iwd-firewalld-zone', net_device])
+
+def properties_changed(interface, changed, invalidated):
+    for name, value in changed.items():
+        if re.match(r"/net/connman/iwd/.*", str(value)):
+            conf_file = value.split('/')[-1].replace('_','.')
+            print('Connected to network with config %s' % conf_file)
+            set_firewalld_zone(net_device)
+
+if __name__ == '__main__':
+    if (len(sys.argv) != 2):
+        print("Usage: %s <device>" % (sys.argv[0]))
+        sys.exit(1)
+
+    net_device = sys.argv[1]
+
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+    bus = dbus.SystemBus()
+
+    bus.add_signal_receiver(properties_changed,
+                            bus_name="net.connman.iwd",
+                            dbus_interface="org.freedesktop.DBus.Properties")
+
+    mainloop = GLib.MainLoop()
+    mainloop.run()

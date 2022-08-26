@@ -1,0 +1,14 @@
+[Unit]
+After=firewalld.service iwd.service
+
+[Service]
+ExecStart=%p %i
+
+CPUQuota=10%
+CPUAccounting=yes
+MemoryAccounting=yes
+MemoryHigh=100M
+MemoryMax=250M
+
+[Install]
+WantedBy=multi-user.target

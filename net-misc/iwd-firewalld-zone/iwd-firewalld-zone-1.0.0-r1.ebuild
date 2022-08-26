@@ -3,7 +3,9 @@
 
 EAPI=8
 
-inherit systemd
+PYTHON_COMPAT=( python3_{9..11} )
+
+inherit systemd python-r1
 
 DESCRIPTION="Automatically move wireless interface into firewalld zone based on setting in relevant iwd network file"
 HOMEPAGE="https://github.com/techhazard/iwd-firewalld-zone"
@@ -17,25 +19,28 @@ DEPEND=""
 RDEPEND="${DEPEND}
 	net-wireless/iwd
 	net-firewall/firewalld
+	dev-python/dbus-python
 "
 BDEPEND=""
 
 PATCHES=( "${FILESDIR}/IWD_DIR-path.patch"
-		  "${FILESDIR}/fix-exec-path.patch"
 		  "${FILESDIR}/fix-get_wanted_zone.patch"
 		  "${FILESDIR}/fix-long-SSID-hexencode.patch" )
 
 src_install() {
 	#Install main script
-	dobin ${S}/bin/${PN}
+	dobin "${S}/bin/${PN}"
 
-	#Install the systemd units
-	systemd_dounit ${S}/systemd/system/${PN}{.path,.target,@.service}
+	#Install the python daemon
+	python_foreach_impl python_doscript "${FILESDIR}/iwd-firewalld-zone-daemon"
+
+	#Install the systemd unit
+	systemd_dounit "${FILESDIR}/iwd-firewalld-zone-daemon@.service"
 }
 
 pkg_postinst() {
 	elog "To enable ${PN} for a interface enable it via"
-	elog "'systemctl enable ${PN}@<INTERFACE_NAME>.service'."
+	elog "'systemctl enable ${PN}-daemon@<INTERFACE_NAME>.service'."
 	elog ""
 	elog "To set a zone for a network add 'FirewalldZone=<ZONE>'"
 	elog "in the corresponding config file in '/var/lib/iwd'."
