@@ -21,6 +21,6 @@ DEPEND=""
 RDEPEND="${DEPEND}
 	dev-python/argcomplete[${PYTHON_USEDEP}]
 	dev-python/packaging[${PYTHON_USEDEP}]
-	dev-ypthon/userpath[${PYTHON_USEDEP}]
+	dev-python/userpath[${PYTHON_USEDEP}]
 "
 BDEPEND=""
