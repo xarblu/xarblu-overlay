@@ -1,0 +1,10 @@
+diff --git a/Makefile b/Makefile
+index 7781c2d..05f5fe1 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,4 +1,4 @@
+-VERSION = 6.45
++VERSION = 6.47
+ PN = profile-sync-daemon
+ 
+ PREFIX ?= /usr
