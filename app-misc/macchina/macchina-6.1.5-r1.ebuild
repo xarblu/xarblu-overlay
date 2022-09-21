@@ -201,7 +201,8 @@ LIBMACCHINA_V="${LIBMACCHINA_V%% *}"
 src_prepare() {
 	#Fix broken package counts
 	pushd "${WORKDIR}/cargo_home/gentoo/libmacchina-${LIBMACCHINA_V}"
-		eapply "${FILESDIR}/${PV}-fix-package-count.patch"
+		eapply "${FILESDIR}/${PV}-flatpak-package-count.patch"
+		eapply "${FILESDIR}/${PV}-portage-package-count.patch"
 	popd
 
 	default

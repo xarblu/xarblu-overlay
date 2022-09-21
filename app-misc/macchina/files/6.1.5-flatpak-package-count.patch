@@ -1,0 +1,37 @@
+diff --git a/src/linux/mod.rs b/src/linux/mod.rs
+index 2ce4122..928ba61 100644
+--- a/src/linux/mod.rs
++++ b/src/linux/mod.rs
+@@ -840,15 +840,24 @@ impl LinuxPackageReadout {
+     /// Returns the number of installed packages for systems
+     /// that have `flatpak` installed.
+     fn count_flatpak(home: &Path) -> Option<usize> {
+-        let global_flatpak_dir = Path::new("/var/lib/flatpak/app");
+-        let user_flatpak_dir = home.join(".local/share/flatpak/app");
+-
+-        match (read_dir(global_flatpak_dir), read_dir(user_flatpak_dir)) {
+-            (Ok(g), Ok(u)) => Some(g.count() + u.count()),
+-            (Ok(g), _) => Some(g.count()),
+-            (_, Ok(u)) => Some(u.count()),
+-            _ => None,
++        let mut total: usize = 0;
++        for install in [Path::new("/var/lib/flatpak"), &home.join(".local/share/flatpak")] {
++            if install.exists() {
++                if install.join("app").exists() {
++                    total += walkdir::WalkDir::new(install.join("app"))
++                                       .min_depth(3).max_depth(3).into_iter().count();
++                }
++                if install.join("runtime").exists() {
++                    total += walkdir::WalkDir::new(install.join("runtime"))
++                                       .min_depth(3).max_depth(3).into_iter().count();
++                }
++            }
+         }
++        if total > 0 {
++            return Some(total);
++        }
++
++        None
+     }
+ 
+     /// Returns the number of installed packages for systems
