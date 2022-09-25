@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>xarblu@protonmail.com</email>
+		<name>Jonas Rakebrandt</name>
+	</maintainer>
+	<use>
+		<flag name="intro-skipper">Build custom jellyfin-web for the intro-skipper plugin.</flag>
+		<flag name="jellyscrub">Setup index.html for the jellyscrub plugin.</flag>
+	</use>
+	<upstream>
+		<remote-id type="github">jellyfin/jellyfin</remote-id>
+		<bugs-to>https://github.com/jellyfin/jellyfin/issues</bugs-to>
+	</upstream>
+</pkgmetadata>
