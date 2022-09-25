@@ -34,7 +34,7 @@ DEPEND="
 RDEPEND="${DEPEND}"
 BDEPEND=""
 
-PATCHES=""
+PATCHES=()
 
 src_configure() {
 	local mycmakeargs=(
