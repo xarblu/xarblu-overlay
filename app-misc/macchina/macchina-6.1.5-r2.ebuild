@@ -203,6 +203,7 @@ src_prepare() {
 	pushd "${WORKDIR}/cargo_home/gentoo/libmacchina-${LIBMACCHINA_V}"
 		eapply "${FILESDIR}/${PV}-flatpak-package-count.patch"
 		eapply "${FILESDIR}/${PV}-portage-package-count.patch"
+		eapply "${FILESDIR}/${PV}-cargo-package-count.patch"
 	popd
 
 	default

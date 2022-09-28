@@ -1,8 +1,40 @@
+From 26d22d28da23cbc2834993b0567fecc157e14b55 Mon Sep 17 00:00:00 2001
+From: Jonas Rakebrandt <xarblu@protonmail.com>
+Date: Tue, 20 Sep 2022 23:42:25 +0200
+Subject: [PATCH] change flatpak package count method
+
+---
+ Cargo.toml       |  1 +
+ src/linux/mod.rs | 38 ++++++++++++++++++++++++++++++--------
+ 2 files changed, 31 insertions(+), 8 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index e91f08c..2bb751b 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -84,6 +84,9 @@ version = "0.1"
+ [target."cfg(target_os = \"linux\")".dependencies.walkdir]
+ version = "2.3.2"
+ 
++[target."cfg(target_os = \"linux\")".dependencies.regex]
++version = "1.6.0"
++
+ [target."cfg(target_os = \"macos\")".dependencies.core-foundation]
+ version = "0.9.3"
+ 
 diff --git a/src/linux/mod.rs b/src/linux/mod.rs
-index 2ce4122..928ba61 100644
+index 2ce4122..9cf5bda 100644
 --- a/src/linux/mod.rs
 +++ b/src/linux/mod.rs
-@@ -840,15 +840,24 @@ impl LinuxPackageReadout {
+@@ -6,6 +6,7 @@ use crate::extra::path_extension;
+ use crate::shared;
+ use crate::traits::*;
+ use itertools::Itertools;
++use regex::Regex;
+ use std::fs;
+ use std::fs::read_dir;
+ use std::fs::File;
+@@ -840,15 +841,36 @@ impl LinuxPackageReadout {
      /// Returns the number of installed packages for systems
      /// that have `flatpak` installed.
      fn count_flatpak(home: &Path) -> Option<usize> {
@@ -15,21 +47,33 @@ index 2ce4122..928ba61 100644
 -            (_, Ok(u)) => Some(u.count()),
 -            _ => None,
 +        let mut total: usize = 0;
-+        for install in [Path::new("/var/lib/flatpak"), &home.join(".local/share/flatpak")] {
++        let filter = Regex::new(r".*\.(Locale|Debug)").unwrap();
++        for install in [
++            Path::new("/var/lib/flatpak"),
++            &home.join(".local/share/flatpak"),
++        ] {
 +            if install.exists() {
-+                if install.join("app").exists() {
-+                    total += walkdir::WalkDir::new(install.join("app"))
-+                                       .min_depth(3).max_depth(3).into_iter().count();
-+                }
-+                if install.join("runtime").exists() {
-+                    total += walkdir::WalkDir::new(install.join("runtime"))
-+                                       .min_depth(3).max_depth(3).into_iter().count();
++                for dir in ["app", "runtime"] {
++                    if install.join(dir).exists() {
++                        for package in walkdir::WalkDir::new(&install.join(dir))
++                            .min_depth(1)
++                            .max_depth(1)
++                            .into_iter()
++                            .filter_entry(|e| !filter.is_match(&e.path().to_string_lossy()))
++                        {
++                            total += walkdir::WalkDir::new(package.ok()?.path())
++                                .min_depth(2)
++                                .max_depth(2)
++                                .into_iter()
++                                .count();
++                        }
++                    }
 +                }
 +            }
-         }
++        }
 +        if total > 0 {
 +            return Some(total);
-+        }
+         }
 +
 +        None
      }

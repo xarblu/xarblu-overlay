@@ -1,0 +1,19 @@
+diff --git a/src/shared/mod.rs b/src/shared/mod.rs
+index 178522a..768900b 100644
+--- a/src/shared/mod.rs
++++ b/src/shared/mod.rs
+@@ -321,10 +321,10 @@ pub(crate) fn count_cargo() -> Option<usize> {
+     if let Ok(cargo_home) = home::cargo_home() {
+         let bin = cargo_home.join("bin");
+         if let Ok(read_dir) = read_dir(bin) {
+-            match read_dir.count() {
+-                0 => None,
+-                pkgs => Some(pkgs),
+-            };
++            let pkgs = read_dir.count();
++            if pkgs > 0 {
++                return Some(pkgs)
++            }
+         }
+     }
+ 

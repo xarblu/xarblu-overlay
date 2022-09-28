@@ -1,15 +1,28 @@
+From 41dd8ec97de76b4cd49eea534741000ce7298a20 Mon Sep 17 00:00:00 2001
+From: xarblu <xarblu@protonmail.com>
+Date: Thu, 22 Sep 2022 12:35:41 +0200
+Subject: [PATCH] fix portage package count (#124)
+
+---
+ src/linux/mod.rs | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
 diff --git a/src/linux/mod.rs b/src/linux/mod.rs
-index 2ce4122..e230971 100644
+index 2ce4122..8225d56 100644
 --- a/src/linux/mod.rs
 +++ b/src/linux/mod.rs
-@@ -758,7 +758,9 @@ impl LinuxPackageReadout {
+@@ -758,7 +758,13 @@ impl LinuxPackageReadout {
      fn count_portage() -> Option<usize> {
          let pkg_dir = Path::new("/var/db/pkg");
          if pkg_dir.exists() {
 -            return Some(walkdir::WalkDir::new(pkg_dir).into_iter().count());
-+            return Some(walkdir::WalkDir::new(pkg_dir)
-+                        .min_depth(2).max_depth(2)
-+                        .into_iter().count());
++            return Some(
++                walkdir::WalkDir::new(pkg_dir)
++                    .min_depth(2)
++                    .max_depth(2)
++                    .into_iter()
++                    .count(),
++            );
          }
  
          None
