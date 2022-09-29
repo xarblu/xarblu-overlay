@@ -31,6 +31,7 @@ UNIPATCH_LIST_DEFAULT=""
 
 pkg_postinst() {
 	elog "MICROCODES"
-	elog "Use xanmod-sources with microcodes"
+	elog "xanmod-sources should be used with updated microcodes"
 	elog "Read https://wiki.gentoo.org/wiki/Microcode"
+	kernel-2_pkg_postinst
 }
