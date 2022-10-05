@@ -9,4 +9,5 @@
 		<flag name="display-mirroring">Enable display-mirroring</flag>
 		<flag name="systray">Enable systray via <pkg>dev-python/pystray</pkg></flag>
 		<flag name="shaders">Install the default shader pack</flag>
+	</use>
 </pkgmetadata>
