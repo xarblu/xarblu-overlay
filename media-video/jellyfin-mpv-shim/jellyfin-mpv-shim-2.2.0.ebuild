@@ -37,7 +37,7 @@ RDEPEND="${DEPEND}"
 BDEPEND=""
 
 shaders_symlink() {
-	ln -sv "/usr/share/mpv-shim-default-shaders" \
+	ln -sv "/usr/share/jellyfin-mpv-shim-default-shader-pack" \
 		"${ED}/$(python_get_sitedir)/jellyfin_mpv_shim/default_shader_pack" || die
 }
 
