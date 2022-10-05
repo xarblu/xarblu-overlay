@@ -19,7 +19,7 @@ DEPEND="
 	dev-python/six[${PYTHON_USEDEP}]
 	dev-python/python-xlib[${PYTHON_USEDEP}]
 	dev-python/pygobject[${PYTHON_USEDEP}]
-	dev-libs/libappindicator[${PYTHON_USEDEP}]
+	dev-libs/libappindicator
 "
 RDEPEND="${DEPEND}"
 BDEPEND="
