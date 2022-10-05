@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>xarblu@protonmail.com</email>
+		<name>Jonas Rakebrandt</name>
+	</maintainer>
+	<use>
+		<flag name="display-mirroring">Enable display-mirroring</flag>
+		<flag name="systray">Enable systray via <pkg>dev-python/pystray</pkg></flag>
+		<flag name="systray">Install the default shader pack</pkg></flag>
+</pkgmetadata>
