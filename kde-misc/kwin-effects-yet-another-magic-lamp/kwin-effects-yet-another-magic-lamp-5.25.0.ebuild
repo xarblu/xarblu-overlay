@@ -10,7 +10,7 @@ HOMEPAGE="https://github.com/zzag/kwin-effects-yet-another-magic-lamp"
 
 if [[ ${PV} == 9999 ]]; then
 	inherit git-r3
-	EGIT_REPO_URI="https://github.com/zzag/kwin-effects-yet-another-magic-lamp.git"
+	EGIT_REPO_URI="https://github.com/zzag/${PN}.git"
 	KEYWORDS=""
 else
 	SRC_URI="https://github.com/zzag/${PN}/archive/${PV}.tar.gz -> ${P}.tar.gz"
@@ -20,14 +20,22 @@ fi
 LICENSE="GPL-2"
 SLOT="0"
 
-DEPEND="dev-qt/qtcore:5=
+DEPEND="
+	dev-qt/qtcore:5=
+	dev-qt/qtdbus:5=
+	dev-qt/qtgui:5=
 	kde-plasma/kwin:5=
 	kde-frameworks/kconfig:5=
+	kde-frameworks/kconfigwidgets:5=
 	kde-frameworks/kcoreaddons:5=
-	kde-frameworks/kwindowsystem:5="
+	kde-frameworks/kwindowsystem:5=
+	media-libs/libepoxy
+"
 RDEPEND="${DEPEND}"
-BDEPEND="dev-util/cmake
-	kde-frameworks/extra-cmake-modules:5="
+BDEPEND="
+	dev-util/cmake
+	kde-frameworks/extra-cmake-modules:5=
+"
 
 src_configure() {
 	local mycmakeargs=(
