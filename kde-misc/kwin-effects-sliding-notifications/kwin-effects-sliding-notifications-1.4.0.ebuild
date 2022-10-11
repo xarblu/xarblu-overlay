@@ -8,7 +8,7 @@ inherit cmake
 DESCRIPTION="Sliding animation for notification windows"
 HOMEPAGE="https://github.com/zzag/kwin-effects-sliding-notifications"
 
-KWINEFFECTS_V="*"
+KWINEFFECTS_V="5.26*"
 
 if [[ ${PV} == 9999 ]]; then
 	inherit git-r3

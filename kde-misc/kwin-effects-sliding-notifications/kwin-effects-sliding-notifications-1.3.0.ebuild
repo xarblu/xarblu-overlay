@@ -8,19 +8,24 @@ inherit cmake
 DESCRIPTION="Sliding animation for notification windows"
 HOMEPAGE="https://github.com/zzag/kwin-effects-sliding-notifications"
 
+KWINEFFECTS_V="5.25*"
+
 if [[ ${PV} == 9999 ]]; then
 	inherit git-r3
 	EGIT_REPO_URI="https://github.com/zzag/${PN}.git"
 	KEYWORDS=""
+	KWIN="kde-plasma/kwin"
 else
 	SRC_URI="https://github.com/zzag/${PN}/archive/${PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="~amd64"
+	KWIN="=kde-plasma/kwin-${KWINEFFECTS_V}:5="
 fi
 
 LICENSE="GPL-3 MIT"
 SLOT="0"
 
 DEPEND="
+	${KWIN}
 	dev-qt/qtcore:5=
 	dev-qt/qtgui:5=
 	kde-plasma/kwin:5=
