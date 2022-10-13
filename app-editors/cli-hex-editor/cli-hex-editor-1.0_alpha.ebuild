@@ -6,7 +6,7 @@ EAPI=8
 inherit toolchain-funcs
 
 DESCRIPTION="A rudimentary CLI hex editor programmed in C, probably not memory safe"
-HOMEPAGE="https://github.com/1UPNuke/CLIHexEditor"
+HOMEPAGE="https://github.com/1UPNuke/cli-hex-editor"
 
 #Handle version suffixes
 case ${PV} in
@@ -23,10 +23,10 @@ esac
 
 if [[ ${MY_PV} == 9999 ]]; then
 	inherit git-r3
-	EGIT_REPO_URI="https://github.com/1UPNuke/CLIHexEditor.git"
+	EGIT_REPO_URI="https://github.com/1UPNuke/${PN}.git"
 	KEYWORDS=""
 else
-	SRC_URI="https://github.com/1UPNuke/CLIHexEditor/archive/${MY_PV}.tar.gz -> ${P}.tar.gz"
+	SRC_URI="https://github.com/1UPNuke/${PN}/archive/${MY_PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="~amd64 ~x86"
 	S="${WORKDIR}/${PN}-${MY_PV}"
 fi
