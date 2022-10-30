@@ -19,15 +19,23 @@ DEPEND="
 RDEPEND="${DEPEND}"
 BDEPEND=""
 
+src_prepare() {
+	default
+
+	# modify package.path so lua finds the shared libs
+	MPV_INSTALL_DIR="/usr/$(get_libdir)/mpv/${PN}"
+	sed -i -e "13s|$| .. \';\' .. \'${MPV_INSTALL_DIR}/scripts\' .. \'/?.lua\'|" scripts/${PN}.lua
+}
+
 src_install() {
 	MPV_INSTALL_DIR="/usr/$(get_libdir)/mpv/${PN}"
 	for dir in {scripts,fonts}; do
 		pushd ${dir}
 			insinto "${MPV_INSTALL_DIR}/${dir}"
-			doins *
+			doins -r *
 			if use autoload; then
 				for file in *; do
-					dosym "${MPV_INSTALL_DIR}/${dir}/${file}" "/etc/mpv/${dir}/${file}"
+					dosym "../../..${MPV_INSTALL_DIR}/${dir}/${file}" "/etc/mpv/${dir}/${file}"
 				done
 			fi
 		popd
