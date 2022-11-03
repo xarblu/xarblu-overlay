@@ -24,7 +24,7 @@ src_prepare() {
 
 	# modify package.path so lua finds the shared libs
 	MPV_INSTALL_DIR="/usr/$(get_libdir)/mpv/${PN}"
-	sed -i -e "13s|$| .. \';\' .. \'${MPV_INSTALL_DIR}/scripts\' .. \'/?.lua\'|" scripts/${PN}.lua
+	sed -i -e "13s|$| .. \';\' .. \'${MPV_INSTALL_DIR}/scripts\' .. \'/?.lua\'|" scripts/${PN}.lua || die "failed modifying package.path"
 }
 
 src_install() {
