@@ -66,7 +66,7 @@ src_compile() {
 	#Build custom jellyfin-web for intro-skipper
 	if use intro-skipper; then
 		pushd ${WORKDIR}/jellyfin-web-${PV}
-		npm install
+		npm install || die "npm failed"
 		popd
 	fi
 }
@@ -74,8 +74,8 @@ src_compile() {
 src_install() {
 	#Install custom jellyfin-web for intro-skipper
 	if use intro-skipper; then
-		rm -r ${S}/jellyfin-web/*
-		mv ${WORKDIR}/jellyfin-web-${PV}/dist/* ${S}/jellyfin-web/
+		rm -r ${S}/jellyfin-web/* || die "switching to modded jellyfin-web failed"
+		mv ${WORKDIR}/jellyfin-web-${PV}/dist/* ${S}/jellyfin-web/ || die "switching to modded jellyfin-web failed"
 	fi
 
 	#Add jellyscrub plugin to index.html
