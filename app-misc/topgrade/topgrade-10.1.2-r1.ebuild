@@ -278,5 +278,5 @@ KEYWORDS="~amd64"
 
 src_install() {
 	cargo_src_install
-	einstalldocs
+	doman ${PN}.8
 }
