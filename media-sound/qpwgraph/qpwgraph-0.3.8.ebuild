@@ -21,18 +21,32 @@ fi
 LICENSE="GPL-2+"
 SLOT="0"
 
-IUSE="+alsa +trayicon wayland"
+IUSE="+alsa qt6 +trayicon wayland"
 
 DEPEND="
-	dev-qt/qtcore:5
-	dev-qt/qtgui:5
-	dev-qt/qtwidgets:5
-	dev-qt/qtxml:5
+	!qt6? (
+		dev-qt/qtcore:5=
+		dev-qt/qtgui:5=
+		dev-qt/qtwidgets:5=
+		dev-qt/qtxml:5=
+		dev-qt/qtsvg:5=
+	)
+	qt6? (
+		dev-qt/qtbase:6=[gui,widgets,xml]
+		dev-qt/qtsvg:6=
+	)
 	media-video/pipewire
-	trayicon? ( dev-qt/qtnetwork:5 )
+	trayicon? (
+		!qt6? (
+			dev-qt/qtnetwork:5=
+		)
+		qt6? (
+			dev-qt/qtnetwork:6=
+		)
+	)
 "
 RDEPEND="${DEPEND}"
-BDEPEND=""
+BDEPEND="${DEPEND}"
 
 PATCHES=()
 
@@ -41,7 +55,7 @@ src_configure() {
 		"-DCONFIG_ALSA_MIDI=$(usex alsa)"
 		"-DCONFIG_SYSTEM_TRAY=$(usex trayicon)"
 		"-DCONFIG_WAYLAND=$(usex wayland)"
-		"-DCONFIG_QT6=no"
+		"-DCONFIG_QT6=$(usex qt6)"
 	)
 
 	cmake_src_configure
