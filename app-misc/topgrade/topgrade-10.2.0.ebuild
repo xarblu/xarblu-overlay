@@ -4,14 +4,14 @@
 EAPI=8
 
 CRATES="
+	addr2line-0.17.0
 	adler-1.0.2
 	ahash-0.7.6
-	aho-corasick-0.7.19
+	aho-corasick-0.7.20
 	android_system_properties-0.1.5
-	anyhow-1.0.66
 	async-broadcast-0.4.1
 	async-channel-1.7.1
-	async-executor-1.4.1
+	async-executor-1.5.0
 	async-io-1.10.0
 	async-lock-2.6.0
 	async-recursion-0.3.2
@@ -19,29 +19,33 @@ CRATES="
 	async-trait-0.1.58
 	atty-0.2.14
 	autocfg-1.1.0
+	backtrace-0.3.66
 	base64-0.13.1
 	bitflags-1.3.2
 	block-0.1.6
 	bumpalo-3.11.1
 	byteorder-1.4.3
-	bytes-1.2.1
+	bytes-1.3.0
 	cache-padded-1.2.0
-	cc-1.0.74
+	cc-1.0.77
 	cfg-if-1.0.0
-	chrono-0.4.22
+	chrono-0.4.23
 	clap-3.1.18
 	clap_derive-3.1.18
 	clap_lex-0.2.4
 	codespan-reporting-0.11.1
+	color-eyre-0.6.2
+	color-spantrace-0.2.0
 	concurrent-queue-1.2.4
+	concurrent-queue-2.0.0
 	console-0.15.2
 	core-foundation-sys-0.8.3
 	crc32fast-1.3.2
-	crossbeam-utils-0.8.12
-	cxx-1.0.80
-	cxx-build-1.0.80
-	cxxbridge-flags-1.0.80
-	cxxbridge-macro-1.0.80
+	crossbeam-utils-0.8.14
+	cxx-1.0.82
+	cxx-build-1.0.82
+	cxxbridge-flags-1.0.82
+	cxxbridge-macro-1.0.82
 	derivative-2.2.0
 	directories-4.0.1
 	dirs-4.0.0
@@ -54,8 +58,8 @@ CRATES="
 	encoding_rs-0.8.31
 	enumflags2-0.7.5
 	enumflags2_derive-0.7.4
-	env_logger-0.7.1
 	event-listener-2.5.3
+	eyre-0.6.8
 	fastrand-1.8.0
 	filetime-0.2.18
 	flate2-1.0.24
@@ -72,6 +76,7 @@ CRATES="
 	futures-task-0.3.25
 	futures-util-0.3.25
 	getrandom-0.2.8
+	gimli-0.26.2
 	glob-0.3.0
 	h2-0.3.12
 	hashbrown-0.12.3
@@ -84,16 +89,16 @@ CRATES="
 	http-body-0.4.5
 	httparse-1.8.0
 	httpdate-1.0.2
-	humantime-1.3.0
-	hyper-0.14.22
-	hyper-rustls-0.23.0
+	hyper-0.14.23
+	hyper-rustls-0.23.1
 	iana-time-zone-0.1.53
 	iana-time-zone-haiku-0.1.1
 	idna-0.3.0
-	indexmap-1.9.1
+	indenter-0.3.3
+	indexmap-1.9.2
 	indicatif-0.16.2
 	instant-0.1.12
-	ipnet-2.5.0
+	ipnet-2.5.1
 	itoa-1.0.4
 	js-sys-0.3.60
 	lazy_static-1.4.0
@@ -103,6 +108,7 @@ CRATES="
 	log-0.4.17
 	mac-notification-sys-0.5.6
 	malloc_buf-0.0.6
+	matchers-0.1.0
 	memchr-2.5.0
 	memoffset-0.6.5
 	mime-0.3.16
@@ -113,18 +119,21 @@ CRATES="
 	nix-0.24.2
 	notify-rust-4.5.10
 	ntapi-0.3.7
+	nu-ansi-term-0.46.0
 	num-integer-0.1.45
 	num-traits-0.2.15
-	num_cpus-1.13.1
-	num_threads-0.1.6
+	num_cpus-1.14.0
 	number_prefix-0.4.0
 	objc-0.2.7
 	objc-foundation-0.1.1
 	objc_id-0.1.1
+	object-0.29.0
 	once_cell-1.16.0
 	ordered-multimap-0.4.3
 	ordered-stream-0.0.1
-	os_str_bytes-6.3.1
+	os_str_bytes-6.4.1
+	overload-0.1.1
+	owo-colors-3.5.0
 	parking-2.0.0
 	parking_lot-0.12.1
 	parking_lot_core-0.9.4
@@ -133,13 +142,11 @@ CRATES="
 	pin-project-lite-0.2.9
 	pin-utils-0.1.0
 	polling-2.4.0
-	ppv-lite86-0.2.16
-	pretty_env_logger-0.4.0
+	ppv-lite86-0.2.17
 	proc-macro-crate-1.2.1
 	proc-macro-error-1.0.4
 	proc-macro-error-attr-1.0.4
 	proc-macro2-1.0.47
-	quick-error-1.2.3
 	quick-xml-0.22.0
 	quick-xml-0.23.1
 	quote-1.0.21
@@ -149,11 +156,13 @@ CRATES="
 	redox_syscall-0.2.16
 	redox_users-0.4.3
 	regex-1.5.6
-	regex-syntax-0.6.27
+	regex-automata-0.1.10
+	regex-syntax-0.6.28
 	remove_dir_all-0.5.3
-	reqwest-0.11.12
+	reqwest-0.11.13
 	ring-0.16.20
 	rust-ini-0.18.0
+	rustc-demangle-0.1.21
 	rustls-0.20.7
 	rustls-pemfile-1.0.1
 	rustversion-1.0.9
@@ -166,11 +175,12 @@ CRATES="
 	semver-1.0.14
 	serde-1.0.147
 	serde_derive-1.0.147
-	serde_json-1.0.87
+	serde_json-1.0.89
 	serde_repr-0.1.9
 	serde_urlencoded-0.7.1
 	sha1-0.6.1
 	sha1_smol-1.0.0
+	sharded-slab-0.1.4
 	shell-words-1.1.0
 	shellexpand-2.1.2
 	signal-hook-registry-1.4.0
@@ -185,19 +195,19 @@ CRATES="
 	strum_macros-0.22.0
 	strum_macros-0.24.3
 	syn-1.0.103
-	sys-info-0.9.1
 	tar-0.4.38
 	tauri-winrt-notification-0.1.0
 	tempfile-3.2.0
 	termcolor-1.1.3
 	terminal_size-0.1.17
-	textwrap-0.15.1
+	textwrap-0.15.2
 	thiserror-1.0.37
 	thiserror-impl-1.0.37
+	thread_local-1.1.4
 	time-0.1.44
-	time-0.3.16
+	time-0.3.17
 	time-core-0.1.0
-	time-macros-0.2.5
+	time-macros-0.2.6
 	tinyvec-1.6.0
 	tinyvec_macros-0.1.0
 	tokio-1.5.1
@@ -208,6 +218,9 @@ CRATES="
 	tracing-0.1.37
 	tracing-attributes-0.1.23
 	tracing-core-0.1.30
+	tracing-error-0.2.0
+	tracing-log-0.1.3
+	tracing-subscriber-0.3.16
 	try-lock-0.2.3
 	uds_windows-1.0.2
 	unicode-bidi-0.3.8
@@ -217,6 +230,7 @@ CRATES="
 	unicode-width-0.1.10
 	untrusted-0.7.1
 	url-2.3.1
+	valuable-0.1.0
 	version_check-0.9.4
 	waker-fn-1.1.0
 	walkdir-2.3.2
@@ -257,12 +271,11 @@ CRATES="
 	xattr-0.2.3
 	zbus-2.3.2
 	zbus_macros-2.3.2
-	zbus_names-2.2.0
+	zbus_names-2.3.0
 	zip-0.6.3
-	zvariant-3.7.1
-	zvariant_derive-3.7.1
+	zvariant-3.8.0
+	zvariant_derive-3.8.0
 "
-
 inherit cargo
 
 DESCRIPTION="Upgrade all the things"
