@@ -10,13 +10,13 @@ CRATES="
 	aho-corasick-0.7.20
 	android_system_properties-0.1.5
 	async-broadcast-0.4.1
-	async-channel-1.7.1
+	async-channel-1.8.0
 	async-executor-1.5.0
-	async-io-1.10.0
+	async-io-1.12.0
 	async-lock-2.6.0
 	async-recursion-0.3.2
 	async-task-4.3.0
-	async-trait-0.1.58
+	async-trait-0.1.59
 	atty-0.2.14
 	autocfg-1.1.0
 	backtrace-0.3.66
@@ -26,17 +26,17 @@ CRATES="
 	bumpalo-3.11.1
 	byteorder-1.4.3
 	bytes-1.3.0
-	cache-padded-1.2.0
 	cc-1.0.77
 	cfg-if-1.0.0
 	chrono-0.4.23
 	clap-3.1.18
+	clap_complete-3.1.4
 	clap_derive-3.1.18
 	clap_lex-0.2.4
+	clap_mangen-0.1.7
 	codespan-reporting-0.11.1
 	color-eyre-0.6.2
 	color-spantrace-0.2.0
-	concurrent-queue-1.2.4
 	concurrent-queue-2.0.0
 	console-0.15.2
 	core-foundation-sys-0.8.3
@@ -62,7 +62,7 @@ CRATES="
 	eyre-0.6.8
 	fastrand-1.8.0
 	filetime-0.2.18
-	flate2-1.0.24
+	flate2-1.0.25
 	fnv-1.0.7
 	form_urlencoded-1.1.0
 	futures-0.3.25
@@ -113,6 +113,7 @@ CRATES="
 	memoffset-0.6.5
 	mime-0.3.16
 	miniz_oxide-0.5.4
+	miniz_oxide-0.6.2
 	mio-0.7.14
 	miow-0.3.7
 	nix-0.23.1
@@ -136,12 +137,12 @@ CRATES="
 	owo-colors-3.5.0
 	parking-2.0.0
 	parking_lot-0.12.1
-	parking_lot_core-0.9.4
+	parking_lot_core-0.9.5
 	parselnk-0.1.1
 	percent-encoding-2.2.0
 	pin-project-lite-0.2.9
 	pin-utils-0.1.0
-	polling-2.4.0
+	polling-2.5.1
 	ppv-lite86-0.2.17
 	proc-macro-crate-1.2.1
 	proc-macro-error-1.0.4
@@ -161,6 +162,7 @@ CRATES="
 	remove_dir_all-0.5.3
 	reqwest-0.11.13
 	ring-0.16.20
+	roff-0.2.1
 	rust-ini-0.18.0
 	rustc-demangle-0.1.21
 	rustls-0.20.7
@@ -173,8 +175,8 @@ CRATES="
 	sct-0.7.0
 	self_update-0.30.0
 	semver-1.0.14
-	serde-1.0.147
-	serde_derive-1.0.147
+	serde-1.0.148
+	serde_derive-1.0.148
 	serde_json-1.0.89
 	serde_repr-0.1.9
 	serde_urlencoded-0.7.1
@@ -194,7 +196,7 @@ CRATES="
 	strum-0.24.1
 	strum_macros-0.22.0
 	strum_macros-0.24.3
-	syn-1.0.103
+	syn-1.0.104
 	tar-0.4.38
 	tauri-winrt-notification-0.1.0
 	tempfile-3.2.0
@@ -204,7 +206,7 @@ CRATES="
 	thiserror-1.0.37
 	thiserror-impl-1.0.37
 	thread_local-1.1.4
-	time-0.1.44
+	time-0.1.45
 	time-0.3.17
 	time-core-0.1.0
 	time-macros-0.2.6
@@ -276,7 +278,8 @@ CRATES="
 	zvariant-3.8.0
 	zvariant_derive-3.8.0
 "
-inherit cargo
+
+inherit cargo bash-completion-r1
 
 DESCRIPTION="Upgrade all the things"
 HOMEPAGE="https://github.com/topgrade-rs/topgrade"
@@ -291,5 +294,25 @@ KEYWORDS="~amd64"
 
 src_install() {
 	cargo_src_install
-	doman ${PN}.8
+
+	# Shell completions
+	mkdir -p ${S}/completions
+
+	# bash
+	${ED}/usr/bin/topgrade --gen-completion bash > ${S}/completions/${PN}.bash
+	newbashcomp ${S}/completions/${PN}.bash ${PN}
+
+	# zsh
+	${ED}/usr/bin/topgrade --gen-completion zsh > ${S}/completions/_${PN}
+	insinto /usr/share/zsh/site-functions
+	doins ${S}/completions/_${PN}
+
+	# fish
+	${ED}/usr/bin/topgrade --gen-completion fish > ${S}/completions/${PN}.fish
+	insinto /usr/share/fish/vendor_completions.d
+	doins ${S}/completions/${PN}.fish
+
+	# manpage
+	${ED}/usr/bin/topgrade --gen-manpage > ${S}/completions/${PN}.8
+	doman ${S}/completions/${PN}.8
 }
