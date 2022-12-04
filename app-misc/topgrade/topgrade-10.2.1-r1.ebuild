@@ -313,6 +313,6 @@ src_install() {
 	doins ${S}/completions/${PN}.fish
 
 	# manpage
-	${ED}/usr/bin/topgrade --gen-manpage > ${S}/completions/${PN}.8
-	doman ${S}/completions/${PN}.8
+	${ED}/usr/bin/topgrade --gen-manpage > ${S}/completions/${PN}.1
+	doman ${S}/completions/${PN}.1
 }
