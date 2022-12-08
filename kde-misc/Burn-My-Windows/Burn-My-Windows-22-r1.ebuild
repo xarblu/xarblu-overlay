@@ -13,6 +13,7 @@ KEYWORDS="~amd64 ~x86"
 
 DEPEND="
 	kde-plasma/kwin:5=
+	kde-frameworks/kwidgetsaddons:5=[designer]
 "
 RDEPEND="${DEPEND}"
 BDEPEND="
