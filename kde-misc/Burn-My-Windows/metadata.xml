@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>xarblu@protonmail.com</email>
+		<name>Jonas Rakebrandt</name>
+	</maintainer>
+	<use>
+		<flag name="doom">Melt your windows</flag>
+		<flag name="energize-a">Beam your windows away</flag>
+		<flag name="energize-b">Using different transporter technology results in an alternative visual effect</flag>
+		<flag name="fire">The classic effect inspired by Compiz</flag>
+		<flag name="glide">Fade the window to transparency with subtle 3D effects</flag>
+		<flag name="hexagon">With glowing lines and hexagon-shaped tiles, this effect looks very sci-fi</flag>
+		<flag name="incinerate">A less snappy but definitely more fancy take on the fire effect</flag>
+		<flag name="pixelate">Pixelate the window and randomly hide the pixels</flag>
+		<flag name="pixel-wheel">Pixelate the window and hide the pixels in a wheel-like fashion</flag>
+		<flag name="pixel-wipe">Pixelate the window and hide the pixels radially, starting from the pointer position</flag>
+		<flag name="tv">Make windows close like turning off a TV</flag>
+		<flag name="wisps">Let your windows be carried away to the realm of dreams by these little fairies</flag>
+	</use>
+</pkgmetadata>
