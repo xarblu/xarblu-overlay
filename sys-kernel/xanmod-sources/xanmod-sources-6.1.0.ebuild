@@ -12,7 +12,10 @@ K_NODRYRUN="1" # fails on 2910_bfp-mark-get-entry-ip-as--maybe-unused.patch
 
 IUSE="extra-patches"
 
-EXTRA_PATCHES="${FILESDIR}/6.1.0-drm-i915-improve-the-catch-all-evict-to-handle-lock-contention.patch"
+EXTRA_PATCHES="
+	${FILESDIR}/6.1.0-drm-i915-improve-the-catch-all-evict-to-handle-lock-contention.patch
+	${FILESDIR}/6.1.0-hid-nintendo-faceswap.patch
+"
 
 inherit kernel-2
 detect_version
