@@ -5,9 +5,4 @@
 		<email>xarblu@protonmail.com</email>
 		<name>Jonas Rakebrandt</name>
 	</maintainer>
-	<use>
-		<flag name="fish-completion">
-			Enable fish completion support.
-		</flag>
-	</use>
 </pkgmetadata>
