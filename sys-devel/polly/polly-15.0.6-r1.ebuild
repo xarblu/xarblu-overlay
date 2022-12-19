@@ -15,12 +15,11 @@ KEYWORDS="~amd64"
 IUSE="test"
 RESTRICT="!test? ( test )"
 
-DEPEND="
-	sys-devel/llvm:${LLVM_MAJOR}
-"
-RDEPEND="
-	${DEPEND}
-"
+# Pretty sure this standalone build doesn't depend on llvm
+# being installed so I removed it for now because else
+# it'll cause circular dependencies
+DEPEND=""
+RDEPEND=""
 BDEPEND="
 	test? (
 		>=dev-util/cmake-3.16
@@ -42,13 +41,13 @@ pkg_setup() {
 }
 
 src_configure() {
+	# not defining LLVM_MAIN_SRC_DIR causes standalone build
 	local mycmakeargs=(
 		-DBUILD_SHARED_LIBS=OFF
 		-DLLVM_LINK_LLVM_DYLIB=ON
 		-DLLVM_POLLY_LINK_INTO_TOOLS=OFF
 		-DLLVM_INCLUDE_TESTS=$(usex test)
 		-DCMAKE_INSTALL_PREFIX="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}"
-		-DCMAKE_PREFIX_PATH="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)/cmake/llvm"
 	)
 	use test && mycmakeargs+=(
 		-DLLVM_BUILD_TESTS=ON
