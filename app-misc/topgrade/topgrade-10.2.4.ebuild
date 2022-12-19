@@ -42,10 +42,10 @@ CRATES="
 	core-foundation-sys-0.8.3
 	crc32fast-1.3.2
 	crossbeam-utils-0.8.14
-	cxx-1.0.82
-	cxx-build-1.0.82
-	cxxbridge-flags-1.0.82
-	cxxbridge-macro-1.0.82
+	cxx-1.0.83
+	cxx-build-1.0.83
+	cxxbridge-flags-1.0.83
+	cxxbridge-macro-1.0.83
 	derivative-2.2.0
 	directories-4.0.1
 	dirs-4.0.0
@@ -78,7 +78,7 @@ CRATES="
 	getrandom-0.2.8
 	gimli-0.26.2
 	glob-0.3.0
-	h2-0.3.12
+	h2-0.3.15
 	hashbrown-0.12.3
 	heck-0.3.3
 	heck-0.4.0
@@ -102,7 +102,7 @@ CRATES="
 	itoa-1.0.4
 	js-sys-0.3.60
 	lazy_static-1.4.0
-	libc-0.2.137
+	libc-0.2.138
 	link-cplusplus-1.0.7
 	lock_api-0.4.9
 	log-0.4.17
@@ -116,8 +116,8 @@ CRATES="
 	miniz_oxide-0.6.2
 	mio-0.7.14
 	miow-0.3.7
-	nix-0.23.1
-	nix-0.24.2
+	nix-0.23.2
+	nix-0.24.3
 	notify-rust-4.5.10
 	ntapi-0.3.7
 	nu-ansi-term-0.46.0
@@ -175,8 +175,8 @@ CRATES="
 	sct-0.7.0
 	self_update-0.30.0
 	semver-1.0.14
-	serde-1.0.148
-	serde_derive-1.0.148
+	serde-1.0.149
+	serde_derive-1.0.149
 	serde_json-1.0.89
 	serde_repr-0.1.9
 	serde_urlencoded-0.7.1
@@ -196,7 +196,7 @@ CRATES="
 	strum-0.24.1
 	strum_macros-0.22.0
 	strum_macros-0.24.3
-	syn-1.0.104
+	syn-1.0.105
 	tar-0.4.38
 	tauri-winrt-notification-0.1.0
 	tempfile-3.2.0
@@ -212,9 +212,9 @@ CRATES="
 	time-macros-0.2.6
 	tinyvec-1.6.0
 	tinyvec_macros-0.1.0
-	tokio-1.5.1
+	tokio-1.8.5
 	tokio-rustls-0.23.4
-	tokio-util-0.6.9
+	tokio-util-0.7.2
 	toml-0.5.9
 	tower-service-0.3.2
 	tracing-0.1.37
@@ -273,10 +273,10 @@ CRATES="
 	xattr-0.2.3
 	zbus-2.3.2
 	zbus_macros-2.3.2
-	zbus_names-2.3.0
+	zbus_names-2.4.0
 	zip-0.6.3
-	zvariant-3.8.0
-	zvariant_derive-3.8.0
+	zvariant-3.9.0
+	zvariant_derive-3.9.0
 "
 
 inherit cargo bash-completion-r1
