@@ -4,39 +4,39 @@
 EAPI=8
 
 CRATES="
-	addr2line-0.17.0
+	addr2line-0.19.0
 	adler-1.0.2
 	aho-corasick-0.7.20
 	android_system_properties-0.1.5
-	anyhow-1.0.66
+	anyhow-1.0.68
 	assert_cmd-2.0.7
-	async-trait-0.1.59
+	async-trait-0.1.60
 	autocfg-1.1.0
-	backtrace-0.3.66
+	backtrace-0.3.67
 	base64-0.13.1
 	better-panic-0.3.0
 	bindgen-0.59.2
 	bitflags-1.3.2
 	block-buffer-0.10.3
 	bstr-0.2.17
-	bstr-1.0.1
+	bstr-1.1.0
 	bumpalo-3.11.1
 	byteorder-1.4.3
 	bytes-1.3.0
-	cc-1.0.77
+	cc-1.0.78
 	cexpr-0.6.0
 	cfg-if-1.0.0
 	chrono-0.4.23
 	chrono-english-0.1.7
 	clang-sys-1.4.0
-	clap-4.0.29
-	clap_complete-4.0.6
+	clap-4.0.32
+	clap_complete-4.0.7
 	clap_derive-4.0.21
 	clap_lex-0.3.0
 	codespan-reporting-0.11.1
 	comfy-table-6.1.3
-	command-group-2.0.0
-	console-0.15.2
+	command-group-2.0.1
+	console-0.15.3
 	core-foundation-sys-0.8.3
 	cpufeatures-0.2.5
 	crossbeam-channel-0.5.6
@@ -46,10 +46,10 @@ CRATES="
 	crypto-common-0.1.6
 	ctor-0.1.26
 	ctrlc-3.2.4
-	cxx-1.0.83
-	cxx-build-1.0.83
-	cxxbridge-flags-1.0.83
-	cxxbridge-macro-1.0.83
+	cxx-1.0.85
+	cxx-build-1.0.85
+	cxxbridge-flags-1.0.85
+	cxxbridge-macro-1.0.85
 	diff-0.1.13
 	difflib-0.4.0
 	digest-0.10.6
@@ -75,13 +75,12 @@ CRATES="
 	futures-util-0.3.25
 	generic-array-0.14.6
 	getrandom-0.2.8
-	gimli-0.26.2
+	gimli-0.27.0
 	glob-0.3.0
 	half-1.8.2
-	handlebars-4.3.5
+	handlebars-4.3.6
 	hashbrown-0.12.3
 	heck-0.4.0
-	hermit-abi-0.1.19
 	hermit-abi-0.2.6
 	hex-0.4.3
 	humantime-2.1.0
@@ -90,55 +89,54 @@ CRATES="
 	indexmap-1.9.2
 	instant-0.1.12
 	io-lifetimes-1.0.3
-	is-terminal-0.4.1
+	is-terminal-0.4.2
 	itertools-0.10.5
-	itoa-1.0.4
+	itoa-1.0.5
 	js-sys-0.3.60
 	lazy_static-1.4.0
 	lazycell-1.3.0
-	libc-0.2.138
+	libc-0.2.139
 	libloading-0.7.4
 	libproc-0.12.0
-	link-cplusplus-1.0.7
-	linux-raw-sys-0.1.3
+	link-cplusplus-1.0.8
+	linux-raw-sys-0.1.4
 	lock_api-0.4.9
 	log-0.4.17
 	memchr-2.5.0
-	memoffset-0.7.1
 	minimal-lexical-0.2.1
-	miniz_oxide-0.5.4
+	miniz_oxide-0.6.2
 	mio-0.8.5
 	nix-0.26.1
 	nom-7.1.1
 	num-integer-0.1.45
 	num-traits-0.2.15
-	num_cpus-1.14.0
+	num_cpus-1.15.0
 	num_threads-0.1.6
-	object-0.29.0
-	once_cell-1.16.0
+	object-0.30.0
+	once_cell-1.17.0
 	os_str_bytes-6.4.1
 	output_vt100-0.1.3
 	parking_lot-0.12.1
 	parking_lot_core-0.9.5
 	peeking_take_while-0.1.2
 	pem-1.1.0
-	pest-2.5.1
-	pest_derive-2.5.1
-	pest_generator-2.5.1
-	pest_meta-2.5.1
+	pest-2.5.2
+	pest_derive-2.5.2
+	pest_generator-2.5.2
+	pest_meta-2.5.2
 	pin-project-lite-0.2.9
 	pin-utils-0.1.0
 	portpicker-0.1.1
 	ppv-lite86-0.2.17
-	predicates-2.1.4
+	predicates-2.1.5
 	predicates-core-1.0.5
 	predicates-tree-1.0.7
 	pretty_assertions-1.3.0
 	proc-macro-error-1.0.4
 	proc-macro-error-attr-1.0.4
-	proc-macro2-1.0.47
+	proc-macro2-1.0.49
 	procfs-0.14.2
-	quote-1.0.21
+	quote-1.0.23
 	rand-0.4.6
 	rand-0.8.5
 	rand_chacha-0.3.1
@@ -160,21 +158,21 @@ CRATES="
 	rustc-demangle-0.1.21
 	rustc-hash-1.1.0
 	rustc_version-0.4.0
-	rustix-0.36.5
+	rustix-0.36.6
 	rustls-0.20.7
 	rustls-pemfile-1.0.1
-	rustversion-1.0.9
-	ryu-1.0.11
+	rustversion-1.0.11
+	ryu-1.0.12
 	scanlex-0.1.4
 	scopeguard-1.1.0
-	scratch-1.0.2
+	scratch-1.0.3
 	sct-0.7.0
-	semver-1.0.14
-	serde-1.0.150
+	semver-1.0.16
+	serde-1.0.152
 	serde_cbor-0.11.2
-	serde_derive-1.0.150
-	serde_json-1.0.89
-	serde_yaml-0.9.14
+	serde_derive-1.0.152
+	serde_json-1.0.91
+	serde_yaml-0.9.16
 	sha1-0.10.5
 	shell-escape-0.1.5
 	shellexpand-3.0.0
@@ -194,15 +192,14 @@ CRATES="
 	strsim-0.10.0
 	strum-0.24.1
 	strum_macros-0.24.3
-	syn-1.0.105
+	syn-1.0.107
 	tempdir-0.3.7
 	tempfile-3.3.0
 	termcolor-1.1.3
-	terminal_size-0.1.17
 	termtree-0.4.0
 	test-log-0.2.11
-	thiserror-1.0.37
-	thiserror-impl-1.0.37
+	thiserror-1.0.38
+	thiserror-impl-1.0.38
 	time-0.1.45
 	time-0.3.17
 	time-core-0.1.0
@@ -212,10 +209,10 @@ CRATES="
 	tokio-rustls-0.23.4
 	typenum-1.16.0
 	ucd-trie-0.1.5
-	unicode-ident-1.0.5
+	unicode-ident-1.0.6
 	unicode-segmentation-1.10.0
 	unicode-width-0.1.10
-	unsafe-libyaml-0.2.4
+	unsafe-libyaml-0.2.5
 	untrusted-0.7.1
 	version_check-0.9.4
 	wait-timeout-0.2.0
@@ -228,7 +225,7 @@ CRATES="
 	wasm-bindgen-shared-0.2.83
 	web-sys-0.3.60
 	webpki-0.22.0
-	whoami-1.2.3
+	whoami-1.3.0
 	winapi-0.3.9
 	winapi-i686-pc-windows-gnu-0.4.0
 	winapi-util-0.1.5
@@ -242,7 +239,7 @@ CRATES="
 	windows_x86_64_gnullvm-0.42.0
 	windows_x86_64_msvc-0.42.0
 	yansi-0.5.1
-	yasna-0.5.0
+	yasna-0.5.1
 "
 
 inherit cargo systemd bash-completion-r1
