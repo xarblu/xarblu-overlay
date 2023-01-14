@@ -11,6 +11,7 @@
 		<flag name="energize-b">Using different transporter technology results in an alternative visual effect</flag>
 		<flag name="fire">The classic effect inspired by Compiz</flag>
 		<flag name="glide">Fade the window to transparency with subtle 3D effects</flag>
+		<flag name="glitch">This effect applies some intentional graphics issues to your windows</flag>
 		<flag name="hexagon">With glowing lines and hexagon-shaped tiles, this effect looks very sci-fi</flag>
 		<flag name="incinerate">A less snappy but definitely more fancy take on the fire effect</flag>
 		<flag name="pixelate">Pixelate the window and randomly hide the pixels</flag>

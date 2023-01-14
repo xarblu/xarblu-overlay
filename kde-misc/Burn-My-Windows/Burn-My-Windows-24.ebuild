@@ -20,7 +20,7 @@ BDEPEND="
 	dev-lang/perl
 "
 # Allow choosing of the wanted effects
-EFFECTS="doom energize-a energize-b fire glide hexagon incinerate pixelate pixel-wheel pixel-wipe tv wisps"
+EFFECTS="doom energize-a energize-b fire glide glitch hexagon incinerate pixelate pixel-wheel pixel-wipe portal tv wisps"
 IUSE="${EFFECTS}"
 REQUIRED_USE="|| ( ${EFFECTS} )"
 
@@ -111,18 +111,20 @@ generate() {
 }
 
 src_compile() {
-	if use doom; then generate "doom" "Doom [Burn-My-Windows]" "Melt your windows"; fi
-	if use energize-a; then generate "energize-a" "Energize A [Burn-My-Windows]" "Beam your windows away"; fi
-	if use energize-b; then generate "energize-b" "Energize B [Burn-My-Windows]" "Using different transporter technology results in an alternative visual effect"; fi
-	if use fire; then generate "fire" "Fire [Burn-My-Windows]" "The classic effect inspired by Compiz"; fi
-	if use glide; then generate "glide" "Glide [Burn-My-Windows]" "Fade the window to transparency with subtle 3D effects"; fi
-	if use hexagon; then generate "hexagon" "Hexagon [Burn-My-Windows]" "With glowing lines and hexagon-shaped tiles, this effect looks very sci-fi"; fi
-	if use incinerate; then generate "incinerate" "Incinerate [Burn-My-Windows]"  "A less snappy but definitely more fancy take on the fire effect"; fi
-	if use pixelate; then generate "pixelate" "Pixelate [Burn-My-Windows]" "Pixelate the window and randomly hide the pixels"; fi
-	if use pixel-wheel; then generate "pixel-wheel" "Pixel Wheel [Burn-My-Windows]" "Pixelate the window and hide the pixels in a wheel-like fashion"; fi
-	if use pixel-wipe; then generate "pixel-wipe" "Pixel Wipe [Burn-My-Windows]" "Pixelate the window and hide the pixels radially, starting from the pointer position"; fi
-	if use tv; then generate "tv" "TV Effect [Burn-My-Windows]" "Make windows close like turning off a TV"; fi
-	if use wisps; then generate "wisps" "Wisps [Burn-My-Windows]" "Let your windows be carried away to the realm of dreams by these little fairies"; fi
+	use doom && generate "doom" "Doom [Burn-My-Windows]" "Melt your windows"
+	use energize-a && generate "energize-a" "Energize A [Burn-My-Windows]" "Beam your windows away"
+	use energize-b && generate "energize-b" "Energize B [Burn-My-Windows]" "Using different transporter technology results in an alternative visual effect"
+	use fire && generate "fire" "Fire [Burn-My-Windows]" "The classic effect inspired by Compiz"
+	use glide && generate "glide" "Glide [Burn-My-Windows]" "Fade the window to transparency with subtle 3D effects"
+	use glitch && generate "glitch" "Glitch [Burn-My-Windows]" "This effect applies some intentional graphics issues to your windows"
+	use hexagon && generate "hexagon" "Hexagon [Burn-My-Windows]" "With glowing lines and hexagon-shaped tiles, this effect looks very sci-fi"
+	use incinerate && generate "incinerate" "Incinerate [Burn-My-Windows]" "A less snappy but definitely more fancy take on the fire effect"
+	use pixelate && generate "pixelate" "Pixelate [Burn-My-Windows]" "Pixelate the window and randomly hide the pixels"
+	use pixel-wheel && generate "pixel-wheel" "Pixel Wheel [Burn-My-Windows]" "Pixelate the window and hide the pixels in a wheel-like fashion"
+	use pixel-wipe && generate "pixel-wipe" "Pixel Wipe [Burn-My-Windows]" "Pixelate the window and hide the pixels radially, starting from the pointer position"
+	use portal && generate "portal" "Portal [Burn-My-Windows]" "Transfer your windows to other locations in space and time"
+	use tv && generate "tv" "TV Effect [Burn-My-Windows]" "Make windows close like turning off a TV"
+	use wisps && generate "wisps" "Wisps [Burn-My-Windows]" "Let your windows be carried away to the realm of dreams by these little fairies"
 }
 
 src_install() {
