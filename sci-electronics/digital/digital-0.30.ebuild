@@ -9,7 +9,7 @@ MY_PN="${PN^}"
 
 DESCRIPTION="A digital logic designer and circuit simulator"
 HOMEPAGE="https://github.com/hneemann/Digital"
-SRC_URI="https://github.com/hneemann/${MY_PN}/releases/download/v${PV}/${MY_PN}.zip"
+SRC_URI="https://github.com/hneemann/${MY_PN}/releases/download/v${PV}/${MY_PN}.zip -> ${P}.zip"
 
 LICENSE="GPL-3"
 SLOT="0"
