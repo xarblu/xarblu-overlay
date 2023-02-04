@@ -18,9 +18,10 @@ DEPEND="
 RDEPEND="${DEPEND}"
 BDEPEND="
 	dev-lang/perl
+	sys-devel/gettext
 "
 # Allow choosing of the wanted effects
-EFFECTS="doom energize-a energize-b fire glide glitch hexagon incinerate pixelate pixel-wheel pixel-wipe portal tv wisps"
+EFFECTS="doom energize-a energize-b fire glide glitch hexagon incinerate pixelate pixel-wheel pixel-wipe portal tv tv-glitch wisps"
 IUSE="${EFFECTS}"
 REQUIRED_USE="|| ( ${EFFECTS} )"
 
@@ -45,6 +46,9 @@ generate() {
 	mkdir -p "$BUILD_DIR/$DIR_NAME/contents/code"
 	mkdir -p "$BUILD_DIR/$DIR_NAME/contents/config"
 	mkdir -p "$BUILD_DIR/$DIR_NAME/contents/ui"
+
+  	# Copy the translations.
+  	cp -r "$BUILD_DIR/locale" "$BUILD_DIR/$DIR_NAME/contents"
 
 	# Copy the config file if it exists.
 	if [ -f "$1/main.xml" ]; then
@@ -111,6 +115,18 @@ generate() {
 }
 
 src_compile() {
+	# Create it if it's not there yet.
+	mkdir -p "$BUILD_DIR"
+
+	# Compile the translations.
+	for file in ../po/*.po; do
+		echo "Compiling $file"
+		lang=$(basename "$file" .po)
+		mkdir -p "$BUILD_DIR/locale/$lang/LC_MESSAGES"
+		msgfmt "$file" -o "$BUILD_DIR/locale/$lang/LC_MESSAGES/burn-my-windows.mo"
+	done
+
+	# build effects based on USE
 	use doom && generate "doom" "Doom [Burn-My-Windows]" "Melt your windows"
 	use energize-a && generate "energize-a" "Energize A [Burn-My-Windows]" "Beam your windows away"
 	use energize-b && generate "energize-b" "Energize B [Burn-My-Windows]" "Using different transporter technology results in an alternative visual effect"
@@ -124,6 +140,7 @@ src_compile() {
 	use pixel-wipe && generate "pixel-wipe" "Pixel Wipe [Burn-My-Windows]" "Pixelate the window and hide the pixels radially, starting from the pointer position"
 	use portal && generate "portal" "Portal [Burn-My-Windows]" "Transfer your windows to other locations in space and time"
 	use tv && generate "tv" "TV Effect [Burn-My-Windows]" "Make windows close like turning off a TV"
+	use tv-glitch && generate "tv-glitch" "TV Glitch [Burn-My-Windows]" "Make your windows close like a very glitchy old-school TV"
 	use wisps && generate "wisps" "Wisps [Burn-My-Windows]" "Let your windows be carried away to the realm of dreams by these little fairies"
 }
 
