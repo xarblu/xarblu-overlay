@@ -441,6 +441,15 @@ multilib_src_configure() {
 		local CXXFLAGS="${CXXFLAGS} -mno-bmi"
 	fi
 
+	# remove polly flags if used llvm isn't built with support for it yet
+	if use polly && tc-is-clang; then
+		if ! $(has_version sys-devel/llvm:$(clang-major-version)[polly]); then
+			einfo "Stripping polly flags because LLVM used for build doesn't have USE=polly"
+			local -x CFLAGS="$(echo "${CFLAGS}" | sed -E 's/-mllvm\s+-polly\S*//g')"
+			local -x CXXFLAGS="$(echo "${CXXFLAGS}" | sed -E 's/-mllvm\s+-polly\S*//g')"
+		fi
+	fi
+
 	# LLVM can have very high memory consumption while linking,
 	# exhausting the limit on 32-bit linker executable
 	use x86 && local -x LDFLAGS="${LDFLAGS} -Wl,--no-keep-memory"
