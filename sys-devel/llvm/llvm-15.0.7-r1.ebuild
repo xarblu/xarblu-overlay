@@ -32,7 +32,6 @@ RDEPEND="
 	libedit? ( dev-libs/libedit:0=[${MULTILIB_USEDEP}] )
 	libffi? ( >=dev-libs/libffi-3.0.13-r1:0=[${MULTILIB_USEDEP}] )
 	ncurses? ( >=sys-libs/ncurses-5.9-r3:0=[${MULTILIB_USEDEP}] )
-	polly? ( ~sys-devel/polly-${PV} )
 	xar? ( app-arch/xar )
 	xml? ( dev-libs/libxml2:2=[${MULTILIB_USEDEP}] )
 	z3? ( >=sci-mathematics/z3-4.7.1:0=[${MULTILIB_USEDEP}] )
@@ -41,6 +40,10 @@ RDEPEND="
 DEPEND="
 	${RDEPEND}
 	binutils-plugin? ( sys-libs/binutils-libs )
+	polly? (
+		sys-devel/polly:${LLVM_MAJOR}=
+		dev-util/patchelf
+	)
 "
 BDEPEND="
 	${PYTHON_DEPS}
@@ -416,9 +419,6 @@ multilib_src_configure() {
 		use binutils-plugin && mycmakeargs+=(
 			-DLLVM_BINUTILS_INCDIR="${EPREFIX}"/usr/include
 		)
-
-		# Link against polly libs if requested
-		use polly && local -x LDFLAGS="${LDFLAGS} -L${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir) -lPolly -lPollyISL"
 	fi
 
 	if tc-is-cross-compiler; then
@@ -489,6 +489,9 @@ src_install() {
 
 	# move wrapped headers back
 	mv "${ED}"/usr/include "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/include || die
+
+	# add polly libs to DT_NEEDED if requested
+	use polly && patchelf --add-needed libPolly.so --add-needed libPollyISL.so "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)/libLLVM.so || die "failed patching libLLVM.so for polly"
 }
 
 multilib_src_install() {

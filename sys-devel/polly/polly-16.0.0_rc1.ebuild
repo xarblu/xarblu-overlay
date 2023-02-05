@@ -11,13 +11,12 @@ HOMEPAGE="https://polly.llvm.org/"
 
 LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
-KEYWORDS="~amd64"
+KEYWORDS="~loong"
 IUSE="test"
 RESTRICT="!test? ( test )"
 
 # Pretty sure this standalone build doesn't depend on llvm
-# being installed so I removed it for now because else
-# it'll cause circular dependencies
+# already being installed
 DEPEND=""
 RDEPEND=""
 BDEPEND="
@@ -43,8 +42,6 @@ pkg_setup() {
 src_configure() {
 	# not defining LLVM_MAIN_SRC_DIR causes standalone build
 	local mycmakeargs=(
-		-DBUILD_SHARED_LIBS=OFF
-		-DLLVM_LINK_LLVM_DYLIB=ON
 		-DLLVM_POLLY_LINK_INTO_TOOLS=OFF
 		-DLLVM_INCLUDE_TESTS=$(usex test)
 		-DCMAKE_INSTALL_PREFIX="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}"
