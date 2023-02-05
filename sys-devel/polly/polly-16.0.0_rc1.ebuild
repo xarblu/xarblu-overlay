@@ -15,8 +15,6 @@ KEYWORDS="~loong"
 IUSE="test"
 RESTRICT="!test? ( test )"
 
-# Pretty sure this standalone build doesn't depend on llvm
-# already being installed
 DEPEND=""
 RDEPEND=""
 BDEPEND="
@@ -32,6 +30,21 @@ llvm.org_set_globals
 
 python_check_deps() {
 	python_has_version ">=dev-python/lit-${PV}[${PYTHON_USEDEP}]"
+}
+
+pkg_pretend() {
+	# Pretty sure this standalone build (for the most part)
+	# doesn't depend on llvm already being installed.
+	# However there may be situations (especially with major version jumps)
+	# where things can go wrong.
+	# I think it's better to just print a warning and have the user temporarily
+	# build llvm with USE=-polly rather than having stricter deps that cause a lot
+	# of circular dependencies (essentially also meaning disabling polly)
+	if $(has_version ${CATEGORY}/${PN}) && ! $(has_version ${CATEGORY}/${PN}:${LLVM_MAJOR}); then
+		ewarn "This is a major version upgrade!"
+		ewarn "This build *may* work fine but if not unset USE=\"polly\""
+		ewarn "and upgrade the rest of the LLVM toolchain first."
+	fi
 }
 
 pkg_setup() {
@@ -58,4 +71,15 @@ src_configure() {
 src_test() {
 	local -x LIT_PRESERVES_TMP=1
 	cmake_build check-polly
+}
+
+pkg_postinst() {
+	# print a warning if building independent from sys-devel/llvm
+	if ! $(has_version sys-devel/llvm:${LLVM_MAJOR}[polly]); then
+		elog "sys-devel/llvm:${LLVM_MAJOR}[polly] wasn't found on the system!"
+		elog "If USE=\"polly\" isn't set you need to manually load polly as"
+		elog "a clang extension by adding the following flags:"
+		elog "     \"-Xclang -load -Xclang LLVMPolly.so\""
+		elog "Then the usual \"-mllvm -polly\" should work."
+	fi
 }
