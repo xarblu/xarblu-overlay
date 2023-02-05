@@ -485,7 +485,9 @@ src_install() {
 	mv "${ED}"/usr/include "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/include || die
 
 	# add polly libs to DT_NEEDED if requested
-	use polly && patchelf --add-needed libPolly.so --add-needed libPollyISL.so "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)/libLLVM.so || die "failed patching libLLVM.so for polly"
+	if use polly; then
+		patchelf --add-needed libPolly.so --add-needed libPollyISL.so "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)/libLLVM.so || die "failed patching libLLVM.so for polly"
+	fi
 }
 
 multilib_src_install() {
