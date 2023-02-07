@@ -15,7 +15,6 @@ IUSE="extra-patches"
 EXTRA_PATCHES="
 	${FILESDIR}/6.1.0-drm-i915-improve-the-catch-all-evict-to-handle-lock-contention.patch
 	${FILESDIR}/6.1.0-hid-nintendo-faceswap.patch
-	${FILESDIR}/prjc_v6.1-r4.patch
 "
 
 inherit kernel-2
