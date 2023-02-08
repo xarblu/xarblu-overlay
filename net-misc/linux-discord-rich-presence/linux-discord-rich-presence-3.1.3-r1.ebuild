@@ -80,7 +80,7 @@ CRATES="
 	windows_x86_64_msvc-0.42.1
 "
 
-inherit desktop cargo
+inherit systemd desktop cargo
 
 DESCRIPTION="Customizable Discord Rich Presence client for Linux"
 HOMEPAGE="https://github.com/trickybestia/linux-discord-rich-presence"
@@ -110,6 +110,8 @@ src_install() {
 		sed -i -e 's|/usr/bin/||g' -e '/^Path=/d' ${desktopfile} || die "sed failed"
 		domenu ${desktopfile}
 	done
+
+	systemd_douserunit ${FILESDIR}/${PN}.service
 }
 
 pkg_postinst() {

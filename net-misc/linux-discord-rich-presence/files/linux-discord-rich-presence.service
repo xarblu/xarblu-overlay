@@ -1,0 +1,10 @@
+[Unit]
+Description=Customizable Discord Rich Presence client for Linux - Service
+
+[Service]
+Restart=no
+ExecStart=linux-discord-rich-presence --config ${HOME}/.config/linux-discord-rich-presencerc
+
+[Install]
+WantedBy=default.target
+
