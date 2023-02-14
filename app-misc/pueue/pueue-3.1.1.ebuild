@@ -1,4 +1,4 @@
-# Copyright 2022 Gentoo Authors
+# Copyright 2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -16,7 +16,7 @@ CRATES="
 	base64-0.13.1
 	base64-0.21.0
 	better-panic-0.3.0
-	bindgen-0.59.2
+	bindgen-0.64.0
 	bitflags-1.3.2
 	block-buffer-0.10.3
 	bstr-0.2.17
@@ -96,7 +96,7 @@ CRATES="
 	lazycell-1.3.0
 	libc-0.2.139
 	libloading-0.7.4
-	libproc-0.12.0
+	libproc-0.13.0
 	link-cplusplus-1.0.8
 	linux-raw-sys-0.1.4
 	lock_api-0.4.9
@@ -263,14 +263,6 @@ QA_FLAGS_IGNORED="usr/bin/${PN}"
 # as of 3.1.0 pueue is subproject
 WORKSPACE="${S}"
 S="${WORKSPACE}/${PN}"
-
-src_prepare() {
-	# remove darwin-libproc from pueue_lib/Cargo.toml because it gets pulled 3rd party
-	# git repo but isn't really needed (considered a 'dev-dependency').
-	sed -i -e "74,78d" "${WORKSPACE}/pueue_lib/Cargo.toml" || die "Failed to remove darwin-libproc dependency"
-
-	default
-}
 
 src_install() {
 	cargo_src_install
