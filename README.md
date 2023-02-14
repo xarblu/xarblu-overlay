@@ -5,7 +5,7 @@ If you want to add them for whatever reason use `app-eselect/eselect-repository`
 
 From [gentoo-mirror](https://github.com/gentoo-mirror/xarblu-overlay) (recommended - has metadata cache pregenerated):
 
-`# eselect repository add xarblu-overlay`
+`# eselect repository enable xarblu-overlay`
 
 From here:
 
