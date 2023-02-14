@@ -5,4 +5,9 @@
 		<email>xarblu@protonmail.com</email>
 		<name>Jonas Rakebrandt</name>
 	</maintainer>
+	<use>
+		<flag name="gpu">Better accuracy on GPU info via <pkg>sys-apps/lshw</pkg></flag>
+		<flag name="images">Support images via <pkg>media-gfx/viu</pkg></flag>
+		<flag name="X">Get screen resolution via <pkg>x11-apps/xwininfo</pkg></flag>
+	</use>
 </pkgmetadata>
