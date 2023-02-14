@@ -29,15 +29,22 @@ DEPEND="
 RDEPEND="${DEPEND}"
 BDEPEND=""
 
+uwufetch_v() {
+	if [[ ${PV} == 9999 ]]; then
+		local tag="$(git describe --tags)"
+		echo "${tag%%-*}"
+	else
+		echo "${PV}"
+	fi
+}
 
 src_prepare() {
 	#Fix Makefile
 	sed -i \
-		-e "s/^UWUFETCH_VERSION =.*/UWUFETCH_VERSION = ${PV}/" \
+		-e "s/^UWUFETCH_VERSION =.*/UWUFETCH_VERSION = $(uwufetch_v)/" \
 		-e "s/install: build/install:/" \
 		-e "s/-shared/-shared -Wl,-soname,lib\$(LIB_FILES:.c=.so)/" \
 		-e "s/\$(ETC_DIR)\/\$(NAME)$/\$(ETC_DIR)\/\$(NAME) \$(DESTDIR)\/include/" \
-		-e "/cp .\/\$(NAME)\.1\.gz.*/d" \
 		${S}/Makefile || die "sed failed"
 
 	default
@@ -47,7 +54,7 @@ src_compile() {
 	emake \
 		CC="$(tc-getCC)" \
 		AR="$(tc-getAR)" \
-		CFLAGS="${CFLAGS} ${LDFLAGS}" \
+		CFLAGS="${CFLAGS} -DUWUFETCH_VERSION=\"$(uwufetch_v)\"" \
 		build
 }
 
