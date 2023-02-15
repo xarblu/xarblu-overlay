@@ -6,6 +6,6 @@
 		<name>Jonas Rakebrandt</name>
 	</maintainer>
 	<use>
-		<flag name="autoload">Install files to /etc/mpv for autoloading.</flag>
+		<flag name="autoload">Symlink files to /etc/mpv for autoloading.</flag>
 	</use>
 </pkgmetadata>
