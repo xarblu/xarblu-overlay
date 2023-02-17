@@ -6,10 +6,6 @@
 		<name>Gentoo Codec Project</name>
 	</maintainer>
 	<maintainer type="person">
-		<email>dilfridge@gentoo.org</email>
-		<name>Andreas K. Huettel</name>
-	</maintainer>
-	<maintainer type="person">
 		<email>xarblu@protonmail.com</email>
 		<name>Jonas Rakebrandt</name>
 	</maintainer>
