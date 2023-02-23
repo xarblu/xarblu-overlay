@@ -11,7 +11,7 @@ HOMEPAGE="https://polly.llvm.org/"
 
 LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
-KEYWORDS="~loong"
+KEYWORDS=""
 IUSE="test"
 RESTRICT="!test? ( test )"
 
