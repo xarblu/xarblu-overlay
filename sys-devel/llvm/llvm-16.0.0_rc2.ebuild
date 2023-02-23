@@ -5,7 +5,7 @@ EAPI=8
 
 PYTHON_COMPAT=( python3_{9..11} )
 inherit cmake llvm.org multilib-minimal pax-utils python-any-r1 \
-	toolchain-funcs
+	toolchain-funcs flag-o-matic
 
 DESCRIPTION="Low Level Virtual Machine"
 HOMEPAGE="https://llvm.org/"
@@ -18,7 +18,7 @@ HOMEPAGE="https://llvm.org/"
 
 LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA BSD public-domain rc"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
-KEYWORDS=""
+KEYWORDS="~loong"
 IUSE="
 	+binutils-plugin debug doc exegesis libedit +libffi ncurses test polly
 	xar xml z3 zstd
@@ -329,6 +329,8 @@ get_distribution_components() {
 }
 
 multilib_src_configure() {
+	tcc-is-gcc && filter-lto # GCC miscompiles LLVM, bug #873670
+
 	local ffi_cflags ffi_ldflags
 	if use libffi; then
 		ffi_cflags=$($(tc-getPKG_CONFIG) --cflags-only-I libffi)
@@ -434,7 +436,7 @@ multilib_src_configure() {
 		local CXXFLAGS="${CXXFLAGS} -mno-bmi"
 	fi
 
-	# remove polly flags if used llvm isn't built with support for it yet
+	# remove polly flags if compiling clang isn't built with support for it yet
 	if use polly && tc-is-clang; then
 		if ! $(has_version sys-devel/llvm:$(clang-major-version)[polly]); then
 			einfo "Stripping polly flags because LLVM used for build doesn't have USE=polly"
@@ -492,7 +494,7 @@ src_install() {
 	# move wrapped headers back
 	mv "${ED}"/usr/include "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/include || die
 
-	# add polly libs to DT_NEEDED if requested
+	# add polly libs to DT_NEEDED
 	if use polly; then
 		patchelf --add-needed libPolly.so --add-needed libPollyISL.so "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)/libLLVM.so || die "failed patching libLLVM.so for polly"
 	fi

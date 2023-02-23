@@ -1,4 +1,4 @@
-# Copyright 2022 Gentoo Authors
+# Copyright 2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -15,8 +15,14 @@ KEYWORDS="~amd64 ~arm ~arm64 ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux ~ppc-ma
 IUSE="test"
 RESTRICT="!test? ( test )"
 
-DEPEND=""
-RDEPEND=""
+# upstream says to build against the exact same version
+# but just depending on LLVM_MAJOR should be fine since we build
+# a shared library + this avoids circular dependencies unless it's
+# a major version upgrade
+DEPEND="
+	sys-devel/llvm:${LLVM_MAJOR}=
+"
+RDEPEND="${DEPENDS}"
 BDEPEND="
 	test? (
 		>=dev-util/cmake-3.16
@@ -30,21 +36,6 @@ llvm.org_set_globals
 
 python_check_deps() {
 	python_has_version ">=dev-python/lit-${PV}[${PYTHON_USEDEP}]"
-}
-
-pkg_pretend() {
-	# Pretty sure this standalone build (for the most part)
-	# doesn't depend on llvm already being installed.
-	# However there may be situations (especially with major version jumps)
-	# where things can go wrong.
-	# I think it's better to just print a warning and have the user temporarily
-	# build llvm with USE=-polly rather than having stricter deps that cause a lot
-	# of circular dependencies (essentially also meaning disabling polly)
-	if $(has_version ${CATEGORY}/${PN}) && ! $(has_version ${CATEGORY}/${PN}:${LLVM_MAJOR}); then
-		ewarn "This is a major version upgrade!"
-		ewarn "This build *may* work fine but if not unset USE=\"polly\""
-		ewarn "and upgrade the rest of the LLVM toolchain first."
-	fi
 }
 
 pkg_setup() {
