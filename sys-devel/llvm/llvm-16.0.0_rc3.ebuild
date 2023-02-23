@@ -18,7 +18,7 @@ HOMEPAGE="https://llvm.org/"
 
 LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA BSD public-domain rc"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
-KEYWORDS="~loong"
+KEYWORDS=""
 IUSE="
 	+binutils-plugin debug doc exegesis libedit +libffi ncurses test polly
 	xar xml z3 zstd
@@ -329,7 +329,7 @@ get_distribution_components() {
 }
 
 multilib_src_configure() {
-	tcc-is-gcc && filter-lto # GCC miscompiles LLVM, bug #873670
+	tc-is-gcc && filter-lto # GCC miscompiles LLVM, bug #873670
 
 	local ffi_cflags ffi_ldflags
 	if use libffi; then
