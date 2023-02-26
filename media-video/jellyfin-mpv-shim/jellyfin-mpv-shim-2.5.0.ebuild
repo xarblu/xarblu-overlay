@@ -3,6 +3,7 @@
 
 EAPI=8
 
+DISTUTILS_USE_PEP517=setuptools
 PYTHON_COMPAT=( python3_{9..11} )
 inherit distutils-r1 desktop
 
@@ -21,7 +22,7 @@ DEPEND="
 	>=dev-lang/python-3.6[tk]
 	dev-python/requests[${PYTHON_USEDEP}]
 	dev-python/python-mpv[${PYTHON_USEDEP}]
-	>=dev-python/python-mpv-jsonipc-1.1.14[${PYTHON_USEDEP}]
+	>=dev-python/python-mpv-jsonipc-1.2.0[${PYTHON_USEDEP}]
 	>=dev-python/jellyfin-apiclient-python-1.9.2[${PYTHON_USEDEP}]
 	systray? (
 		dev-python/pystray[${PYTHON_USEDEP}]
@@ -38,7 +39,7 @@ BDEPEND=""
 
 shaders_symlink() {
 	ln -sv "/usr/share/jellyfin-mpv-shim-default-shader-pack" \
-		"${ED}/$(python_get_sitedir)/jellyfin_mpv_shim/default_shader_pack" || die
+		"${ED}/$(python_get_sitedir)/jellyfin_mpv_shim/default_shader_pack" || die  "shader symlink failed"
 }
 
 src_prepare() {
