@@ -49,8 +49,7 @@ SRC_URI="
 "
 
 EXTRA_PATCHES="
-	${FILESDIR}/5510-6.1.0-drm-i915-improve-the-catch-all-evict-to-handle-lock-contention.patch
-	${FILESDIR}/5511-6.1.0-hid-nintendo-faceswap.patch
+	${FILESDIR}/5510-6.2.1-hid-nintendo-faceswap.patch
 "
 
 src_unpack() {
