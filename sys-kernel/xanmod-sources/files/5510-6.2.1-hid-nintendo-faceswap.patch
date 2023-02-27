@@ -1,0 +1,53 @@
+diff --git a/drivers/hid/hid-nintendo.c b/drivers/hid/hid-nintendo.c
+index 5bfc0c4..903ac8d 100644
+--- a/drivers/hid/hid-nintendo.c
++++ b/drivers/hid/hid-nintendo.c
+@@ -32,6 +32,7 @@
+ #include <linux/jiffies.h>
+ #include <linux/leds.h>
+ #include <linux/module.h>
++#include <linux/moduleparam.h>
+ #include <linux/power_supply.h>
+ #include <linux/spinlock.h>
+ 
+@@ -321,6 +322,8 @@ struct joycon_imu_cal {
+ 	s16 scale[3];
+ };
+ 
++bool faceswap;
++
+ /*
+  * All the controller's button values are stored in a u32.
+  * They can be accessed with bitwise ANDs.
+@@ -1356,10 +1359,17 @@ static void joycon_parse_report(struct joycon_ctlr *ctlr,
+ 		input_report_key(dev, BTN_START, btns & JC_BTN_PLUS);
+ 		input_report_key(dev, BTN_THUMBR, btns & JC_BTN_RSTICK);
+ 		input_report_key(dev, BTN_MODE, btns & JC_BTN_HOME);
+-		input_report_key(dev, BTN_WEST, btns & JC_BTN_Y);
+-		input_report_key(dev, BTN_NORTH, btns & JC_BTN_X);
+-		input_report_key(dev, BTN_EAST, btns & JC_BTN_A);
+-		input_report_key(dev, BTN_SOUTH, btns & JC_BTN_B);
++		if (!faceswap) {
++			input_report_key(dev, BTN_WEST, btns & JC_BTN_Y);
++			input_report_key(dev, BTN_NORTH, btns & JC_BTN_X);
++			input_report_key(dev, BTN_EAST, btns & JC_BTN_A);
++			input_report_key(dev, BTN_SOUTH, btns & JC_BTN_B);
++		} else {
++			input_report_key(dev, BTN_WEST, btns & JC_BTN_X);
++			input_report_key(dev, BTN_NORTH, btns & JC_BTN_Y);
++			input_report_key(dev, BTN_EAST, btns & JC_BTN_B);
++			input_report_key(dev, BTN_SOUTH, btns & JC_BTN_A);
++		}
+ 	}
+ 
+ 	input_sync(dev);
+@@ -2321,6 +2331,9 @@ static const struct hid_device_id nintendo_hid_devices[] = {
+ };
+ MODULE_DEVICE_TABLE(hid, nintendo_hid_devices);
+ 
++module_param(faceswap, bool, 0440);
++MODULE_PARM_DESC(faceswap, "Swaps AB/XY to use the XBOX layout");
++
+ static struct hid_driver nintendo_hid_driver = {
+ 	.name		= "nintendo",
+ 	.id_table	= nintendo_hid_devices,
