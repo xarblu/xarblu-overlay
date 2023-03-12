@@ -44,7 +44,6 @@ pkg_setup() {
 }
 
 src_configure() {
-	# not defining LLVM_MAIN_SRC_DIR causes standalone build
 	local mycmakeargs=(
 		-DLLVM_POLLY_LINK_INTO_TOOLS=OFF
 		-DLLVM_INCLUDE_TESTS=$(usex test)
