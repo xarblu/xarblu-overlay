@@ -12,7 +12,7 @@ K_SECURITY_UNSUPPORTED="1"
 K_NOSETEXTRAVERSION="1"
 K_NODRYRUN="1"
 
-IUSE="extra-patches project-c"
+IUSE="project-c"
 
 inherit kernel-2
 detect_version
@@ -48,16 +48,9 @@ SRC_URI="
 	${GENPATCHES_URI}
 "
 
-EXTRA_PATCHES="
-	${FILESDIR}/5510-6.2.1-hid-nintendo-faceswap.patch
-"
-
 src_unpack() {
 	UNIPATCH_LIST_DEFAULT=""
 	UNIPATCH_LIST="${UNIPATCH_LIST} ${DISTDIR}/patch-${OKV}-xanmod${XANMOD_VERSION}.xz"
-	if use extra-patches; then
-		UNIPATCH_LIST="${UNIPATCH_LIST} ${EXTRA_PATCHES}"
-	fi
 	if use project-c; then
 		UNIPATCH_LIST="${UNIPATCH_LIST} $(prjc_get patch)"
 	fi

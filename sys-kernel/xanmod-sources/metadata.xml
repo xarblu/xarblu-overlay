@@ -6,7 +6,6 @@
 		<name>Jonas Rakebrandt</name>
 	</maintainer>
 	<use>
-		<flag name="extra-patches">(EXPERIMENTAL) Apply extra patches</flag>
 		<flag name="project-c">(EXPERIMENTAL) Apply project-c scheduler patches</flag>
 	</use>
 	<upstream>
