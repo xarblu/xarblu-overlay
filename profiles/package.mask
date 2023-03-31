@@ -1,0 +1,7 @@
+# Jonas Rakebrandt <xarblu@protonmail.com> (2023-04-01)
+# masked due to masking and future removal 
+# of dev-python/nototools in ::gentoo. Bug #719882.
+# + unsure if twemoji will continue development
+# see https://github.com/twitter/twemoji/issues/570
+media-fonts/twemoji
+
