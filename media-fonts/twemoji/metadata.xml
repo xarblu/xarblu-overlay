@@ -5,6 +5,9 @@
 		<email>xarblu@protonmail.com</email>
 		<name>Jonas Rakebrandt</name>
 	</maintainer>
+	<use>
+		<flag name="icons">Install Twemoji icon theme</flag>
+	</use>
 	<upstream>
 		<remote-id type="github">twitter/twemoji</remote-id>
 	</upstream>
