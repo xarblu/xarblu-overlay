@@ -49,6 +49,7 @@ src_install() {
 
 	# fix multilib-strict
 	if [[ $(get_libdir) != "lib" ]]; then
-		mv ${ED}/usr/lib ${ED}/usr/$(get_libdir)
+		einfo "fixing multilib-strict path..."
+		mv ${ED}/usr/lib ${ED}/usr/$(get_libdir) || die "fixing multilib-strict path failed"
 	fi
 }
