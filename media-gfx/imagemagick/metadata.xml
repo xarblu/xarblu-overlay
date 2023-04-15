@@ -7,7 +7,7 @@
 	</maintainer>
 	<maintainer type="person">
 		<email>xarblu@protonmail.com</email>
-		<name>Jonas Rakebrandt</name>
+		<name>Xarblu</name>
 	</maintainer>
 	<use>
 		<flag name="corefonts">Use <pkg>media-fonts/corefonts</pkg> which is required by some commands</flag>
