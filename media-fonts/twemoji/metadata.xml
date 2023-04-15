@@ -3,7 +3,7 @@
 <pkgmetadata>
 	<maintainer type="person">
 		<email>xarblu@protonmail.com</email>
-		<name>Jonas Rakebrandt</name>
+		<name>Xarblu</name>
 	</maintainer>
 	<use>
 		<flag name="icons">Install Twemoji icon theme</flag>

@@ -6,7 +6,7 @@
 	</maintainer>
 	<maintainer type="person">
 		<email>xarblu@protonmail.com</email>
-		<name>Jonas Rakebrandt</name>
+		<name>Xarblu</name>
 	</maintainer>
 	<longdescription>Low Level Virtual Machine (LLVM) is:
 	1. A compilation strategy designed to enable effective program optimization across the entire lifetime of a program. LLVM supports effective optimization at compile time, link-time (particularly interprocedural), run-time and offline (i.e., after software is installed), while remaining transparent to developers and maintaining compatibility with existing build scripts.
