@@ -201,6 +201,206 @@ index f6b2665c955..c0671138db1 100644
  
          function onPlayPauseStateChanged() {
 
+From 4fef839c79df63fd3310ccc437fff879320e0f61 Mon Sep 17 00:00:00 2001
+From: ConfusedPolarBear <33811686+ConfusedPolarBear@users.noreply.github.com>
+Date: Thu, 16 Jun 2022 18:15:26 -0500
+Subject: [PATCH 4/8] Add dockerfile
+
+---
+ Dockerfile | 5 +++++
+ 1 file changed, 5 insertions(+)
+ create mode 100644 Dockerfile
+
+diff --git a/Dockerfile b/Dockerfile
+new file mode 100644
+index 00000000000..b244b90f772
+--- /dev/null
++++ b/Dockerfile
+@@ -0,0 +1,5 @@
++FROM jellyfin/jellyfin:10.8.0
++
++RUN npm install
++
++COPY dist/ /jellyfin/jellyfin-web/
+
+From 4f8a2c2a967745ae30024cac693d69cd0146d1c4 Mon Sep 17 00:00:00 2001
+From: ConfusedPolarBear <33811686+ConfusedPolarBear@users.noreply.github.com>
+Date: Thu, 16 Jun 2022 18:16:30 -0500
+Subject: [PATCH 5/8] Create container.yml
+
+---
+ .github/workflows/container.yml | 61 +++++++++++++++++++++++++++++++++
+ 1 file changed, 61 insertions(+)
+ create mode 100644 .github/workflows/container.yml
+
+diff --git a/.github/workflows/container.yml b/.github/workflows/container.yml
+new file mode 100644
+index 00000000000..b4e7b7d0aaa
+--- /dev/null
++++ b/.github/workflows/container.yml
+@@ -0,0 +1,61 @@
++name: Publish container
++
++on:
++  workflow_dispatch:
++  
++env:
++  REGISTRY: ghcr.io
++  IMAGE_NAME: jellyfin-intro-skipper
++
++jobs:
++  build:
++    runs-on: ubuntu-latest
++
++    strategy:
++      matrix:
++        node-version: [14.x]
++    
++    steps:
++    - uses: actions/checkout@v3
++
++    - name: Use Node.js ${{ matrix.node-version }}
++      uses: actions/setup-node@v3
++      with:
++        node-version: ${{ matrix.node-version }}
++        
++    - name: Get npm cache directory
++      id: npm-cache-dir
++      run: |
++        echo "::set-output name=dir::$(npm config get cache)"
++
++    - name: Configure npm cache
++      uses: actions/cache@v3
++      id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
++      with:
++        path: ${{ steps.npm-cache-dir.outputs.dir }}
++        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
++        restore-keys: |
++          ${{ runner.os }}-node-
++        
++    - name: Checkout web interface
++      uses: actions/checkout@v3
++
++    - name: Store commit of web interface
++      id: web_commit
++      run: |
++        echo "::set-output commit=$(git log -1 --format='%H' | cut -c -10)"
++
++    - name: Login to GHCR
++      uses: docker/login-action@v2.0.0
++      with:
++        registry: ${{ env.REGISTRY }}
++        username: ${{ github.actor }}
++        password: ${{ secrets.GITHUB_TOKEN }}
++
++    - name: Publish container
++      uses: docker/build-push-action@v3.0.0
++      with:
++        file: docker/Dockerfile
++        context: docker/
++        push: true
++        tags: ${{ steps.web_commit.outputs.commit }}
+
+From c5144223c4f4cdf2444ed688005ba51077dfe50f Mon Sep 17 00:00:00 2001
+From: ConfusedPolarBear <33811686+ConfusedPolarBear@users.noreply.github.com>
+Date: Thu, 7 Jul 2022 18:08:48 -0500
+Subject: [PATCH 6/8] Remove unused files
+
+---
+ .github/workflows/container.yml | 61 ---------------------------------
+ Dockerfile                      |  5 ---
+ 2 files changed, 66 deletions(-)
+ delete mode 100644 .github/workflows/container.yml
+ delete mode 100644 Dockerfile
+
+diff --git a/.github/workflows/container.yml b/.github/workflows/container.yml
+deleted file mode 100644
+index b4e7b7d0aaa..00000000000
+--- a/.github/workflows/container.yml
++++ /dev/null
+@@ -1,61 +0,0 @@
+-name: Publish container
+-
+-on:
+-  workflow_dispatch:
+-  
+-env:
+-  REGISTRY: ghcr.io
+-  IMAGE_NAME: jellyfin-intro-skipper
+-
+-jobs:
+-  build:
+-    runs-on: ubuntu-latest
+-
+-    strategy:
+-      matrix:
+-        node-version: [14.x]
+-    
+-    steps:
+-    - uses: actions/checkout@v3
+-
+-    - name: Use Node.js ${{ matrix.node-version }}
+-      uses: actions/setup-node@v3
+-      with:
+-        node-version: ${{ matrix.node-version }}
+-        
+-    - name: Get npm cache directory
+-      id: npm-cache-dir
+-      run: |
+-        echo "::set-output name=dir::$(npm config get cache)"
+-
+-    - name: Configure npm cache
+-      uses: actions/cache@v3
+-      id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
+-      with:
+-        path: ${{ steps.npm-cache-dir.outputs.dir }}
+-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+-        restore-keys: |
+-          ${{ runner.os }}-node-
+-        
+-    - name: Checkout web interface
+-      uses: actions/checkout@v3
+-
+-    - name: Store commit of web interface
+-      id: web_commit
+-      run: |
+-        echo "::set-output commit=$(git log -1 --format='%H' | cut -c -10)"
+-
+-    - name: Login to GHCR
+-      uses: docker/login-action@v2.0.0
+-      with:
+-        registry: ${{ env.REGISTRY }}
+-        username: ${{ github.actor }}
+-        password: ${{ secrets.GITHUB_TOKEN }}
+-
+-    - name: Publish container
+-      uses: docker/build-push-action@v3.0.0
+-      with:
+-        file: docker/Dockerfile
+-        context: docker/
+-        push: true
+-        tags: ${{ steps.web_commit.outputs.commit }}
+diff --git a/Dockerfile b/Dockerfile
+deleted file mode 100644
+index b244b90f772..00000000000
+--- a/Dockerfile
++++ /dev/null
+@@ -1,5 +0,0 @@
+-FROM jellyfin/jellyfin:10.8.0
+-
+-RUN npm install
+-
+-COPY dist/ /jellyfin/jellyfin-web/
+
+From 83fc2cf4fe47118fa21dcc118c062b65f1fd0e4f Mon Sep 17 00:00:00 2001
+From: ConfusedPolarBear <33811686+ConfusedPolarBear@users.noreply.github.com>
+Date: Thu, 7 Jul 2022 18:09:44 -0500
+Subject: [PATCH 7/8] Fix positioning of skip intro button
+
+---
+ src/assets/css/videoosd.scss | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
 diff --git a/src/assets/css/videoosd.scss b/src/assets/css/videoosd.scss
 index 7dc0f715657..d6bf3e42935 100644
 --- a/src/assets/css/videoosd.scss

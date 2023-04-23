@@ -1,9 +1,9 @@
-# Copyright 2023 Gentoo Authors
+# Copyright 2022-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-inherit systemd
+inherit pax-utils systemd tmpfiles
 
 DESCRIPTION="Jellyfin puts you in control of managing and streaming your media"
 HOMEPAGE="https://jellyfin.readthedocs.io/en/latest/"
@@ -28,17 +28,32 @@ SRC_URI="
 RESTRICT="mirror network-sandbox test"
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~amd64 ~arm64"
-DEPEND="acct-user/jellyfin"
+KEYWORDS="-* ~amd64 ~arm64"
+DEPEND="
+	acct-user/jellyfin
+	media-libs/fontconfig
+	sys-libs/zlib
+"
 RDEPEND="${DEPEND}
+	dev-libs/icu
 	media-video/ffmpeg[vpx,x264]
+	sys-libs/glibc
 	intro-skipper? ( media-video/ffmpeg[chromaprint] )
-	dev-libs/icu"
-BDEPEND="acct-user/jellyfin
+"
+BDEPEND="
+	acct-user/jellyfin
 	intro-skipper? ( net-libs/nodejs[npm] )
 "
+
 INST_DIR="/opt/${PN}"
 QA_PREBUILT="${INST_DIR#/}/*.so ${INST_DIR#/}/jellyfin ${INST_DIR#/}/createdump"
+
+pkg_pretend() {
+	if use jellyscrub; then
+		ewarn "If your Jellyfin server uses a baseurl you need to set JF_BASEURL=<baseurl>."
+		ewarn "Otherwise the Jellyscrub plugin won't work."
+	fi
+}
 
 src_unpack() {
 	unpack ${A}
@@ -55,7 +70,7 @@ src_prepare() {
 	#Patch jellyfin-web for intro-skipper
 	if use intro-skipper; then
 		pushd ${WORKDIR}/jellyfin-web-${PV}
-		eapply ${FILESDIR}/10.8.5-intro-skipper-web.patch
+		eapply ${FILESDIR}/10.8.9-intro-skipper-web.patch
 		popd
 	fi
 }
@@ -90,15 +105,14 @@ src_install() {
 	insinto ${INST_DIR}
 	dodir ${INST_DIR}
 	doins -r "${S}"/*
+	newtmpfiles - jellyfin.conf <<<"d /var/cache/jellyfin 0775 jellyfin jellyfin -"
 	chmod 755 "${D}${INST_DIR}/jellyfin"
 	newinitd "${FILESDIR}/${PN}.init-r1" "${PN}"
 	newconfd "${FILESDIR}"/${PN}.confd "${PN}"
 	systemd_dounit "${FILESDIR}/${PN}.service"
+	pax-mark -m "${ED}${INST_DIR}/jellyfin"
 }
 
 pkg_postinst() {
-	if use jellyscrub; then
-		ewarn "If your Jellyfin server uses a baseurl you need to set JF_BASEURL=<baseurl>."
-		ewarn "Otherwise the Jellyscrub plugin won't work."
-	fi
+	tmpfiles_process jellyfin.conf
 }
