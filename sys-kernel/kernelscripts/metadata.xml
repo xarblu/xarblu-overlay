@@ -5,7 +5,4 @@
 		<email>xarblu@protonmail.com</email>
 		<name>Xarblu</name>
 	</maintainer>
-	<use>
-		<flag name="eclean-kernel">Install <pkg>app-admin/eclean-kernel</pkg> to help remove sparse files</flag>
-	</use>
 </pkgmetadata>
