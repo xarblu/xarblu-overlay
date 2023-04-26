@@ -11,15 +11,11 @@ LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 
-IUSE="eclean-kernel"
-
 RDEPEND="
-	eclean-kernel? ( app-admin/eclean-kernel )
 	|| ( sys-kernel/installkernel-gentoo sys-kernel/installkernel-systemd-boot )
 "
 
 src_install() {
 	exeinto /usr/bin
 	doexe kernelbuilder
-	doexe kernelcleaner
 }
