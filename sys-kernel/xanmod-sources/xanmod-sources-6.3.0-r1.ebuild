@@ -7,7 +7,7 @@ K_SECURITY_UNSUPPORTED="1"
 K_NOSETEXTRAVERSION="1"
 K_WANT_GENPATCHES="base extras"
 K_GENPATCHES_VER="1"
-XANMOD_VER="1"
+XANMOD_VER="1_rev2"
 PRJC_VER="$(ver_cut 1-2)"
 PRJC_REV="0"
 PRJC_GLUE_VER="6.3.0"
@@ -45,7 +45,7 @@ XANMOD_PATCH="1000-xanmod-${OKV}-${XANMOD_VER}.patch.xz"
 
 SRC_URI="
 	${KERNEL_BASE_URI}/linux-${KV_MAJOR}.${KV_MINOR}.tar.xz
-	${XANMOD_URI}/${OKV}-xanmod${XANMOD_VER}/patch-${OKV}-xanmod${XANMOD_VER}.xz -> ${XANMOD_PATCH}
+	${XANMOD_URI}/${OKV}-xanmod${XANMOD_VER}/patch-${OKV}-xanmod${XANMOD_VER%_rev*}.xz -> ${XANMOD_PATCH}
 	$(prjc_get src)
 	${GENPATCHES_URI}
 "
