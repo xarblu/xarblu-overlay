@@ -1,0 +1,30 @@
+diff --git a/kernel/sysctl.c b/kernel/sysctl.c
+index 316f93c..417d691 100644
+--- a/kernel/sysctl.c
++++ b/kernel/sysctl.c
+@@ -102,7 +102,9 @@ static const int six_hundred_forty_kb = 640 * 1024;
+ #endif
+ 
+ 
++#ifndef CONFIG_SCHED_ALT
+ extern int sysctl_sched_yield_type;
++#endif
+ static const int ngroups_max = NGROUPS_MAX;
+ static const int cap_last_cap = CAP_LAST_CAP;
+ 
+@@ -1654,6 +1656,7 @@ static struct ctl_table kern_table[] = {
+ 		.mode		= 0644,
+ 		.proc_handler	= proc_dointvec,
+ 	},
++#ifndef CONFIG_SCHED_ALT
+ 	{
+ 		.procname	= "yield_type",
+ 		.data		= &sysctl_sched_yield_type,
+@@ -1663,6 +1666,7 @@ static struct ctl_table kern_table[] = {
+ 		.extra1		= SYSCTL_ZERO,
+ 		.extra2		= SYSCTL_TWO,
+ 	},
++#endif
+ #ifdef CONFIG_USER_NS
+ 	{
+ 		.procname	= "unprivileged_userns_clone",
