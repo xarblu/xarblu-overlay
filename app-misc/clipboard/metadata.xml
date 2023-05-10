@@ -5,4 +5,7 @@
 		<email>xarblu@protonmail.com</email>
 		<name>Xarblu</name>
 	</maintainer>
+	<use>
+		<flag name="lto">Enable link time optimization (LTO)</flag>
+	</use>
 </pkgmetadata>
