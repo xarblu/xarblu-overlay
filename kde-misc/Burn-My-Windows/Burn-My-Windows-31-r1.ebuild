@@ -25,12 +25,10 @@ EFFECTS="doom energize-a energize-b fire glide glitch hexagon incinerate pixelat
 IUSE="${EFFECTS}"
 REQUIRED_USE="|| ( ${EFFECTS} )"
 
-# We only care for the kwin effects here
-S="${WORKDIR}/${P}/kwin"
-BUILD_DIR="${WORKDIR}/${P}_build"
+PATCHES=( "${FILESDIR}/blacklist-spectacle.patch" )
 
 # modded generate() from kwin/build.sh to allow USE flags and skip unneeded steps
-# This method is called one for each effect. The parameters are as follows:
+# This function is called for each effect. The parameters are as follows:
 # $1: The nick of the effect (e.g. "energize-a")
 # $2: The name of the effect (e.g. "Energize A")
 # $3: A short description of the effect (e.g. "Beam your windows away")
@@ -115,10 +113,14 @@ generate() {
 }
 
 src_compile() {
-	# Create it if it's not there yet.
+	# We only care for the kwin effects here
+	cd "${WORKDIR}/${P}/kwin"
+
+	# setup build dir
+	BUILD_DIR="${WORKDIR}/${P}_build"
 	mkdir -p "$BUILD_DIR"
 
-	# Compile the translations.
+	# compile the translations.
 	for file in ../po/*.po; do
 		echo "Compiling $file"
 		lang=$(basename "$file" .po)
