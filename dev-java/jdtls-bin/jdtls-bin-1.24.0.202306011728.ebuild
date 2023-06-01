@@ -5,11 +5,12 @@ EAPI=8
 
 inherit java-pkg-2
 
-JDTLS_REV="202303161431"
+MY_PV="$(ver_cut 1-3)"
+JDTLS_DATE="$(ver_cut 4)"
 
 DESCRIPTION="Java language server"
 HOMEPAGE="https://github.com/eclipse/eclipse.jdt.ls"
-SRC_URI="https://download.eclipse.org/jdtls/milestones/${PV}/jdt-language-server-${PV}-${JDTLS_REV}.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://download.eclipse.org/jdtls/milestones/${MY_PV}/jdt-language-server-${MY_PV}-${JDTLS_DATE}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="EPL-2.0"
 SLOT="0"
