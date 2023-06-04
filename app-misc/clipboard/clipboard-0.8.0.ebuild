@@ -15,7 +15,7 @@ LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 
-IUSE="debug wayland X"
+IUSE="debug lto wayland X"
 
 DEPEND="
 	wayland? (
@@ -32,24 +32,15 @@ BDEPEND="
 S="${WORKDIR}/${MY_PN}-${PV}"
 
 src_configure() {
-		local mycmakeargs=(
-			-DNO_WAYLAND=$(usex wayland NO YES)
-			-DNO_X11=$(usex X NO YES)
-		)
-		if ! use debug; then
-			append-cflags -DNDEBUG
-			append-cxxflags -DNDEBUG
-			mycmakeargs+=( -Wno-dev )
-		fi
-		cmake_src_configure
-}
-
-src_install() {
-	cmake_src_install
-
-	# fix multilib-strict
-	if [[ $(get_libdir) != "lib" ]]; then
-		einfo "fixing multilib-strict path..."
-		mv ${ED}/usr/lib ${ED}/usr/$(get_libdir) || die "fixing multilib-strict path failed"
+	local mycmakeargs=(
+		-DNO_LTO=$(usex lto NO YES)
+		-DNO_WAYLAND=$(usex wayland NO YES)
+		-DNO_X11=$(usex X NO YES)
+		-DCMAKE_INSTALL_LIBDIR=$(get_libdir)
+	)
+	if ! use debug; then
+		append-cflags -DNDEBUG
+		append-cxxflags -DNDEBUG
 	fi
+	cmake_src_configure
 }
