@@ -3,7 +3,7 @@
 
 EAPI=8
 
-inherit unpacker
+inherit unpacker linux-info
 
 DESCRIPTION="The Mullvad VPN client app for desktop"
 HOMEPAGE="https://www.mullvad.net"
@@ -25,6 +25,13 @@ DEPEND="
 RDEPEND="${DEPEND}"
 BDEPENDS="
 	$(unpacker_src_uri_depends)
+"
+
+# openvpn needs CONFIG_TUN
+# wireguard needs CONFIG_WIREGUARD
+CONFIG_CHECK="
+	~TUN
+	~WIREGUARD
 "
 
 src_unpack() {
@@ -50,4 +57,8 @@ src_install() {
 
 	# Wrapper for the GUI
 	newbin ${FILESDIR}/wrapper.sh mullvad-gui
+
+	# openrc init
+	doinitd ${FILESDIR}/mullvad-daemon.rc
+	doinitd ${FILESDIR}/mullvad-early-boot-blocking.rc
 }
