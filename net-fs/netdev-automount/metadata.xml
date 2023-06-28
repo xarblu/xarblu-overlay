@@ -2,7 +2,8 @@
 <!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
 <pkgmetadata>
 	<maintainer type="person">
-		<email></email>
+		<email>xarblu@protonmail.com</email>
+		<name>Xarblu</name>
 	</maintainer>
 	<use>
 		<flag name="networkmanager">Create symlinks for NetworkManager-dispatcher<flag>
