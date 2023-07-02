@@ -10,5 +10,7 @@
 	</use>
 	<upstream>
 		<remote-id type="github">xanmod/linux</remote-id>
+		<remote-id type="gitlab">xanmod/linux</remote-id>
+		<remote-id type="sourceforge">xanmod</remote-id>
 	</upstream>
 </pkgmetadata>
