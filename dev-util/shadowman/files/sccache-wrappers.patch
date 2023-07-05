@@ -1,0 +1,69 @@
+diff --git a/compiler-shadow.eselect b/compiler-shadow.eselect
+index 931a94a..05828bb 100644
+--- a/compiler-shadow.eselect
++++ b/compiler-shadow.eselect
+@@ -106,19 +106,44 @@ do_update() {
+ 
+ 		mkdir -p "${out_dir}" || die
+ 		cd "${out_dir}" || die
+-		local p
+-		for p in "${wildcards[@]}"; do
+-			# remove existing links matching the wildcard
+-			rm -f ${p} || die
+-
+-			# create new links
+-			local exe
+-			while read -r exe; do
+-				ln -v -s "${tool_exec}" "${exe}" || die
+-			done < <(compgen -c -X "!${p}" | sort -u)
+-			# note: compgen can return a command twice if it is included
+-			# in multiple directories in PATH
+-		done
++
++		case ${tool_exec} in
++			*sccache)
++				local p
++				for p in "${wildcards[@]}"; do
++					# remove existing wrappers matching the wildcard
++					rm -f ${p} || die
++
++					# create new links
++					local exe
++					while read -r exe; do
++							echo "'${exe}' -> '${tool_exec}'" || die
++							echo "#!/bin/sh" >> "${exe}" || die
++							echo "# make sure we aren't calling ourselves, then run" >> "${exe}" || die
++							echo "PATH=\$(echo \${PATH} | awk -v RS=: -v ORS=: '/${out_dir//\//\\/}/ {next} {print}' | sed 's/:*\$//')" >> "${exe}" || die
++							echo "${tool_exec} ${exe} \"\$@\"" >> "${exe}" || die
++							chmod +x "${exe}" || die
++					done < <(compgen -c -X "!${p}" | sort -u)
++					# note: compgen can return a command twice if it is included
++					# in multiple directories in PATH
++				done
++				;;
++			*)
++				local p
++				for p in "${wildcards[@]}"; do
++					# remove existing links matching the wildcard
++					rm -f ${p} || die
++
++					# create new links
++					local exe
++					while read -r exe; do
++							ln -v -s "${tool_exec}" "${exe}" || die
++					done < <(compgen -c -X "!${p}" | sort -u)
++					# note: compgen can return a command twice if it is included
++					# in multiple directories in PATH
++				done
++				;;
++		esac
+ 	done
+ }
+ ## }}}
+diff --git a/modules/tools/sccache b/modules/tools/sccache
+new file mode 100644
+index 0000000..8a8c1bf
+--- /dev/null
++++ b/modules/tools/sccache
+@@ -0,0 +1 @@
++/usr/lib/sccache/bin
