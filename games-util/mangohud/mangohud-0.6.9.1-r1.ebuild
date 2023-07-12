@@ -42,10 +42,15 @@ LICENSE="MIT"
 SLOT="0"
 IUSE="+dbus debug doc mangoapp mangohudctl +system-spdlog test wayland video_cards_nvidia +X xnvctrl"
 
+# HACK: system-spdlog only works with native abi
+# since native ABI is always selected selecting 'exactly one of all ABIs'
+# implicitly means 'only select native'
+MULTILIB_ALL="${MULTILIB_USEDEP//'(-)?,'/ }"
+MULTILIB_ALL="${MULTILIB_ALL//'(-)?'/}"
 REQUIRED_USE="
 	|| ( X wayland )
 	xnvctrl? ( video_cards_nvidia )
-	abi_x86_32? ( !system-spdlog )
+	system-spdlog? ( ^^ ( ${MULTILIB_ALL} ) )
 "
 
 BDEPEND="
