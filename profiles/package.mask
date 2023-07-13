@@ -32,3 +32,8 @@
 ## app-misc/some-package
 
 #--- END OF EXAMPLES ---
+
+
+# Xarblu <xarblu@protonmail.com> (2023-07-13)
+# Keeping the beta version(s) masked for now
+~net-vpn/mullvad-vpn-bin-2023.5_beta1

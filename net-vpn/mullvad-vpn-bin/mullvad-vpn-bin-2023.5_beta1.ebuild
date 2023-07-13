@@ -5,16 +5,18 @@ EAPI=8
 
 inherit unpacker linux-info
 
+MY_PV="${PV//_/-}"
+
 DESCRIPTION="The Mullvad VPN client app for desktop"
 HOMEPAGE="https://www.mullvad.net"
 SRC_URI="
-	amd64? ( https://github.com/mullvad/mullvadvpn-app/releases/download/${PV}/MullvadVPN-${PV}_amd64.deb )
-	arm64? ( https://github.com/mullvad/mullvadvpn-app/releases/download/${PV}/MullvadVPN-${PV}_arm64.deb )
+	amd64? ( https://github.com/mullvad/mullvadvpn-app/releases/download/${MY_PV}/MullvadVPN-${MY_PV}_amd64.deb )
+	arm64? ( https://github.com/mullvad/mullvadvpn-app/releases/download/${MY_PV}/MullvadVPN-${MY_PV}_arm64.deb )
 "
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="~amd64 ~arm64"
+KEYWORDS="-* ~amd64 ~arm64"
 
 DEPEND="
 	net-misc/iputils
@@ -33,6 +35,8 @@ CONFIG_CHECK="
 	~TUN
 	~WIREGUARD
 "
+
+S="${WORKDIR}/${PN}-${MY_PV}"
 
 src_unpack() {
 	mkdir ${S}
