@@ -6,6 +6,6 @@
 		<name>Xarblu</name>
 	</maintainer>
 	<use>
-		<flag name="networkmanager">Create symlinks for NetworkManager-dispatcher<flag>
+		<flag name="networkmanager">Create symlinks for NetworkManager-dispatcher</flag>
 	</use>
 </pkgmetadata>
