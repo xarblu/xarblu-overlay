@@ -10,7 +10,7 @@ K_GENPATCHES_VER="5"
 XANMOD_VER="1"
 PRJC_VER="$(ver_cut 1-2)"
 PRJC_REV="0"
-PRJC_GLUE_VER="6.3.0"
+PRJC_GLUE_VER="6.1.26"
 
 IUSE="project-c"
 
