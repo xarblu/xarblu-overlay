@@ -6,7 +6,6 @@ EAPI=8
 CRATES="
 	addr2line@0.19.0
 	adler@1.0.2
-	ahash@0.7.6
 	aho-corasick@0.7.20
 	android-tzdata@0.1.1
 	android_system_properties@0.1.5
@@ -44,10 +43,13 @@ CRATES="
 	color-spantrace@0.2.0
 	concurrent-queue@2.2.0
 	console@0.15.7
+	const-random-macro@0.1.15
+	const-random@0.1.15
 	core-foundation-sys@0.8.4
 	cpufeatures@0.2.8
 	crc32fast@1.3.2
 	crossbeam-utils@0.8.16
+	crunchy@0.2.2
 	crypto-common@0.1.6
 	derivative@2.2.0
 	digest@0.10.7
@@ -55,7 +57,7 @@ CRATES="
 	dirs-sys-next@0.1.2
 	dirs-sys@0.3.7
 	dirs@4.0.0
-	dlv-list@0.3.0
+	dlv-list@0.5.0
 	either@1.8.1
 	encode_unicode@0.3.6
 	encoding_rs@0.8.32
@@ -87,6 +89,7 @@ CRATES="
 	glob@0.3.1
 	h2@0.3.20
 	hashbrown@0.12.3
+	hashbrown@0.13.2
 	heck@0.4.1
 	hermit-abi@0.1.19
 	hermit-abi@0.2.6
@@ -138,7 +141,7 @@ CRATES="
 	objc_id@0.1.1
 	object@0.30.4
 	once_cell@1.17.2
-	ordered-multimap@0.4.3
+	ordered-multimap@0.6.0
 	ordered-stream@0.2.0
 	os_str_bytes@6.5.1
 	overload@0.1.1
@@ -153,6 +156,7 @@ CRATES="
 	proc-macro-crate@1.3.1
 	proc-macro-error-attr@1.0.4
 	proc-macro-error@1.0.4
+	proc-macro-hack@0.5.20+deprecated
 	proc-macro2@1.0.63
 	quick-xml@0.22.0
 	quick-xml@0.23.1
@@ -161,16 +165,16 @@ CRATES="
 	rand_chacha@0.3.1
 	rand_core@0.6.4
 	redox_syscall@0.2.16
+	redox_syscall@0.3.5
 	redox_users@0.4.3
 	regex-automata@0.1.10
 	regex-split@0.1.0
 	regex-syntax@0.6.29
 	regex@1.7.3
-	remove_dir_all@0.5.3
 	reqwest@0.11.18
 	ring@0.16.20
 	roff@0.2.1
-	rust-ini@0.18.0
+	rust-ini@0.19.0
 	rustc-demangle@0.1.23
 	rustix@0.37.20
 	rustls-pemfile@1.0.2
@@ -205,7 +209,7 @@ CRATES="
 	syn@2.0.22
 	tar@0.4.38
 	tauri-winrt-notification@0.1.1
-	tempfile@3.2.0
+	tempfile@3.6.0
 	termcolor@1.2.0
 	textwrap@0.15.2
 	thiserror-impl@1.0.40
@@ -215,6 +219,7 @@ CRATES="
 	time-macros@0.2.9
 	time@0.1.45
 	time@0.3.22
+	tiny-keccak@2.0.2
 	tinyvec@1.6.0
 	tinyvec_macros@0.1.1
 	tokio-rustls@0.24.1
@@ -316,23 +321,23 @@ src_install() {
 	cargo_src_install
 
 	# Shell completions
-	mkdir -p ${S}/completions
+	mkdir -p "${S}/completions"
 
 	# bash
-	${ED}/usr/bin/topgrade --gen-completion bash > ${S}/completions/${PN}.bash
-	newbashcomp ${S}/completions/${PN}.bash ${PN}
+	"${ED}/usr/bin/topgrade" --gen-completion bash > "${S}/completions/${PN}.bash"
+	newbashcomp "${S}/completions/${PN}.bash" "${PN}"
 
 	# zsh
-	${ED}/usr/bin/topgrade --gen-completion zsh > ${S}/completions/_${PN}
+	"${ED}/usr/bin/topgrade" --gen-completion zsh > "${S}/completions/_${PN}"
 	insinto /usr/share/zsh/site-functions
-	doins ${S}/completions/_${PN}
+	doins "${S}/completions/_${PN}"
 
 	# fish
-	${ED}/usr/bin/topgrade --gen-completion fish > ${S}/completions/${PN}.fish
+	"${ED}/usr/bin/topgrade" --gen-completion fish > "${S}/completions/${PN}.fish"
 	insinto /usr/share/fish/vendor_completions.d
-	doins ${S}/completions/${PN}.fish
+	doins "${S}/completions/${PN}.fish"
 
 	# manpage
-	${ED}/usr/bin/topgrade --gen-manpage > ${S}/completions/${PN}.1
-	doman ${S}/completions/${PN}.1
+	"${ED}/usr/bin/topgrade" --gen-manpage > "${S}/completions/${PN}.1"
+	doman "${S}/completions/${PN}.1"
 }
