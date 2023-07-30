@@ -30,7 +30,7 @@ BDEPEND="
 	)
 "
 
-LLVM_COMPONENTS=( polly cmake third-party )
+LLVM_COMPONENTS=( polly cmake )
 llvm.org_set_globals
 
 python_check_deps() {
@@ -43,9 +43,10 @@ pkg_setup() {
 }
 
 src_prepare() {
+	# prepend the newly built test binaries
 	if use test; then
 		local polly_test_bin="${WORKDIR}/${PN}_build/bin"
-		sed -i -E -e "s|^(llvm_config.add_tool_substitutions\(tool_patterns)|\1,\[llvm_config.config.llvm_tools_dir,\'${polly_test_bin}\'\]|" test/lit.cfg || die "sed: couldn't add test bin search dir"
+		sed -i -E -e "s|^(llvm_config.add_tool_substitutions\(tool_patterns)|\1,\[\'${polly_test_bin}\',llvm_config.config.llvm_tools_dir\]|" test/lit.cfg || die "sed: couldn't add test bin search dir"
 	fi
 	eapply_user
 	cmake_src_prepare
@@ -54,12 +55,9 @@ src_prepare() {
 src_configure() {
 	local mycmakeargs=(
 		-DLLVM_POLLY_LINK_INTO_TOOLS=OFF
-		-DLLVM_INCLUDE_TESTS=ON
-		-DLLVM_INSTALL_GTEST=ON
 		-DCMAKE_INSTALL_PREFIX="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}"
 	)
 	use test && mycmakeargs+=(
-		-DLLVM_BUILD_TESTS=ON
 		-DLLVM_EXTERNAL_LIT="${EPREFIX}/usr/bin/lit"
 		-DLLVM_LIT_ARGS="$(get_lit_flags)"
 		-DPython3_EXECUTABLE="${PYTHON}"
