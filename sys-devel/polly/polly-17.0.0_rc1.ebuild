@@ -3,7 +3,7 @@
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{9..11} )
+PYTHON_COMPAT=( python3_{10..12} )
 inherit cmake llvm llvm.org python-any-r1
 
 DESCRIPTION="Polyhedral optimizations for LLVM"
@@ -11,7 +11,7 @@ HOMEPAGE="https://polly.llvm.org/"
 
 LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
-KEYWORDS="~amd64 ~arm ~arm64 ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux ~ppc-macos ~x64-macos"
+KEYWORDS=""
 IUSE="test"
 RESTRICT="!test? ( test )"
 
@@ -30,8 +30,7 @@ BDEPEND="
 	)
 "
 
-LLVM_COMPONENTS=( polly cmake )
-LLVM_TEST_COMPONENTS=( llvm/utils/{lit,unittest} )
+LLVM_COMPONENTS=( polly cmake third-party )
 llvm.org_set_globals
 
 python_check_deps() {
@@ -43,10 +42,20 @@ pkg_setup() {
 	use test && python-any-r1_pkg_setup
 }
 
+src_prepare() {
+	if use test; then
+		local polly_test_bin="${WORKDIR}/${PN}_build/bin"
+		sed -i -E -e "s|^(llvm_config.add_tool_substitutions\(tool_patterns)|\1,\[llvm_config.config.llvm_tools_dir,\'${polly_test_bin}\'\]|" test/lit.cfg || die "sed: couldn't add test bin search dir"
+	fi
+	eapply_user
+	cmake_src_prepare
+}
+
 src_configure() {
 	local mycmakeargs=(
 		-DLLVM_POLLY_LINK_INTO_TOOLS=OFF
-		-DLLVM_INCLUDE_TESTS=$(usex test)
+		-DLLVM_INCLUDE_TESTS=ON
+		-DLLVM_INSTALL_GTEST=ON
 		-DCMAKE_INSTALL_PREFIX="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}"
 	)
 	use test && mycmakeargs+=(
