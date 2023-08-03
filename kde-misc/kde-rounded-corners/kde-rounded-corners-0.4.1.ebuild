@@ -9,7 +9,7 @@ KF_MIN="5.78"
 
 MY_PN="KDE-Rounded-Corners"
 
-DESCRIPTION="A KWin animation for windows moved or resized by programs or scripts"
+DESCRIPTION="Rounds the corners of your windows in KDE Plasma 5"
 HOMEPAGE="https://github.com/matinlotfali/KDE-Rounded-Corners"
 SRC_URI="https://github.com/matinlotfali/${MY_PN}/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 
