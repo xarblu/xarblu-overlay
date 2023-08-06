@@ -11,7 +11,6 @@ HOMEPAGE="https://gitlab.freedesktop.org/rncbc/qpwgraph"
 if [[ ${PV} == "9999" ]]; then
 	inherit git-r3
 	EGIT_REPO_URI="https://gitlab.freedesktop.org/rncbc/qpwgraph.git"
-	KEYWORDS=""
 else
 	SRC_URI="https://gitlab.freedesktop.org/rncbc/qpwgraph/-/archive/v${PV}/${PN}-v${PV}.tar.bz2 -> ${P}.tar.bz2"
 	S="${WORKDIR}/${PN}-v${PV}"
@@ -35,15 +34,15 @@ DEPEND="
 		dev-qt/qtbase:6=[gui,widgets,xml]
 		dev-qt/qtsvg:6=
 	)
-	media-video/pipewire
 	trayicon? (
 		!qt6? (
 			dev-qt/qtnetwork:5=
 		)
 		qt6? (
-			dev-qt/qtnetwork:6=
+			dev-qt/qtbase:6=[network]
 		)
 	)
+	media-video/pipewire
 "
 RDEPEND="${DEPEND}"
 BDEPEND="${DEPEND}"
