@@ -1,9 +1,9 @@
-# Copyright 2022 Gentoo Authors
+# Copyright 2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-COMMIT="eb21b2e871144a328f93c4597cc1932b43783e6a"
+COMMIT="4241c7daa444d3859b51b65a39d30e922adb87e9"
 
 DESCRIPTION="High-performance on-the-fly thumbnailer for mpv "
 HOMEPAGE="https://github.com/po5/thumbfast"
@@ -29,8 +29,15 @@ src_install() {
 	insinto "${MPV_INSTALL_DIR}"
 	doins thumbfast.lua
 	if use autoload; then
-   		dosym "${MPV_INSTALL_DIR}/thumbfast.lua" "/etc/mpv/scripts/thumbfast.lua"
+		dosym "${MPV_INSTALL_DIR}/thumbfast.lua" "/etc/mpv/scripts/thumbfast.lua"
 	fi
+
+	# install sample conf
+	insinto "/usr/share/${PN}"
+	doins "${PN}.conf"
+
+	# install docs (README)
+	einstalldocs
 }
 
 pkg_postinst() {
@@ -42,4 +49,8 @@ pkg_postinst() {
 		elog "If you want to manually configure them they're located in ${MPV_INSTALL_DIR}."
 		elog
 	fi
+
+	elog
+	elog "A sample config has been installed to /usr/share/${PN}/${PN}.conf"
+	elog
 }
