@@ -11,7 +11,7 @@ SRC_URI="https://github.com/po5/${PN}/archive/${COMMIT}.tar.gz -> ${P}.tar.gz"
 
 IUSE="+autoload"
 
-LICENSE="GPL-3"
+LICENSE="MPL-2.0"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 
