@@ -5,13 +5,13 @@ EAPI="8"
 ETYPE="sources"
 K_SECURITY_UNSUPPORTED="1"
 K_NOSETEXTRAVERSION="1"
+K_NODRYRUN="1"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="12"
+K_GENPATCHES_VER="52"
 XANMOD_VER="1"
-XANMOD_BRANCH="main"
+XANMOD_BRANCH="lts"
 PRJC_VER="$(ver_cut 1-2)"
-PRJC_REV="1"
-PRJC_LOCAL="1"
+PRJC_REV="4"
 PRJC_GLUE_VER="6.1.26"
 
 IUSE="project-c"
@@ -32,16 +32,10 @@ prjc_get() {
 			echo -n "project-c? ( GPL-3 )"
 			;;
 		src)
-			if [[ -z "${PRJC_LOCAL}" ]]; then
-				echo -n "project-c? ( ${PRJC_URI}/${PRJC_PATCH#*-} -> ${PRJC_PATCH} )"
-			fi
+			echo -n "project-c? ( ${PRJC_URI}/${PRJC_PATCH#*-} -> ${PRJC_PATCH} )"
 			;;
 		patch)
-			if [[ -z "${PRJC_LOCAL}" ]]; then
-				use project-c && echo -n "${DISTDIR}/${PRJC_PATCH} ${FILESDIR}/${PRJC_GLUE}"
-			else
-				use project-c && echo -n "${FILESDIR}/${PRJC_PATCH}.xz ${FILESDIR}/${PRJC_GLUE}"
-			fi
+			use project-c && echo -n "${DISTDIR}/${PRJC_PATCH} ${FILESDIR}/${PRJC_GLUE}"
 			;;
 	esac
 }
