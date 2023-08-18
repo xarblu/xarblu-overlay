@@ -22,4 +22,7 @@
 		<flag name="tv-glitch">Make your windows close like a very glitchy old-school TV</flag>
 		<flag name="wisps">Let your windows be carried away to the realm of dreams by these little fairies</flag>
 	</use>
+	<upstream>
+		<remote-id type="github">Schneegans/Burn-My-Windows</remote-id>
+	</upstream>
 </pkgmetadata>

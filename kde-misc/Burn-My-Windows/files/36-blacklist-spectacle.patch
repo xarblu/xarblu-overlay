@@ -1,0 +1,17 @@
+diff --git a/kwin/main.js.in b/kwin/main.js.in
+index 59d7a9f..7d4c7f3 100755
+--- a/kwin/main.js.in
++++ b/kwin/main.js.in
+@@ -9,7 +9,11 @@ const blacklist = [
+     "ksmserver-logout-greeter ksmserver-logout-greeter",
+ 
+     // KDE Plasma splash screen has to be animated only by the login effect.
+     "ksplashqml ksplashqml",
++
++    // Spectacle needs to be blacklisted in order to stay out of its own screenshots.
++    "spectacle spectacle", // x11
++    "spectacle org.kde.spectacle", // wayland
+
+     // All the tooltips of IntelliJ IDEs use the same window class as their main window.
+     // This results in many awkward animations, so we have to blacklist them all.
+     // See https://github.com/Schneegans/Burn-My-Windows/issues/284 for details.
