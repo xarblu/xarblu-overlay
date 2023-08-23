@@ -5,4 +5,7 @@
 		<email>xarblu@protonmail.com</email>
 		<name>Xarblu</name>
 	</maintainer>
+	<upstream>
+		<remote-id type="github">alexankitty/FancyTasks</remote-id>
+	</upstream>
 </pkgmetadata>
