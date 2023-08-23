@@ -9,7 +9,7 @@ MY_PV="$(ver_cut 1-3)"
 JDTLS_DATE="$(ver_cut 4)"
 
 DESCRIPTION="Java language server"
-HOMEPAGE="https://github.com/eclipse/eclipse.jdt.ls"
+HOMEPAGE="https://github.com/eclipse-jdtls/eclipse.jdt.ls"
 SRC_URI="https://download.eclipse.org/jdtls/milestones/${MY_PV}/jdt-language-server-${MY_PV}-${JDTLS_DATE}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="EPL-2.0"
