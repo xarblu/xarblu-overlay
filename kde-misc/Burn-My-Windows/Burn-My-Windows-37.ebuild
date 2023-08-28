@@ -21,11 +21,14 @@ BDEPEND="
 	sys-devel/gettext
 "
 # Allow choosing of the wanted effects
-EFFECTS="doom energize-a energize-b fire glide glitch hexagon incinerate pixelate pixel-wheel pixel-wipe portal tv tv-glitch wisps"
-IUSE="${EFFECTS}"
-REQUIRED_USE="|| ( ${EFFECTS} )"
+EFFECTS=( doom energize-a energize-b fire
+			glide glitch hexagon incinerate pixelate
+			pixel-wheel pixel-wipe portal tv tv-glitch wisps
+		)
+IUSE="${EFFECTS[@]/#/+}"
+REQUIRED_USE="|| ( "${EFFECTS[@]}" )"
 
-PATCHES=( "${FILESDIR}/blacklist-spectacle.patch" )
+PATCHES=( "${FILESDIR}/36-blacklist-spectacle.patch" )
 
 # modded generate() from kwin/build.sh to allow USE flags and skip unneeded steps
 # This function is called for each effect. The parameters are as follows:
@@ -45,8 +48,8 @@ generate() {
 	mkdir -p "$BUILD_DIR/$DIR_NAME/contents/config"
 	mkdir -p "$BUILD_DIR/$DIR_NAME/contents/ui"
 
-  	# Copy the translations.
-  	cp -r "$BUILD_DIR/locale" "$BUILD_DIR/$DIR_NAME/contents"
+	# Copy the translations.
+	cp -r "$BUILD_DIR/locale" "$BUILD_DIR/$DIR_NAME/contents"
 
 	# Copy the config file if it exists.
 	if [ -f "$1/main.xml" ]; then
