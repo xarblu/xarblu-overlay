@@ -5,6 +5,9 @@
 		<email>xarblu@protonmail.com</email>
 		<name>Xarblu</name>
 	</maintainer>
+	<use>
+		<flag name="battery">Battery status reporting via <pkg>sys-power/upower</pkg></flag>
+	</use>
 	<upstream>
 		<remote-id type="github">v1993/evdevhook2</remote-id>
 	</upstream>
