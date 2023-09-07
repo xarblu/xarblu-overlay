@@ -5,16 +5,15 @@ EAPI="8"
 ETYPE="sources"
 K_SECURITY_UNSUPPORTED="1"
 K_NOSETEXTRAVERSION="1"
-K_NODRYRUN="1"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="52"
+K_GENPATCHES_VER="17"
 XANMOD_VER="1"
-XANMOD_BRANCH="lts"
+XANMOD_BRANCH="main"
+#PRJC_UNSUPPORTED="1"
+PRJC_LOCAL="1"
 PRJC_VER="$(ver_cut 1-2)"
-PRJC_REV="4"
+PRJC_REV="1"
 PRJC_GLUE_VER="6.1.26"
-
-IUSE="project-c"
 
 inherit kernel-2
 detect_version
@@ -24,25 +23,36 @@ HOMEPAGE="https://xanmod.org"
 KEYWORDS="~amd64"
 
 prjc_get() {
+	[[ -n "${PRJC_UNSUPPORTED}" ]] && return
 	local PRJC_URI="https://gitlab.com/alfredchen/projectc/-/raw/master/${PRJC_VER}"
 	local PRJC_PATCH="5500-prjc_v${PRJC_VER}-r${PRJC_REV}.patch"
 	local PRJC_GLUE="5501-${PRJC_GLUE_VER}-prjc-glue.patch"
 	case $1 in
+		use)
+			echo -n "project-c"
+			;;
 		license)
 			echo -n "project-c? ( GPL-3 )"
 			;;
 		src)
-			echo -n "project-c? ( ${PRJC_URI}/${PRJC_PATCH#*-} -> ${PRJC_PATCH} )"
+			if [[ -z "${PRJC_LOCAL}" ]]; then
+				echo -n "project-c? ( ${PRJC_URI}/${PRJC_PATCH#*-} -> ${PRJC_PATCH} )"
+			fi
 			;;
 		patch)
-			use project-c && echo -n "${DISTDIR}/${PRJC_PATCH} ${FILESDIR}/${PRJC_GLUE}"
+			if [[ -z "${PRJC_LOCAL}" ]]; then
+				use project-c && echo -n "${DISTDIR}/${PRJC_PATCH} ${FILESDIR}/${PRJC_GLUE}"
+			else
+				use project-c && echo -n "${FILESDIR}/${PRJC_PATCH}.xz ${FILESDIR}/${PRJC_GLUE}"
+			fi
 			;;
 	esac
 }
 
+IUSE+=" $(prjc_get use)"
 LICENSE+=" CDDL $(prjc_get license)"
 
-XANMOD_URI="https://sourceforge.net/projects/xanmod/files/releases/${XANMOD_BRANCH}/${OKV}-xanmod${XANMOD_VER}"
+XANMOD_URI="https://master.dl.sourceforge.net/project/xanmod/releases/${XANMOD_BRANCH}/${OKV}-xanmod${XANMOD_VER}"
 XANMOD_PATCH="1000-xanmod-${OKV}-${XANMOD_VER}.patch.xz"
 
 SRC_URI="
