@@ -54,6 +54,8 @@ REQUIRED_USE="
 	${PYTHON_REQUIRED_USE}
 "
 
+RESTRICT="!test? ( test )"
+
 BDEPEND="
 	app-arch/unzip
 	test? ( dev-util/cmocka[${MULTILIB_USEDEP}] )
@@ -107,7 +109,7 @@ src_unpack() {
 
 	for subproject in "${projects[@]}"; do
 		einfo "Symlinking subproject ${subproject}"
-		ln -sfv ${WORKDIR}/${subproject} ${S}/subprojects/ || die "Couldn't symlink ${subproject}"
+		ln -sfv "${WORKDIR}/${subproject}" "${S}/subprojects/" || die "Couldn't symlink ${subproject}"
 	done
 }
 
