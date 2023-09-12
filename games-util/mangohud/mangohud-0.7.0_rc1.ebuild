@@ -51,6 +51,7 @@ REQUIRED_USE="
 	|| ( X wayland )
 	xnvctrl? ( video_cards_nvidia )
 	system-spdlog? ( ^^ ( ${MULTILIB_ALL} ) )
+	${PYTHON_REQUIRED_USE}
 "
 
 BDEPEND="
