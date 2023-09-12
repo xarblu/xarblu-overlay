@@ -3,7 +3,9 @@
 
 EAPI=8
 
-inherit desktop
+PYTHON_COMPAT=( python3_{10..12} )
+
+inherit python-any-r1 desktop
 
 DESCRIPTION="Make your plasma task manager widget pretty"
 HOMEPAGE="https://github.com/alexankitty/FancyTasks"
@@ -17,11 +19,20 @@ DEPEND="
 	kde-plasma/plasma-workspace:5
 "
 RDEPEND="${DEPEND}"
-BDEPEND=""
+BDEPEND="
+	${PYTHON_DEPS}
+	sys-devel/gettext
+"
+
+src_compile() {
+	pushd package/translate >/dev/null
+	bash ./merge
+	bash ./build
+	popd >/dev/null
+}
 
 src_install() {
 	insinto "/usr/share/plasma/plasmoids/alexankitty.fancytasks"
-	doins -r contents metadata.json
-
-	doicon -s 256 ${PN}.png
+	doins -r package/contents package/metadata.json
+	doicon -s 256 package/${PN}.png
 }
