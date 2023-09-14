@@ -6,15 +6,14 @@ ETYPE="sources"
 K_SECURITY_UNSUPPORTED="1"
 K_NOSETEXTRAVERSION="1"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="13"
+K_GENPATCHES_VER="59"
 XANMOD_VER="1"
-XANMOD_BRANCH="main"
+XANMOD_BRANCH="lts"
+PRJC_UNSUPPORTED="1"
+#PRJC_LOCAL="1"
 PRJC_VER="$(ver_cut 1-2)"
-PRJC_REV="1"
-PRJC_LOCAL="1"
+PRJC_REV="4"
 PRJC_GLUE_VER="6.1.26"
-
-IUSE="project-c"
 
 inherit kernel-2
 detect_version
@@ -24,10 +23,14 @@ HOMEPAGE="https://xanmod.org"
 KEYWORDS="~amd64"
 
 prjc_get() {
+	[[ -n "${PRJC_UNSUPPORTED}" ]] && return
 	local PRJC_URI="https://gitlab.com/alfredchen/projectc/-/raw/master/${PRJC_VER}"
 	local PRJC_PATCH="5500-prjc_v${PRJC_VER}-r${PRJC_REV}.patch"
 	local PRJC_GLUE="5501-${PRJC_GLUE_VER}-prjc-glue.patch"
 	case $1 in
+		use)
+			echo -n "project-c"
+			;;
 		license)
 			echo -n "project-c? ( GPL-3 )"
 			;;
@@ -46,6 +49,7 @@ prjc_get() {
 	esac
 }
 
+IUSE+=" $(prjc_get use)"
 LICENSE+=" CDDL $(prjc_get license)"
 
 XANMOD_URI="https://master.dl.sourceforge.net/project/xanmod/releases/${XANMOD_BRANCH}/${OKV}-xanmod${XANMOD_VER}"
