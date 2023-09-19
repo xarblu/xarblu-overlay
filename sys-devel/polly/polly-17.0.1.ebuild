@@ -12,7 +12,7 @@ HOMEPAGE="https://polly.llvm.org/"
 LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
 KEYWORDS="~amd64 ~arm ~arm64 ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux ~ppc-macos ~x64-macos"
-IUSE="test"
+IUSE="debug test"
 RESTRICT="!test? ( test )"
 
 # upstream says to build against the exact same version
@@ -53,6 +53,9 @@ src_prepare() {
 }
 
 src_configure() {
+	# LLVM_ENABLE_ASSERTIONS=NO does not guarantee this for us, #614844
+	use debug || local -x CPPFLAGS="${CPPFLAGS} -DNDEBUG"
+
 	local mycmakeargs=(
 		-DLLVM_POLLY_LINK_INTO_TOOLS=OFF
 		-DCMAKE_INSTALL_PREFIX="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}"
