@@ -504,10 +504,17 @@ src_install() {
 
 	# add polly libs to DT_NEEDED
 	if use polly; then
+		# die if they don't exist in ldpath
+		local ldpath="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)"
+		[[ -f "${ldpath}/libPolly.so" ]] \
+			&& einfo "libPolly.so found (${ldpath}/libPolly.so)" || die "libPolly.so not found"
+		[[ -f "${ldpath}/libPollyISL.so" ]] \
+			&& einfo "libPollyISL.so found (${ldpath}/libPollyISL.so)" || die "libPollyISL.so not found"
+		einfo "patching libLLVM.so to include libPolly{,ISL}.so ..."
 		patchelf --add-needed libPolly.so \
 				 --add-needed libPollyISL.so \
 				 "${ED}/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)/libLLVM.so" \
-				 || die "failed patching libLLVM.so for polly"
+				 || die "failed patching libLLVM.so"
 	fi
 }
 
