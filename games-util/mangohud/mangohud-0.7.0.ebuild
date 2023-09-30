@@ -139,6 +139,10 @@ multilib_src_install_all() {
 		rm "${ED}/usr/bin/mangoplot"
 	fi
 
+	# use slightly modified launch script
+	rm "${ED}/usr/bin/mangohud"
+	dobin "${FILESDIR}/mangohud"
+
 	einstalldocs
 }
 
