@@ -36,6 +36,9 @@ CONFIG_CHECK="
 	~WIREGUARD
 "
 
+# binary package, everything is prebuilt
+QA_PREBUILT="*"
+
 S="${WORKDIR}/${PN}-${MY_PV}"
 
 src_unpack() {
