@@ -17,15 +17,6 @@ DEPEND="
 	media-video/mpv:=
 "
 RDEPEND="${DEPEND}"
-BDEPEND=""
-
-src_prepare() {
-	default
-
-	# modify package.path so lua finds the shared libs
-	MPV_INSTALL_DIR="/usr/$(get_libdir)/mpv/${PN}"
-	sed -i -e "13s|$| .. \';\' .. \'${MPV_INSTALL_DIR}/scripts\' .. \'/?.lua\'|" scripts/${PN}.lua || die "failed modifying package.path"
-}
 
 src_install() {
 	MPV_INSTALL_DIR="/usr/$(get_libdir)/mpv/${PN}"

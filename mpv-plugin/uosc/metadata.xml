@@ -8,4 +8,7 @@
 	<use>
 		<flag name="autoload">Symlink files to /etc/mpv for autoloading.</flag>
 	</use>
+	<upstream>
+		<remote-id type="github">tomasklaen/uosc</remote-id>
+	</upstream>
 </pkgmetadata>
