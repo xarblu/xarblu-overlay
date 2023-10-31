@@ -6,13 +6,13 @@ ETYPE="sources"
 K_SECURITY_UNSUPPORTED="1"
 K_NOSETEXTRAVERSION="1"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="62"
+K_GENPATCHES_VER="1"
 XANMOD_VER="1"
-XANMOD_BRANCH="lts"
+XANMOD_BRANCH="edge"
 PRJC_UNSUPPORTED="1"
 #PRJC_LOCAL="1"
 PRJC_VER="$(ver_cut 1-2)"
-PRJC_REV="4"
+PRJC_REV="1"
 PRJC_GLUE_VER="6.1.26"
 
 inherit kernel-2
@@ -52,7 +52,7 @@ prjc_get() {
 IUSE+=" $(prjc_get use)"
 LICENSE+=" CDDL $(prjc_get license)"
 
-XANMOD_URI="https://master.dl.sourceforge.net/project/xanmod/releases/${XANMOD_BRANCH}/${OKV}-xanmod${XANMOD_VER}"
+XANMOD_URI="https://downloads.sourceforge.net/project/xanmod/releases/${XANMOD_BRANCH}/${OKV}-xanmod${XANMOD_VER}"
 XANMOD_PATCH="1000-xanmod-${OKV}-${XANMOD_VER}.patch.xz"
 
 SRC_URI="
