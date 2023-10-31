@@ -52,7 +52,7 @@ prjc_get() {
 IUSE+=" $(prjc_get use)"
 LICENSE+=" CDDL $(prjc_get license)"
 
-XANMOD_URI="https://master.dl.sourceforge.net/project/xanmod/releases/${XANMOD_BRANCH}/${OKV}-xanmod${XANMOD_VER}"
+XANMOD_URI="https://downloads.sourceforge.net/project/xanmod/releases/${XANMOD_BRANCH}/${OKV}-xanmod${XANMOD_VER}"
 XANMOD_PATCH="1000-xanmod-${OKV}-${XANMOD_VER}.patch.xz"
 
 SRC_URI="
