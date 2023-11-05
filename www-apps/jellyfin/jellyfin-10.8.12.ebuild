@@ -6,25 +6,23 @@ EAPI=8
 inherit pax-utils systemd tmpfiles
 
 DESCRIPTION="Jellyfin puts you in control of managing and streaming your media"
-HOMEPAGE="https://jellyfin.readthedocs.io/en/latest/"
+HOMEPAGE="https://jellyfin.org/"
 
 IUSE="intro-skipper jellyscrub"
 
 SRC_URI="
 	arm64? (
 		https://repo.jellyfin.org/releases/server/linux/versions/stable/combined/${PV}/${PN}_${PV}_arm64.tar.gz
-		https://repo.jellyfin.org/archive/linux/stable/${PV}/combined/${PN}_${PV}_arm64.tar.gz
 	)
 	amd64? (
 		https://repo.jellyfin.org/releases/server/linux/versions/stable/combined/${PV}/${PN}_${PV}_amd64.tar.gz
-		https://repo.jellyfin.org/archive/linux/stable/${PV}/combined/${PN}_${PV}_amd64.tar.gz
 	)
 	intro-skipper? (
-	 	https://github.com/jellyfin/jellyfin-web/archive/v${PV}.tar.gz -> jellyfin-web-${PV}.tar.gz
+		https://github.com/jellyfin/jellyfin-web/archive/v${PV}.tar.gz -> jellyfin-web-${PV}.tar.gz
 	)
 "
 
-#npm needs net access
+# npm needs net access
 RESTRICT="mirror network-sandbox test"
 LICENSE="GPL-2"
 SLOT="0"
@@ -57,7 +55,7 @@ pkg_pretend() {
 
 src_unpack() {
 	unpack ${A}
-	mv ${PN}_${PV} ${P} || die
+	mv "${PN}_${PV}" "${P}" || die
 }
 
 src_prepare() {
@@ -69,8 +67,8 @@ src_prepare() {
 
 	#Patch jellyfin-web for intro-skipper
 	if use intro-skipper; then
-		pushd ${WORKDIR}/jellyfin-web-${PV}
-		eapply ${FILESDIR}/10.8.9-intro-skipper-web.patch
+		pushd "${WORKDIR}/jellyfin-web-${PV}"
+		eapply "${FILESDIR}/10.8.9-intro-skipper-web.patch"
 		popd
 	fi
 }
@@ -80,7 +78,7 @@ src_compile() {
 
 	#Build custom jellyfin-web for intro-skipper
 	if use intro-skipper; then
-		pushd ${WORKDIR}/jellyfin-web-${PV}
+		pushd "${WORKDIR}/jellyfin-web-${PV}"
 		npm install || die "npm failed"
 		popd
 	fi
@@ -89,21 +87,21 @@ src_compile() {
 src_install() {
 	#Install custom jellyfin-web for intro-skipper
 	if use intro-skipper; then
-		rm -r ${S}/jellyfin-web/* || die "switching to modded jellyfin-web failed"
-		mv ${WORKDIR}/jellyfin-web-${PV}/dist/* ${S}/jellyfin-web/ || die "switching to modded jellyfin-web failed"
+		rm -r "${S}/jellyfin-web"/* || die "switching to modded jellyfin-web failed"
+		mv "${WORKDIR}/jellyfin-web-${PV}/dist"/* "${S}/jellyfin-web/" || die "switching to modded jellyfin-web failed"
 	fi
 
 	#Add jellyscrub plugin to index.html
 	if use jellyscrub; then
-		sed -i -e "s|</body>|<script plugin=\"Jellyscrub\" version=\"1.0.0.0\" src=\"${JF_BASEURL}/Trickplay/ClientScript\"></script>&|" ${S}/jellyfin-web/index.html || die "Failed modifying index.html"
+		sed -i -e "s|</body>|<script plugin=\"Jellyscrub\" version=\"1.0.0.0\" src=\"${JF_BASEURL#/}/Trickplay/ClientScript\"></script>&|" "${S}/jellyfin-web/index.html" || die "Failed modifying index.html"
 	fi
 
 	keepdir /var/log/jellyfin
 	fowners jellyfin:jellyfin /var/log/jellyfin
 	keepdir /etc/jellyfin
 	fowners jellyfin:jellyfin /etc/jellyfin
-	insinto ${INST_DIR}
-	dodir ${INST_DIR}
+	insinto "${INST_DIR}"
+	dodir "${INST_DIR}"
 	doins -r "${S}"/*
 	newtmpfiles - jellyfin.conf <<<"d /var/cache/jellyfin 0775 jellyfin jellyfin -"
 	chmod 755 "${D}${INST_DIR}/jellyfin"
