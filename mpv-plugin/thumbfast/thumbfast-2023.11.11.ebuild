@@ -3,7 +3,7 @@
 
 EAPI=8
 
-COMMIT="4241c7daa444d3859b51b65a39d30e922adb87e9"
+COMMIT="8498a34b594578a8b5ddd38c8c2ba20023638fc0"
 
 DESCRIPTION="High-performance on-the-fly thumbnailer for mpv "
 HOMEPAGE="https://github.com/po5/thumbfast"
