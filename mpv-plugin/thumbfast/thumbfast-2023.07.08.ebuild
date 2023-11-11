@@ -20,7 +20,6 @@ DEPEND="
 	net-misc/socat
 "
 RDEPEND="${DEPEND}"
-BDEPEND=""
 
 S="${WORKDIR}/${PN}-${COMMIT}"
 
