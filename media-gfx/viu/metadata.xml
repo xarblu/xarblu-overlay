@@ -8,4 +8,7 @@
 	<use>
 		<flag name="sixel">Experimental Sixel support</flag>
 	</use>
+	<upstream>
+		<remote-id type="github">atanunq/viu</remote-id>
+	</upstream>
 </pkgmetadata>
