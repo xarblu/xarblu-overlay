@@ -39,7 +39,7 @@ DEPEND="
 RDEPEND="${DEPEND}"
 BDEPEND="
 	dev-util/cmake
-	kde-frameworks/extra-cmake-modules:5=
+	kde-frameworks/extra-cmake-modules:0=
 "
 
 src_configure() {
