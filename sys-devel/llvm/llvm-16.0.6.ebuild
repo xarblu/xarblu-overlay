@@ -19,7 +19,7 @@ HOMEPAGE="https://llvm.org/"
 
 LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA BSD public-domain rc"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
-KEYWORDS="~amd64 ~arm ~arm64 ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux ~ppc-macos ~x64-macos"
+KEYWORDS="amd64 arm arm64 ~loong ppc ppc64 ~riscv sparc x86 ~amd64-linux ~ppc-macos ~x64-macos"
 IUSE="
 	+binutils-plugin debug doc exegesis libedit +libffi ncurses test polly xar
 	xml z3 zstd
@@ -429,6 +429,13 @@ multilib_src_configure() {
 		)
 	fi
 
+	# On Macos prefix, Gentoo doesn't split sys-libs/ncurses to libtinfo and
+	# libncurses, but llvm tries to use libtinfo before libncurses, and ends up
+	# using libtinfo (actually, libncurses.dylib) from system instead of prefix
+	use kernel_Darwin && mycmakeargs+=(
+		-DTerminfo_LIBRARIES=-lncurses
+	)
+
 	# workaround BMI bug in gcc-7 (fixed in 7.4)
 	# https://bugs.gentoo.org/649880
 	# apply only to x86, https://bugs.gentoo.org/650506
@@ -490,7 +497,17 @@ src_install() {
 
 	# add polly libs to DT_NEEDED
 	if use polly; then
-		patchelf --add-needed libPolly.so --add-needed libPollyISL.so "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)/libLLVM.so || die "failed patching libLLVM.so for polly"
+		# die if they don't exist in ldpath
+		local ldpath="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)"
+		[[ -f "${ldpath}/libPolly.so" ]] \
+			&& einfo "libPolly.so found (${ldpath}/libPolly.so)" || die "libPolly.so not found"
+		[[ -f "${ldpath}/libPollyISL.so" ]] \
+			&& einfo "libPollyISL.so found (${ldpath}/libPollyISL.so)" || die "libPollyISL.so not found"
+		einfo "patching libLLVM.so to include libPolly{,ISL}.so ..."
+		patchelf --add-needed libPolly.so \
+				 --add-needed libPollyISL.so \
+				 "${ED}/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)/libLLVM.so" \
+				 || die "failed patching libLLVM.so"
 	fi
 }
 
