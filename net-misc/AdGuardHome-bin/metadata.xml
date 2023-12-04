@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>xarblu@protonmail.com</email>
+		<name>Xarblu</name>
+	</maintainer>
+	<longdescription lang="en">
+	AdGuard Home is a network-wide software for blocking ads and tracking.
+	After you set it up, it'll cover ALL your home devices,
+	and you don't need any client-side software for that.
+	It operates as a DNS server that re-routes tracking domains
+	to a black hole, thus preventing your devices from connecting
+	to those servers.
+	</longdescription>
+	<upstream>
+		<remote-id type="github">AdguardTeam/AdGuardHome</remote-id>
+	</upstream>
+</pkgmetadata>

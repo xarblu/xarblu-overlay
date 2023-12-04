@@ -1,0 +1,4 @@
+# Config file for /etc/init.d/adguardhome
+
+# extra options (run AdGuardHome --help for a list of supported options)
+ADGUARDHOME_OPTS="-c /etc/adguardhome/AdGuardHome.yaml -w /var/lib/adguardhome"
