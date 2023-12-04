@@ -1,0 +1,32 @@
+#!/sbin/openrc-run
+# Copyright 2023 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+command="/usr/bin/AdGuardHome"
+command_args=""
+command_background="yes"
+command_user="${USER:-adguardhome}:${GROUP:-adguardhome}"
+description="AdGuardHome"
+description_configcheck="Check configuration in conffile"
+description_reload="Send hangup signal"
+extra_commands="configcheck"
+extra_started_commands="reload"
+name="AdGuardHome"
+pidfile="/run/${RC_SVCNAME}.pid"
+
+depend() {
+	need net
+}
+
+reload() {
+	configcheck || return 1
+	ebegin "Reloading AdGuardHome configuration"
+	"${command}" "${command_args}" -s reload
+	eend $? "Failed to reload"
+}
+
+configcheck() {
+	ebegin "Checking AdGuardHome configuration"
+	"${command}" "${command_args}" --check-config
+	eend $? "Failed to check configuration"
+}
