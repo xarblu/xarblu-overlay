@@ -8,7 +8,7 @@ inherit unpacker linux-info
 MY_PV="${PV//_/-}"
 
 DESCRIPTION="The Mullvad VPN client app for desktop"
-HOMEPAGE="https://www.mullvad.net"
+HOMEPAGE="https://mullvad.net"
 SRC_URI="
 	amd64? ( https://github.com/mullvad/mullvadvpn-app/releases/download/${MY_PV}/MullvadVPN-${MY_PV}_amd64.deb )
 	arm64? ( https://github.com/mullvad/mullvadvpn-app/releases/download/${MY_PV}/MullvadVPN-${MY_PV}_arm64.deb )
@@ -36,33 +36,36 @@ CONFIG_CHECK="
 	~WIREGUARD
 "
 
+# binary package, everything is prebuilt
+QA_PREBUILT="*"
+
 S="${WORKDIR}/${PN}-${MY_PV}"
 
 src_unpack() {
-	mkdir ${S}
-	cd ${S}
+	mkdir "${S}"
+	cd "${S}"
 	unpacker ${A}
 }
 
 src_prepare() {
 	# Fix zsh-completion path
-	mv ${S}/usr/{local,}/share/zsh
-	rm -r  ${S}/usr/local
+	mv "${S}/usr"/{local,}/share/zsh
+	rm -r  "${S}/usr/local"
 
 	# don't install "docs" (they're just deb changelogs)
-	rm -r ${S}/usr/share/doc
+	rm -r "${S}/usr/share/doc"
 
 	eapply_user
 }
 
 src_install() {
 	# 'install' messes with permissions so just cp here
-	cp -r ${S}/* ${ED}
+	cp -r "${S}"/* "${ED}"
 
 	# Wrapper for the GUI
-	newbin ${FILESDIR}/wrapper.sh mullvad-gui
+	newbin "${FILESDIR}/wrapper.sh" mullvad-gui
 
 	# openrc init
-	doinitd ${FILESDIR}/mullvad-daemon.rc
-	doinitd ${FILESDIR}/mullvad-early-boot-blocking.rc
+	doinitd "${FILESDIR}/mullvad-daemon.rc"
+	doinitd "${FILESDIR}/mullvad-early-boot-blocking.rc"
 }
