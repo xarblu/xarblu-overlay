@@ -3,7 +3,7 @@
 
 EAPI=8
 
-COMMIT="4241c7daa444d3859b51b65a39d30e922adb87e9"
+COMMIT="03e93feee5a85bf7c65db953ada41b4826e9f905"
 
 DESCRIPTION="High-performance on-the-fly thumbnailer for mpv "
 HOMEPAGE="https://github.com/po5/thumbfast"
@@ -16,8 +16,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 
 DEPEND="
-	media-video/mpv:=
-	net-misc/socat
+	media-video/mpv
 "
 RDEPEND="${DEPEND}"
 
