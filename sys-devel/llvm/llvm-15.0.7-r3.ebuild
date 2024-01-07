@@ -1,4 +1,4 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -20,8 +20,8 @@ LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA BSD public-domain rc"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
 KEYWORDS="amd64 arm arm64 ppc ppc64 ~riscv sparc x86 ~amd64-linux ~ppc-macos ~x64-macos"
 IUSE="
-	+binutils-plugin debug doc exegesis libedit +libffi ncurses test polly
-	xar xml z3 zstd
+	+binutils-plugin debug doc exegesis libedit +libffi ncurses test polly xar
+	xml z3 zstd
 "
 RESTRICT="!test? ( test )"
 
@@ -360,7 +360,8 @@ multilib_src_configure() {
 		-DLLVM_ENABLE_EH=ON
 		-DLLVM_ENABLE_RTTI=ON
 		-DLLVM_ENABLE_Z3_SOLVER=$(usex z3)
-		-DLLVM_ENABLE_ZSTD=$(usex zstd)
+		-DLLVM_ENABLE_ZLIB=FORCE_ON
+		-DLLVM_ENABLE_ZSTD=$(usex zstd FORCE_ON OFF)
 
 		-DLLVM_HOST_TRIPLE="${CHOST}"
 

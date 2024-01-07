@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
 <pkgmetadata>
-	<maintainer type="project">
-		<email>llvm@gentoo.org</email>
-	</maintainer>
 	<maintainer type="person">
 		<email>xarblu@protonmail.com</email>
 		<name>Xarblu</name>
@@ -27,5 +24,6 @@
 	</use>
 	<upstream>
 		<remote-id type="github">llvm/llvm-project</remote-id>
+		<remote-id type="cpe">cpe:/a:llvm:llvm</remote-id>
 	</upstream>
 </pkgmetadata>
