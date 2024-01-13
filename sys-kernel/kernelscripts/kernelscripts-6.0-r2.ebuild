@@ -12,7 +12,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 
 RDEPEND="
-	|| ( sys-kernel/installkernel-gentoo sys-kernel/installkernel-systemd )
+	|| ( sys-kernel/installkernel sys-kernel/installkernel-systemd )
 "
 
 src_install() {
