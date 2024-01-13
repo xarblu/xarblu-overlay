@@ -19,7 +19,7 @@ HOMEPAGE="https://llvm.org/"
 
 LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA BSD public-domain rc"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
-KEYWORDS="~amd64 ~arm ~arm64 ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux ~ppc-macos ~x64-macos"
+KEYWORDS="amd64 ~arm arm64 ~loong ~ppc ~ppc64 ~riscv ~sparc x86 ~amd64-linux ~ppc-macos ~x64-macos"
 IUSE="
 	+binutils-plugin debug debuginfod doc exegesis libedit +libffi
 	ncurses polly test xar xml z3 zstd
@@ -52,7 +52,6 @@ DEPEND="
 BDEPEND="
 	${PYTHON_DEPS}
 	dev-lang/perl
-	>=dev-util/cmake-3.16
 	sys-devel/gnuconfig
 	kernel_Darwin? (
 		<sys-libs/libcxx-${LLVM_VERSION}.9999
