@@ -5,4 +5,7 @@
 		<email>xarblu@protonmail.com</email>
 		<name>Xarblu</name>
 	</maintainer>
+	<upstream>
+		<remote-id type="gitlab">crafty-controller/crafty-4</remote-id>
+	</upstream>
 </pkgmetadata>
