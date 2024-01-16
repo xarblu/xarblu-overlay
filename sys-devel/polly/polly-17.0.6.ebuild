@@ -25,7 +25,6 @@ DEPEND="
 RDEPEND="${DEPENDS}"
 BDEPEND="
 	test? (
-		>=dev-util/cmake-3.16
 		$(python_gen_any_dep ">=dev-python/lit-${PV}[\${PYTHON_USEDEP}]")
 	)
 "
