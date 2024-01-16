@@ -12,18 +12,20 @@ CHROMIUM_LANGS="
 	sw ta te th tr uk ur vi zh-CN zh-TW
 "
 
-inherit chromium-2 desktop linux-info unpacker xdg
+inherit chromium-2 desktop linux-info unpacker xdg wrapper
 
 DESCRIPTION="A standalone Electron app that loads Discord & Vencord"
 HOMEPAGE="https://vencord.dev https://github.com/Vencord/Vesktop"
 SRC_URI="
-	amd64? ( https://github.com/Vencord/${MY_PN}/releases/download/v${PV}/VencordDesktop_${PV}_amd64.deb )
-	arm64? ( https://github.com/Vencord/${MY_PN}/releases/download/v${PV}/VencordDesktop_${PV}_arm64.deb )
+	amd64? ( https://github.com/Vencord/${MY_PN}/releases/download/v${PV}/${PN%-bin}_${PV}_amd64.deb )
+	arm64? ( https://github.com/Vencord/${MY_PN}/releases/download/v${PV}/${PN%-bin}_${PV}_arm64.deb )
 "
 
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="-* ~amd64 ~arm64"
+
+IUSE="wayland"
 
 RDEPEND="
 	x11-libs/libnotify
@@ -51,6 +53,10 @@ src_prepare() {
 	pushd "opt/${MY_PN}/locales/" >/dev/null || die "location change for language cleanup failed"
 	chromium_remove_language_paks
 	popd >/dev/null || die "location reset for language cleanup failed"
+
+	# point desktop file to wrapper
+	sed -i -e "/Exec=/s:${DESTDIR%/}:/usr/bin:" \
+		"usr/share/applications/${PN%-bin}.desktop" || die "sed failed"
 }
 
 src_configure() {
@@ -61,26 +67,29 @@ src_configure() {
 src_install() {
 	# install desktop stuff
 	for size in 16 32 48 64 128 256 512 1024; do
-		doicon -s "${size}" "usr/share/icons/hicolor/${size}x${size}/apps/vencorddesktop.png"
+		doicon -s "${size}" "usr/share/icons/hicolor/${size}x${size}/apps/${PN%-bin}.png"
 	done
-	domenu usr/share/applications/vencorddesktop.desktop
+	domenu usr/share/applications/${PN%-bin}.desktop
 
 	# install the rest
 	pushd "opt/${MY_PN}" >/dev/null || die "changing dirs failed"
 	# executables
 	exeinto "${DESTDIR}"
 	doexe chrome-sandbox \
-		libEGL.so libffmpeg.so \
+		libEGL.so \
+		libffmpeg.so \
 		libGLESv2.so \
 		libvk_swiftshader.so \
 		libvulkan.so.1 \
-		vencorddesktop
+		${PN%-bin}
 
 	# regular files
 	insinto "${DESTDIR}"
 	doins chrome_100_percent.pak \
 		chrome_200_percent.pak \
 		icudtl.dat \
+		LICENSE.electron.txt \
+		LICENSES.chromium.html \
 		resources.pak \
 		snapshot_blob.bin \
 		v8_context_snapshot.bin \
@@ -97,6 +106,8 @@ src_install() {
 	# See #903616 and #890595
 	[[ -x chrome_crashpad_handler ]] && doexe chrome_crashpad_handler
 
-	dosym "${DESTDIR}/vencorddesktop" "/usr/bin/${PN%-bin}"
 	popd >/dev/null || die "changing dirs failed"
+
+	# install wrapper, optionally enable ozone via USE wayland
+	make_wrapper "${PN%-bin}" "${DESTDIR}/${PN%-bin} $(usev wayland --ozone-platform-hint=auto)"
 }
