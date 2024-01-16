@@ -38,7 +38,6 @@ DEPEND="
 "
 RDEPEND="${DEPEND}"
 BDEPEND="
-	dev-util/cmake
 	kde-frameworks/extra-cmake-modules:0=
 "
 
