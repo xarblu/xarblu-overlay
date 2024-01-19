@@ -9,7 +9,7 @@ DESCRIPTION="Qt/C++ Utilities for DFL"
 HOMEPAGE="https://gitlab.com/desktop-frameworks/utils"
 SRC_URI="https://gitlab.com/desktop-frameworks/${PN#dfl-}/-/archive/v${PV}/${PN#dfl-}-v${PV}.tar.bz2"
 
-LICENSE="MIT"
+LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="qt6"
