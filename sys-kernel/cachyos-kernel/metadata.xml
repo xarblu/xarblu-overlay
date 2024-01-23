@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<name>Xarblu</name>
+		<email>xarblu@protonmail.com</email>
+	</maintainer>
+	<upstream>
+		<remote-id type="github">CachyOS/linux-cachyos</remote-id>
+	</upstream>
+	<use>
+		<flag name="bore">BORE Scheduler</flag>
+		<flag name="cachyos">CachyOS Scheduler (BORE + SCHED-EXT)</flag>
+		<flag name="generic-uki">
+			Build and install a generic initramfs and Unified Kernel Image,
+			this is intended for building binpkgs with a pre-generated UKI
+			included (EXPERIMENTAL).
+		</flag>
+		<flag name="hardened">Hardening Patches</flag>
+		<flag name="initramfs">
+			Build initramfs along with the kernel.
+		</flag>
+		<flag name="rt">RT Patches</flag>
+		<flag name="rt-bore">BORE Scheduler + RT Patches</flag>
+		<flag name="sched-ext">SCHED-EXT Scheduler</flag>
+	</use>
+</pkgmetadata>
