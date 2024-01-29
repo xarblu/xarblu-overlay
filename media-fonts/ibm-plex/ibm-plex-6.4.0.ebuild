@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Gentoo Authors
+# Copyright 2019-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -20,11 +20,9 @@ S="${WORKDIR}/${P/ibm-}"
 
 DOCS=( README.md )
 
-FONT_SUFFIX=""
-
 src_install() {
 if use otf; then
-	FONT_SUFFIX+="otf"
+	FONT_SUFFIX="otf"
 	FONT_S=(
 		IBM-Plex-Mono/fonts/complete/otf
 		IBM-Plex-Sans-Arabic/fonts/complete/otf
@@ -42,7 +40,7 @@ if use otf; then
 fi
 
 if use ttf; then
-	FONT_SUFFIX+="ttf"
+	FONT_SUFFIX="ttf"
 	FONT_S=(
 		IBM-Plex-Mono/fonts/complete/ttf
 		IBM-Plex-Sans-Arabic/fonts/complete/ttf
