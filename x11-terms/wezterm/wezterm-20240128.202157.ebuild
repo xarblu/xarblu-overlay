@@ -677,7 +677,7 @@ fi
 
 SUBMODULES=(
 	"freetype2 github main@freetype https://github.com/wez/freetype2 e4586d960f339cf75e2e0b34aee30a0ed8353c0d"
-	"libpng github main@freetype https://github.com/glennrp/libpng 8439534daa1d3a5705ba92e653eda9251246dd61"
+	"libpng github main@freetype https://github.com/pnggroup/libpng 8439534daa1d3a5705ba92e653eda9251246dd61"
 	"zlib github main@freetype https://github.com/madler/zlib cacf7f1d4e3d44d871b605da3b647f07d718623f"
 	"harfbuzz github main@harfbuzz https://github.com/harfbuzz/harfbuzz 894a1f72ee93a1fd8dc1d9218cb3fd8f048be29a"
 	"xcb-imdkit github git-crate-xcb-imdkit@xcb-imdkit https://github.com/fcitx/xcb-imdkit 30e2f16f9a8b0e338e25ce5e3643809a07ad41f0"
