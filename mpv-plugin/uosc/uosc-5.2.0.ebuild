@@ -5,7 +5,7 @@ EAPI=8
 
 DESCRIPTION="Feature-rich minimalist proximity-based UI for MPV player"
 HOMEPAGE="https://github.com/tomasklaen/uosc"
-SRC_URI="https://github.com/tomasklaen/${PN}/archive/${PV}.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/tomasklaen/${PN}/releases/download/${PV}/${PN}.zip -> ${P}.zip"
 
 IUSE="+autoload"
 
@@ -13,10 +13,17 @@ LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 
+BDEPEND="app-arch/unzip"
 DEPEND="
 	media-video/mpv:=
 "
 RDEPEND="${DEPEND}"
+
+# comes with prebuilt binaries
+# TODO: build binary but that requires packaging go-deps
+QA_PREBUILT="*/ziggy-*"
+
+S="${WORKDIR}"
 
 src_install() {
 	MPV_INSTALL_DIR="/usr/$(get_libdir)/mpv/${PN}"
