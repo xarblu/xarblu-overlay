@@ -137,14 +137,6 @@ multilib_src_configure() {
 	meson_src_configure
 }
 
-#multilib_src_install_all() {
-#	# use slightly modified launch script
-#	rm "${ED}/usr/bin/mangohud"
-#	dobin "${FILESDIR}/mangohud"
-#
-#	einstalldocs
-#}
-
 pkg_postinst() {
 	if ! use xnvctrl; then
 		elog ""
