@@ -3,7 +3,7 @@
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{10..11} )
+PYTHON_COMPAT=( python3_{10..12} )
 
 inherit python-r1 meson-multilib
 
@@ -30,14 +30,14 @@ declare -A subprojectv=(
 SRC_URI="
 	https://github.com/flightlessmango/MangoHud/archive/v${MY_PV}${MY_PV_REV}.tar.gz -> ${P}.tar.gz
 	https://github.com/KhronosGroup/Vulkan-Headers/archive/v${subprojectv[vkheaders]}.tar.gz -> vulkan-headers-${subprojectv[vkheaders]}.tar.gz
-	https://wrapdb.mesonbuild.com/v2/vulkan-headers_${subprojectv[vkheaders_meson]}/get_patch#/vulkan-headers-${subprojectv[vkheaders_meson]}-wrap.zip -> vulkan-headers-${subprojectv[vkheaders_meson]}-wrap.zip
+	https://wrapdb.mesonbuild.com/v2/vulkan-headers_${subprojectv[vkheaders_meson]}/get_patch/vulkan-headers-${subprojectv[vkheaders_meson]}-wrap.zip
 	https://github.com/ocornut/imgui/archive/v${subprojectv[imgui]}.tar.gz -> imgui-${subprojectv[imgui]}.tar.gz
-	https://wrapdb.mesonbuild.com/v2/imgui_${subprojectv[imgui_meson]}/get_patch#/imgui-${subprojectv[imgui_meson]}-wrap.zip -> imgui-${subprojectv[imgui_meson]}-wrap.zip
+	https://wrapdb.mesonbuild.com/v2/imgui_${subprojectv[imgui_meson]}/get_patch/imgui-${subprojectv[imgui_meson]}-wrap.zip
 	https://github.com/epezent/implot/archive/v${subprojectv[implot]}.tar.gz -> imgui-${subprojectv[implot]}.tar.gz
-	https://wrapdb.mesonbuild.com/v2/implot_${subprojectv[implot_meson]}/get_patch#/implot-${subprojectv[implot_meson]}-wrap.zip -> implot-${subprojectv[implot_meson]}-wrap.zip
+	https://wrapdb.mesonbuild.com/v2/implot_${subprojectv[implot_meson]}/get_patch/implot-${subprojectv[implot_meson]}-wrap.zip
 	!system-spdlog? (
 		https://github.com/gabime/spdlog/archive/v${subprojectv[spdlog]}.tar.gz -> spdlog-${subprojectv[spdlog]}.tar.gz
-		https://wrapdb.mesonbuild.com/v2/spdlog_${subprojectv[spdlog_meson]}/get_patch#spdlog-${subprojectv[spdlog_meson]}-wrap.zip -> spdlog-${subprojectv[spdlog_meson]}-wrap.zip
+		https://wrapdb.mesonbuild.com/v2/spdlog_${subprojectv[spdlog_meson]}/get_patch/spdlog-${subprojectv[spdlog_meson]}-wrap.zip
 	)
 "
 
