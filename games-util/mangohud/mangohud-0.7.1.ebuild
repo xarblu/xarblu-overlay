@@ -1,17 +1,17 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{10..11} )
+PYTHON_COMPAT=( python3_{10..12} )
 
-inherit python-any-r1 meson-multilib
+inherit python-r1 meson-multilib
 
 DESCRIPTION="Vulkan and OpenGL overlay for monitoring FPS, sensors, system load and more"
 HOMEPAGE="https://github.com/flightlessmango/MangoHud"
 
 MY_PV=$(ver_cut 1-3)
-[[ -n "$(ver_cut 4)" ]] && MY_PV_REV="-$(ver_cut 4)"
+[[ -n "$(ver_cut 4-)" ]] && MY_PV_REV="-$(ver_cut 4-)"
 
 # required subprojects
 # spdlog only required until
@@ -19,28 +19,32 @@ MY_PV=$(ver_cut 1-3)
 declare -A subprojectv=(
 	[vkheaders]="1.2.158"
 	[vkheaders_meson]="1.2.158-2"
-	[imgui]="1.81"
-	[imgui_meson]="1.81-1"
-	[spdlog]="1.8.5"
-	[spdlog_meson]="1.8.5-1"
+	[imgui]="1.89.9"
+	[imgui_meson]="1.89.9-1"
+	[implot]="0.16"
+	[implot_meson]="0.16-1"
+	[spdlog]="1.13.0"
+	[spdlog_meson]="1.13.0-1"
 )
 
 SRC_URI="
 	https://github.com/flightlessmango/MangoHud/archive/v${MY_PV}${MY_PV_REV}.tar.gz -> ${P}.tar.gz
 	https://github.com/KhronosGroup/Vulkan-Headers/archive/v${subprojectv[vkheaders]}.tar.gz -> vulkan-headers-${subprojectv[vkheaders]}.tar.gz
-	https://wrapdb.mesonbuild.com/v2/vulkan-headers_${subprojectv[vkheaders_meson]}/get_patch#/vulkan-headers-${subprojectv[vkheaders_meson]}-wrap.zip -> vulkan-headers-${subprojectv[vkheaders_meson]}-wrap.zip
+	https://wrapdb.mesonbuild.com/v2/vulkan-headers_${subprojectv[vkheaders_meson]}/get_patch/vulkan-headers-${subprojectv[vkheaders_meson]}-wrap.zip
 	https://github.com/ocornut/imgui/archive/v${subprojectv[imgui]}.tar.gz -> imgui-${subprojectv[imgui]}.tar.gz
-	https://wrapdb.mesonbuild.com/v2/imgui_${subprojectv[imgui_meson]}/get_patch#/imgui-${subprojectv[imgui_meson]}-wrap.zip -> imgui-${subprojectv[imgui_meson]}-wrap.zip
+	https://wrapdb.mesonbuild.com/v2/imgui_${subprojectv[imgui_meson]}/get_patch/imgui-${subprojectv[imgui_meson]}-wrap.zip
+	https://github.com/epezent/implot/archive/v${subprojectv[implot]}.tar.gz -> imgui-${subprojectv[implot]}.tar.gz
+	https://wrapdb.mesonbuild.com/v2/implot_${subprojectv[implot_meson]}/get_patch/implot-${subprojectv[implot_meson]}-wrap.zip
 	!system-spdlog? (
 		https://github.com/gabime/spdlog/archive/v${subprojectv[spdlog]}.tar.gz -> spdlog-${subprojectv[spdlog]}.tar.gz
-		https://wrapdb.mesonbuild.com/v2/spdlog_${subprojectv[spdlog_meson]}/get_patch#spdlog-${subprojectv[spdlog_meson]}-wrap.zip -> spdlog-${subprojectv[spdlog_meson]}-wrap.zip
+		https://wrapdb.mesonbuild.com/v2/spdlog_${subprojectv[spdlog_meson]}/get_patch/spdlog-${subprojectv[spdlog_meson]}-wrap.zip
 	)
 "
 
 KEYWORDS="~amd64"
 LICENSE="MIT"
 SLOT="0"
-IUSE="+dbus debug doc mangoapp mangohudctl +system-spdlog test wayland video_cards_nvidia +X xnvctrl"
+IUSE="+dbus debug doc mangoapp mangohudctl mangoplot +system-spdlog test wayland video_cards_nvidia +X xnvctrl"
 
 # HACK: system-spdlog only works with native abi
 # since native ABI is always selected selecting 'exactly one of all ABIs'
@@ -51,7 +55,10 @@ REQUIRED_USE="
 	|| ( X wayland )
 	xnvctrl? ( video_cards_nvidia )
 	system-spdlog? ( ^^ ( ${MULTILIB_ALL} ) )
+	${PYTHON_REQUIRED_USE}
 "
+
+RESTRICT="!test? ( test )"
 
 BDEPEND="
 	app-arch/unzip
@@ -70,13 +77,20 @@ DEPEND="
 		media-libs/glew[${MULTILIB_USEDEP}]
 		media-libs/glfw[-wayland-only,${MULTILIB_USEDEP}]
 	)
+	mangoplot? (
+		$(python_gen_cond_dep '
+			dev-python/numpy[${PYTHON_USEDEP}]
+			dev-python/matplotlib[${PYTHON_USEDEP}]
+		')
+	)
 	system-spdlog? ( dev-libs/spdlog )
 	video_cards_nvidia? (
 		x11-drivers/nvidia-drivers[${MULTILIB_USEDEP}]
 		xnvctrl? ( x11-drivers/nvidia-drivers[static-libs] )
 	)
-	wayland? ( dev-libs/wayland[${MULTILIB_USEDEP}] )
+	wayland? ( >=dev-libs/wayland-1.11[${MULTILIB_USEDEP}] )
 	X? ( x11-libs/libX11[${MULTILIB_USEDEP}] )
+	${PYTHON_DEPS}
 "
 
 RDEPEND="${DEPEND}"
@@ -87,10 +101,6 @@ python_check_deps() {
 
 S="${WORKDIR}/MangoHud-${PV}"
 
-PATCHES=(
-	"${FILESDIR}/mangohud-0.6.9-system-cmocka.patch"
-)
-
 src_unpack() {
 	default
 	[[ -n "${MY_PV_REV}" ]] && ( mv "${WORKDIR}/MangoHud-${MY_PV}${MY_PV_REV}" "${WORKDIR}/MangoHud-${PV}" || die )
@@ -98,19 +108,20 @@ src_unpack() {
 	# symlink subprojects
 	local projects=( Vulkan-Headers-${subprojectv[vkheaders]}
 					 imgui-${subprojectv[imgui]}
+					 implot-${subprojectv[implot]}
 					 $(usex system-spdlog '' spdlog-${subprojectv[spdlog]})
 					)
 
 	for subproject in "${projects[@]}"; do
 		einfo "Symlinking subproject ${subproject}"
-		ln -sfv ${WORKDIR}/${subproject} ${S}/subprojects/ || die "Couldn't symlink ${subproject}"
+		ln -sfv "${WORKDIR}/${subproject}" "${S}/subprojects/" || die "Couldn't symlink ${subproject}"
 	done
 }
 
 multilib_src_configure() {
 	local emesonargs=(
-		-Dappend_libdir_mangohud=false
 		$(meson_feature system-spdlog use_system_spdlog)
+		-Dappend_libdir_mangohud=false
 		$(meson_use doc include_doc)
 		$(meson_feature video_cards_nvidia with_nvml)
 		$(meson_feature xnvctrl with_xnvctrl)
@@ -118,9 +129,10 @@ multilib_src_configure() {
 		$(meson_feature wayland with_wayland)
 		$(meson_feature dbus with_dbus)
 		$(meson_use mangoapp mangoapp)
-		$(meson_use mangoapp mangoapp_layer)
 		$(meson_use mangohudctl mangohudctl)
+		$(meson_use mangoapp mangoapp_layer)
 		$(meson_feature test tests)
+		$(meson_feature mangoplot mangoplot)
 	)
 	meson_src_configure
 }
