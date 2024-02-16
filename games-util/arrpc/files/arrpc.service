@@ -1,0 +1,8 @@
+[Unit]
+Description=Open Discord RPC server for atypical setups
+
+[Service]
+ExecStart=/usr/bin/arrpc
+
+[Install]
+WantedBy=default.target
