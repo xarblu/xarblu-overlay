@@ -54,10 +54,6 @@ BDEPEND="
 	kernel_Darwin? (
 		<sys-libs/libcxx-${LLVM_VERSION}.9999
 	)
-	doc? ( $(python_gen_any_dep '
-		dev-python/myst-parser[${PYTHON_USEDEP}]
-		dev-python/sphinx[${PYTHON_USEDEP}]
-	') )
 	libffi? ( virtual/pkgconfig )
 "
 # There are no file collisions between these versions but having :0
@@ -77,8 +73,17 @@ LLVM_MANPAGES=1
 LLVM_USE_TARGETS=provide
 llvm.org_set_globals
 
+[[ -n ${LLVM_MANPAGE_DIST} ]] && BDEPEND+=" doc? ( "
+BDEPEND+="
+	$(python_gen_any_dep '
+		dev-python/myst-parser[${PYTHON_USEDEP}]
+		dev-python/sphinx[${PYTHON_USEDEP}]
+	')
+"
+[[ -n ${LLVM_MANPAGE_DIST} ]] && BDEPEND+=" ) "
+
 python_check_deps() {
-	use doc || return 0
+	llvm_are_manpages_built || return 0
 
 	python_has_version -b "dev-python/myst-parser[${PYTHON_USEDEP}]" &&
 	python_has_version -b "dev-python/sphinx[${PYTHON_USEDEP}]"
@@ -449,16 +454,6 @@ multilib_src_configure() {
 	use kernel_Darwin && mycmakeargs+=(
 		-DTerminfo_LIBRARIES=-lncurses
 	)
-
-	# workaround BMI bug in gcc-7 (fixed in 7.4)
-	# https://bugs.gentoo.org/649880
-	# apply only to x86, https://bugs.gentoo.org/650506
-	if tc-is-gcc && [[ ${MULTILIB_ABI_FLAG} == abi_x86* ]] &&
-			[[ $(gcc-major-version) -eq 7 && $(gcc-minor-version) -lt 4 ]]
-	then
-		local CFLAGS="${CFLAGS} -mno-bmi"
-		local CXXFLAGS="${CXXFLAGS} -mno-bmi"
-	fi
 
 	# LLVM can have very high memory consumption while linking,
 	# exhausting the limit on 32-bit linker executable
