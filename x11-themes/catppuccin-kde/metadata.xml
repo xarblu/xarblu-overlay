@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<name>Xarblu</name>
+		<email>xarblu@protonmail.com</email>
+	</maintainer>
+	<use>
+		<flag name="mocha">Mocha flavour of Catppuccin</flag>
+		<flag name="macchiato">Macchiato flavour of Catppuccin</flag>
+		<flag name="frappe">Frappe flavour of Catppuccin</flag>
+		<flag name="latte">Latte flavour of Catppuccin</flag>
+	</use>
+	<upstream>
+		<remote-id type="github">catppuccin/kde</remote-id>
+	</upstream>
+</pkgmetadata>
