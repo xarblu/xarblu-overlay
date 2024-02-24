@@ -5,7 +5,7 @@ EAPI=8
 
 PYTHON_COMPAT=( python3_{10..12} )
 
-inherit python-r1 meson-multilib
+inherit python-r1 desktop meson-multilib
 
 DESCRIPTION="Vulkan and OpenGL overlay for monitoring FPS, sensors, system load and more"
 HOMEPAGE="https://github.com/flightlessmango/MangoHud"
@@ -44,7 +44,7 @@ SRC_URI="
 KEYWORDS="~amd64"
 LICENSE="MIT"
 SLOT="0"
-IUSE="+dbus debug doc mangoapp mangohudctl mangoplot +system-spdlog test wayland video_cards_nvidia +X xnvctrl"
+IUSE="+dbus debug mangoapp mangohudctl mangoplot +system-spdlog test wayland video_cards_nvidia +X xnvctrl"
 
 # HACK: system-spdlog only works with native abi
 # since native ABI is always selected selecting 'exactly one of all ABIs'
@@ -122,7 +122,9 @@ multilib_src_configure() {
 	local emesonargs=(
 		$(meson_feature system-spdlog use_system_spdlog)
 		-Dappend_libdir_mangohud=false
-		$(meson_use doc include_doc)
+		# QA: install docs in src_install to ensure FHS/Gentoo policy
+		# also avoids dev-libs/appstream test dep
+		-Dinclude_doc=false
 		$(meson_feature video_cards_nvidia with_nvml)
 		$(meson_feature xnvctrl with_xnvctrl)
 		$(meson_feature X with_x11)
@@ -135,6 +137,16 @@ multilib_src_configure() {
 		$(meson_feature mangoplot mangoplot)
 	)
 	meson_src_configure
+}
+
+multilib_src_install_all() {
+	# extra stuff under data/ (usually controlled by -Dinclude_doc)
+	insinto /usr/share/metainfo
+	doins data/io.github.flightlessmango.mangohud.metainfo.xml
+	doicon -s scalable data/io.github.flightlessmango.mangohud.svg
+	doman data/mangohud.1
+	use mangoapp && doman data/mangoapp.1
+	newdoc data/MangoHud.conf MangoHud.conf.example
 }
 
 pkg_postinst() {
