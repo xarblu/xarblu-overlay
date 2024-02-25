@@ -8,3 +8,4 @@
 amd64       default/linux/amd64/17.1/desktop/plasma/systemd/clang               exp
 amd64       default/linux/amd64/17.1/desktop/plasma/systemd/clang/merged-usr    exp
 
+amd64       default/linux/amd64/23.0/desktop/plasma/systemd/llvm               exp
