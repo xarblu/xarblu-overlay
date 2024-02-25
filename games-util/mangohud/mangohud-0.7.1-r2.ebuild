@@ -147,6 +147,7 @@ multilib_src_install_all() {
 	doman data/mangohud.1
 	use mangoapp && doman data/mangoapp.1
 	newdoc data/MangoHud.conf MangoHud.conf.example
+	newdoc data/presets.conf presets.conf.example
 }
 
 pkg_postinst() {
