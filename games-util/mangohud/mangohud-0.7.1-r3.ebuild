@@ -5,7 +5,7 @@ EAPI=8
 
 PYTHON_COMPAT=( python3_{10..12} )
 
-inherit python-r1 desktop meson-multilib
+inherit toolchain-funcs flag-o-matic python-r1 desktop meson-multilib
 
 DESCRIPTION="Vulkan and OpenGL overlay for monitoring FPS, sensors, system load and more"
 HOMEPAGE="https://github.com/flightlessmango/MangoHud"
@@ -116,6 +116,22 @@ src_unpack() {
 		einfo "Symlinking subproject ${subproject}"
 		ln -sfv "${WORKDIR}/${subproject}" "${S}/subprojects/" || die "Couldn't symlink ${subproject}"
 	done
+}
+
+src_prepare() {
+	# mangohud by default statically links libstdc++
+	# dynamically linked libc++ works just fine though
+	if [[ "$(tc-get-cxx-stdlib)" == "libc++" ]]; then
+		eapply "${FILESDIR}/0.7.1-libcxx.patch"
+	fi
+
+	# https://github.com/flightlessmango/MangoHud/issues/1240
+	# lld throws an error, mold just a warning, bfd doesn't care
+	if [[ "$(tc-getLD)" == "ld.lld" ]]; then
+		append-ldflags "-Wl,--undefined-version"
+	fi
+
+	default
 }
 
 multilib_src_configure() {
