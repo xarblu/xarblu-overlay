@@ -6,18 +6,22 @@ EAPI=8
 KERNEL_IUSE_GENERIC_UKI=1
 KERNEL_IUSE_MODULES_SIGN=1
 
+# for kernel-install.eclass install path
+# internally set via EXTRAVERSION patch
+KV_LOCALVERSION="-cachyos"
+
 inherit kernel-build
 
 MY_P=linux-${PV%.*}
 
 # https://dev.gentoo.org/~mpagano/genpatches/kernels.html
-GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 3 ))
+GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 4 ))
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g11
 # https://github.com/CachyOS/linux-cachyos
-CACHYOS_CONFIG_COMMIT="263df57e4224fcf9fb6a7d543e3a415983dd4e51"
+CACHYOS_CONFIG_COMMIT="c7da597774abd0f4ebb19d1aaf0febe6341d2fc3"
 # https://github.com/CachyOS/kernel-patches
-CACHYOS_PATCH_COMMIT="a171e3d62bcbba54a6275a69501f81e19daafa6a"
+CACHYOS_PATCH_COMMIT="44300fe16ee1fb28a55749245038a761528e64b5"
 # CPU schdulers supported by cachyos-patches
 CPU_SCHED="+cachyos bore rt rt-bore hardened sched-ext"
 
