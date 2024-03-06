@@ -19,8 +19,9 @@ HOMEPAGE="https://llvm.org/"
 
 LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA BSD public-domain rc"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
+KEYWORDS="~amd64 ~arm ~arm64 ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux ~arm64-macos ~ppc-macos ~x64-macos"
 IUSE="
-	+binutils-plugin +debug debuginfod doc exegesis libedit +libffi
+	+binutils-plugin debug debuginfod doc exegesis libedit +libffi
 	ncurses polly test xml z3 zstd
 "
 RESTRICT="!test? ( test )"
@@ -448,11 +449,13 @@ multilib_src_configure() {
 		)
 	fi
 
-	# On Macos prefix, Gentoo doesn't split sys-libs/ncurses to libtinfo and
-	# libncurses, but llvm tries to use libtinfo before libncurses, and ends up
-	# using libtinfo (actually, libncurses.dylib) from system instead of prefix
 	use kernel_Darwin && mycmakeargs+=(
+		# On Macos prefix, Gentoo doesn't split sys-libs/ncurses to libtinfo and
+		# libncurses, but llvm tries to use libtinfo before libncurses, and ends up
+		# using libtinfo (actually, libncurses.dylib) from system instead of prefix
 		-DTerminfo_LIBRARIES=-lncurses
+		# Use our libtool instead of looking it up with xcrun
+		-DCMAKE_LIBTOOL="${EPREFIX}/usr/bin/${CHOST}-libtool"
 	)
 
 	# LLVM can have very high memory consumption while linking,
@@ -504,17 +507,14 @@ src_install() {
 	# move wrapped headers back
 	mv "${ED}"/usr/include "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/include || die
 
-	# add polly libs to DT_NEEDED
+	# add polly lib to DT_NEEDED
 	if use polly; then
-		# die if they don't exist in ldpath
+		# die if it's not in ldpath
 		local ldpath="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)"
 		[[ -f "${ldpath}/libPolly.so" ]] \
 			&& einfo "libPolly.so found (${ldpath}/libPolly.so)" || die "libPolly.so not found"
-		[[ -f "${ldpath}/libPollyISL.so" ]] \
-			&& einfo "libPollyISL.so found (${ldpath}/libPollyISL.so)" || die "libPollyISL.so not found"
-		einfo "patching libLLVM.so to include libPolly{,ISL}.so ..."
+		einfo "patching libLLVM.so to include libPolly.so ..."
 		patchelf --add-needed libPolly.so \
-				 --add-needed libPollyISL.so \
 				 "${ED}/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)/libLLVM.so" \
 				 || die "failed patching libLLVM.so"
 	fi

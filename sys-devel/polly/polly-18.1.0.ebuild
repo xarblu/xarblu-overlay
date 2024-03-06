@@ -1,4 +1,4 @@
-# Copyright 2023 Gentoo Authors
+# Copyright 2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -8,7 +8,7 @@ inherit cmake llvm llvm.org python-any-r1
 
 DESCRIPTION="Polyhedral optimizations for LLVM"
 HOMEPAGE="https://polly.llvm.org/"
-
+KEYWORDS="~amd64 ~arm ~arm64 ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux ~arm64-macos ~ppc-macos ~x64-macos"
 LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
 IUSE="+debug test"
@@ -76,8 +76,8 @@ pkg_postinst() {
 	if ! $(has_version sys-devel/llvm:${LLVM_MAJOR}[polly]); then
 		elog "sys-devel/llvm:${LLVM_MAJOR}[polly] wasn't found on the system!"
 		elog "If USE=\"polly\" isn't set you need to manually load polly as"
-		elog "a clang extension by adding the following flags:"
-		elog "     \"-Xclang -load -Xclang LLVMPolly.so\""
+		elog "a clang plugin by adding the following flag:"
+		elog "     \"-fplugin=LLVMPolly.so\""
 		elog "Then the usual \"-mllvm -polly\" should work."
 	fi
 }
