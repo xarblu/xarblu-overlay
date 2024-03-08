@@ -1,0 +1,52 @@
+diff --git a/src/platform/linux/debug.cpp b/src/platform/linux/debug.cpp
+index 1cbfb48..14b057a 100644
+--- a/src/platform/linux/debug.cpp
++++ b/src/platform/linux/debug.cpp
+@@ -12,6 +12,8 @@
+ 
+ #include <spdlog/spdlog.h>
+ 
++#include <unistd.h>
++
+ namespace ananicy_debug {
+ void print_file(const std::string &path) {
+   const auto file_data = read_file(path);
+diff --git a/src/platform/linux/process.cpp b/src/platform/linux/process.cpp
+index be98fa9..bf7f66f 100644
+--- a/src/platform/linux/process.cpp
++++ b/src/platform/linux/process.cpp
+@@ -20,6 +20,8 @@
+ 
+ #include <spdlog/spdlog.h>
+ 
++#include <unistd.h>
++
+ namespace fs = std::filesystem;
+ 
+ #if defined(USE_BPF_PROC_IMPL)
+diff --git a/src/platform/systemd/service.cpp b/src/platform/systemd/service.cpp
+index d716481..807a56b 100644
+--- a/src/platform/systemd/service.cpp
++++ b/src/platform/systemd/service.cpp
+@@ -5,6 +5,8 @@
+ 
+ #include <spdlog/spdlog.h>
+ 
++#include <unistd.h>
++
+ namespace service {
+ status current_status = STARTING;
+ 
+diff --git a/src/tests/unit-core.cpp b/src/tests/unit-core.cpp
+index c954c81..85e9992 100644
+--- a/src/tests/unit-core.cpp
++++ b/src/tests/unit-core.cpp
+@@ -11,6 +11,8 @@
+ 
+ #include <spdlog/spdlog.h>
+ 
++#include <unistd.h>
++
+ namespace fs = std::filesystem;
+ 
+ static fs::path get_cgroup_path(const std::string_view &cgroup_name) {
