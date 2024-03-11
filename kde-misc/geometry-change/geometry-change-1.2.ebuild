@@ -1,4 +1,4 @@
-# Copyright 2023 Gentoo Authors
+# Copyright 2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -14,7 +14,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 
 RDEPEND="
-	kde-plasma/kwin:5=
+	kde-plasma/kwin
 "
 
 S="${WORKDIR}/${MY_PN}-${PV}"
@@ -22,6 +22,6 @@ S="${WORKDIR}/${MY_PN}-${PV}"
 src_compile() { :; }
 
 src_install() {
-	insinto /usr/share/kwin/effects/
-	doins -r "${MY_PN}"
+	insinto "/usr/share/kwin/effects/${MY_PN}"
+	doins -r package/*
 }
