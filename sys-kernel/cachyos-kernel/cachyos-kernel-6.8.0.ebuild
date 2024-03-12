@@ -121,7 +121,7 @@ src_prepare() {
 
 	# Localversion
 	local myversion="$(cachy_get_version)"
-	echo "CONFIG_LOCALVERSION=\"${myversion}\"" > "${T}"/version.config || die
+	echo "CONFIG_LOCALVERSION=\"-${myversion}\"" > "${T}"/version.config || die
 
 	# CachyOS config as base
 	cp "${WORKDIR}/linux-cachyos-${CACHYOS_CONFIG_COMMIT}/${myversion}/config" \
