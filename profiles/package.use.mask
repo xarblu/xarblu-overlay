@@ -1,0 +1,3 @@
+# Xarblu <xarblu@protonmail.com> (2024-03-12)
+# waiting for hardened patch
+>=sys-kernel/cachyos-kernel-6.8.0 hardened
