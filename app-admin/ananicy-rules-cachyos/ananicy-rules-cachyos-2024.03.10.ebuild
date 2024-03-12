@@ -14,8 +14,6 @@ LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~amd64"
 
-RDEPEND="app-admin/ananicy-cpp"
-
 S="${WORKDIR}/${MY_PN}-${COMMIT}"
 
 src_install() {
