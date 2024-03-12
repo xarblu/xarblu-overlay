@@ -81,7 +81,7 @@ src_install() {
 		libGLESv2.so \
 		libvk_swiftshader.so \
 		libvulkan.so.1 \
-		${PN%-bin}
+		"${PN%-bin}"
 
 	# regular files
 	insinto "${DESTDIR}"
