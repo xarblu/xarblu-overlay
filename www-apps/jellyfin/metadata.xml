@@ -6,7 +6,6 @@
 		<name>Xarblu</name>
 	</maintainer>
 	<use>
-		<flag name="intro-skipper">Build custom jellyfin-web for the intro-skipper plugin.</flag>
 		<flag name="jellyscrub">Setup index.html for the jellyscrub plugin.</flag>
 	</use>
 	<upstream>
