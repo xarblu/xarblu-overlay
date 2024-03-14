@@ -75,7 +75,7 @@ src_compile() {
 			# NOTES:
 			# 1) script wants indices starting at 1
 			# 2) stdout has control chars -> messes with terminal
-			./install.sh "$(( ${flavour} + 1 ))" "$(( ${accent} + 1 ))" "1" "color" >/dev/null \
+			./install.sh "$(( ${flavour} + 1 ))" "$(( ${accent} + 1 ))" "1" "color" &>/dev/null \
 				|| die "Making colorscheme failed"
 			# grab what we want then clean
 			mv dist/Catppuccin*.colors "${COLORDEST}" || die "mv failed"
@@ -86,7 +86,7 @@ src_compile() {
 				# NOTES:
 				# 1) script wants indices starting at 1
 				# 2) stdout has control chars -> messes with terminal
-				./install.sh "$(( ${flavour} + 1 ))" "$(( ${accent} + 1 ))" "1" "splash" >/dev/null \
+				./install.sh "$(( ${flavour} + 1 ))" "$(( ${accent} + 1 ))" "1" "splash" &>/dev/null \
 					|| die "Making splashscreen failed"
 				# grab what we want then clean
 				mv dist/Catppuccin*-splash "${SPLASHDEST}" || die "mv failed"
