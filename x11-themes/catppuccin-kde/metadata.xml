@@ -6,10 +6,25 @@
 		<email>xarblu@protonmail.com</email>
 	</maintainer>
 	<use>
-		<flag name="mocha">Mocha flavour of Catppuccin</flag>
-		<flag name="macchiato">Macchiato flavour of Catppuccin</flag>
-		<flag name="frappe">Frappe flavour of Catppuccin</flag>
-		<flag name="latte">Latte flavour of Catppuccin</flag>
+		<flag name="catppuccin_accents_blue">Blue accent of Catppuccin</flag>
+		<flag name="catppuccin_accents_flamingo">Flamingo accent of Catppuccin</flag>
+		<flag name="catppuccin_accents_green">Green accent of Catppuccin</flag>
+		<flag name="catppuccin_accents_lavender">Lavendar accent of Catppuccin</flag>
+		<flag name="catppuccin_accents_maroon">Maroon accent of Catppuccin</flag>
+		<flag name="catppuccin_accents_mauve">Mauve accent of Catppuccin</flag>
+		<flag name="catppuccin_accents_peach">Peach accent of Catppuccin</flag>
+		<flag name="catppuccin_accents_pink">Pink accent of Catppuccin</flag>
+		<flag name="catppuccin_accents_red">Red accent of Catppuccin</flag>
+		<flag name="catppuccin_accents_rosewater">Rosewater accent of Catppuccin</flag>
+		<flag name="catppuccin_accents_sapphire">Sapphire accent of Catppuccin</flag>
+		<flag name="catppuccin_accents_sky">Sky accent of Catppuccin</flag>
+		<flag name="catppuccin_accents_teal">Teal accent of Catppuccin</flag>
+		<flag name="catppuccin_accents_yellow">Yellow accent of Catppuccin</flag>
+		<flag name="catppuccin_flavours_frappe">Frappe flavour of Catppuccin</flag>
+		<flag name="catppuccin_flavours_latte">Latte flavour of Catppuccin</flag>
+		<flag name="catppuccin_flavours_macchiato">Macchiato flavour of Catppuccin</flag>
+		<flag name="catppuccin_flavours_mocha">Mocha flavour of Catppuccin</flag>
+		<flag name="splashscreen">Install Catppuccin splashscreens</flag>
 	</use>
 	<upstream>
 		<remote-id type="github">catppuccin/kde</remote-id>
