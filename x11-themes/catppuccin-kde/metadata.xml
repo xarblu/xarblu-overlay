@@ -24,7 +24,8 @@
 		<flag name="catppuccin_flavours_latte">Latte flavour of Catppuccin</flag>
 		<flag name="catppuccin_flavours_macchiato">Macchiato flavour of Catppuccin</flag>
 		<flag name="catppuccin_flavours_mocha">Mocha flavour of Catppuccin</flag>
-		<flag name="splashscreen">Install Catppuccin splashscreens</flag>
+		<flag name="catppuccin_styles_classic">Classic window decoration style of Catppuccin</flag>
+		<flag name="catppuccin_styles_modern">Modern window decoration style of Catppuccin</flag>
 	</use>
 	<upstream>
 		<remote-id type="github">catppuccin/kde</remote-id>
