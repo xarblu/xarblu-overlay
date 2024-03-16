@@ -6,7 +6,7 @@ EAPI=8
 MY_PN="kde"
 
 if [[ "${PV}" == *_pre* ]]; then
-	MY_PV="4495a061998a9ee55287f085a188adab2432ee8d"
+	MY_PV=""
 	SRC_A="${MY_PV}.tar.gz"
 else
 	MY_PV="${PV}"
