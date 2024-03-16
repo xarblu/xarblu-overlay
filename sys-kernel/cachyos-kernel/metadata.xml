@@ -10,13 +10,14 @@
 	</upstream>
 	<use>
 		<flag name="bore">BORE Scheduler</flag>
-		<flag name="cachyos">CachyOS Scheduler (BORE + SCHED-EXT)</flag>
+		<flag name="cachyos">CachyOS (BORE + SCHED-EXT) Scheduler</flag>
+		<flag name="eevdf">EEVDF (Mainline Linux) Scheduler</flag>
 		<flag name="generic-uki">
 			Build and install a generic initramfs and Unified Kernel Image,
 			this is intended for building binpkgs with a pre-generated UKI
 			included (EXPERIMENTAL).
 		</flag>
-		<flag name="hardened">Hardening Patches</flag>
+		<flag name="hardened"> BORE Scheduler + Hardening Patches</flag>
 		<flag name="initramfs">
 			Build initramfs along with the kernel.
 		</flag>
