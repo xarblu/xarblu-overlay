@@ -5,10 +5,15 @@ EAPI=8
 
 ECM_HANDBOOK="forceoptional"
 KDE_ORG_CATEGORY="office"
-KDE_ORG_COMMIT="078a771ff425149b0240369288f0c323c3f7e671"
+
+if [[ "${PV}" == *_pre* ]]; then
+	KDE_ORG_COMMIT=""
+else
+	KDE_ORG_COMMIT="v${PV/_beta/b}"
+fi
+
 KFMIN=6.0.0
 QTMIN=6.6.0
-MY_P=${P/_beta/b}
 inherit ecm kde.org
 
 DESCRIPTION="Latex Editor and TeX shell based on KDE Frameworks"
@@ -60,7 +65,6 @@ DOCS=( kile-remote-control.txt )
 
 PATCHES=(
 	"${FILESDIR}/${PN}-2.9.93_p20221123-cmake.patch"
-	"${FILESDIR}/${PN}-2.9.93_p20240312-clang.patch"
 )
 
 src_configure() {
