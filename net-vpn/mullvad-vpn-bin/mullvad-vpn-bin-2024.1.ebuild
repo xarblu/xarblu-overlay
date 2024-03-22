@@ -1,4 +1,4 @@
-# Copyright 2023 Gentoo Authors
+# Copyright 2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -39,21 +39,19 @@ CONFIG_CHECK="
 # binary package, everything is prebuilt
 QA_PREBUILT="*"
 
-S="${WORKDIR}/${PN}-${MY_PV}"
-
 src_unpack() {
-	mkdir "${S}"
-	cd "${S}"
+	mkdir -p "${S}" || die "mkdir failed"
+	cd "${S}" || die "cd failed"
 	unpacker ${A}
 }
 
 src_prepare() {
 	# Fix zsh-completion path
-	mv "${S}/usr"/{local,}/share/zsh
-	rm -r  "${S}/usr/local"
+	mv usr/{local,}/share/zsh
+	rm -r  usr/local || die "rm failed"
 
 	# don't install "docs" (they're just deb changelogs)
-	rm -r "${S}/usr/share/doc"
+	rm -r usr/share/doc || die "rm failed"
 
 	eapply_user
 }
