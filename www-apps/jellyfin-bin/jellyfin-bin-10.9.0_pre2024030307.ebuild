@@ -12,18 +12,20 @@ SLOT="0"
 IUSE="jellyscrub"
 RESTRICT="mirror test"
 
+MY_PN="${PN%-bin}"
+
 if [[ "${PV}" == *_pre* ]]; then
 	TYPE="unstable"
 	MY_PV="${PV#*_pre}"
 	# should have -* but that also
 	# affects supported arches
 	KEYWORDS=""
-	S="${WORKDIR}/${PN}"
+	S="${WORKDIR}/${MY_PN}"
 else
 	TYPE="stable"
 	MY_PV="${PV}"
 	KEYWORDS="-* ~amd64 ~arm64"
-	S="${WORKDIR}/${PN}_${MY_PV}"
+	S="${WORKDIR}/${MY_PN}_${MY_PV}"
 fi
 
 src_uris() {
@@ -33,14 +35,14 @@ src_uris() {
 			stable)
 				SRC_URI+="
 					${arch}? (
-						${baseuri}/${TYPE}/${MY_PV}/${arch}/${PN}_${MY_PV}_${arch}.tar.gz
+						${baseuri}/${TYPE}/${MY_PV}/${arch}/${MY_PN}_${MY_PV}_${arch}.tar.gz
 					)
 				"
 				;;
 			unstable)
 				SRC_URI+="
 					${arch}? (
-						${baseuri}/${TYPE}/${MY_PV}/${arch}/${PN}_${MY_PV}-${arch}.tar.gz
+						${baseuri}/${TYPE}/${MY_PV}/${arch}/${MY_PN}_${MY_PV}-${arch}.tar.gz
 					)
 				"
 				;;
@@ -101,9 +103,9 @@ src_install() {
 	pax-mark -m "${INST_DIR}/jellyfin"
 
 	# services
-	newinitd "${FILESDIR}/${PN}.init-r1" "${PN}"
-	newconfd "${FILESDIR}"/${PN}.confd "${PN}"
-	systemd_dounit "${FILESDIR}/${PN}.service"
+	newinitd "${FILESDIR}/${MY_PN}.init-r1" "${MY_PN}"
+	newconfd "${FILESDIR}/${MY_PN}.confd" "${MY_PN}"
+	systemd_dounit "${FILESDIR}/${MY_PN}.service"
 }
 
 pkg_postinst() {
