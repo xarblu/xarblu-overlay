@@ -65,7 +65,7 @@ BDEPEND="
 	acct-user/jellyfin
 "
 
-INST_DIR="/opt/${PN}"
+INST_DIR="/opt/${MY_PN}"
 QA_PREBUILT="${INST_DIR#/}/*.so ${INST_DIR#/}/jellyfin ${INST_DIR#/}/createdump"
 
 pkg_pretend() {
