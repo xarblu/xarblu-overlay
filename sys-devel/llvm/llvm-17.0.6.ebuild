@@ -508,7 +508,7 @@ src_install() {
 	# die if it's not found to not break llvm
 	if use polly; then
 		local llvm_libdir="/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)"
-		local polly="LLVMPolly.so"
+		local polly="libPolly.so"
 		local llvm="libLLVM.so"
 		if [[ ! -f "${EPREFIX%/}/${llvm_libdir}/${polly}" ]]; then
 			die "${polly} not found"
