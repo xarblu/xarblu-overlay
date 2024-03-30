@@ -21,7 +21,7 @@ LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA BSD public-domain rc"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
 KEYWORDS="amd64 arm arm64 ~loong ppc ppc64 ~riscv sparc x86 ~amd64-linux ~arm64-macos ~ppc-macos ~x64-macos"
 IUSE="
-	+binutils-plugin debug doc exegesis libedit +libffi ncurses test polly xar
+	+binutils-plugin debug doc exegesis libedit +libffi ncurses polly test xar
 	xml z3 zstd
 "
 RESTRICT="!test? ( test )"
@@ -40,10 +40,7 @@ RDEPEND="
 DEPEND="
 	${RDEPEND}
 	binutils-plugin? ( sys-libs/binutils-libs )
-	polly? (
-		sys-devel/polly:${LLVM_MAJOR}=
-		dev-util/patchelf
-	)
+	polly? ( sys-devel/polly:${LLVM_MAJOR} )
 "
 BDEPEND="
 	${PYTHON_DEPS}
@@ -57,6 +54,7 @@ BDEPEND="
 		dev-python/sphinx[${PYTHON_USEDEP}]
 	') )
 	libffi? ( virtual/pkgconfig )
+	polly? ( dev-util/patchelf )
 "
 # There are no file collisions between these versions but having :0
 # installed means llvm-config there will take precedence.
@@ -328,7 +326,15 @@ get_distribution_components() {
 }
 
 multilib_src_configure() {
-	tc-is-gcc && filter-lto # GCC miscompiles LLVM, bug #873670
+	if use ppc && tc-is-gcc && [[ $(gcc-major-version) -lt 14 ]]; then
+		# Workaround for bug #880677
+		append-flags $(test-flags-CXX -fno-ipa-sra -fno-ipa-modref -fno-ipa-icf)
+	fi
+
+	# ODR violations (bug #917536, bug #926529). Just do it for GCC for now
+	# to avoid people grumbling. GCC is, anecdotally, more likely to miscompile
+	# LLVM with LTO anyway (which is not necessarily its fault).
+	tc-is-gcc && filter-lto
 
 	local ffi_cflags ffi_ldflags
 	if use libffi; then
@@ -484,19 +490,20 @@ src_install() {
 	# move wrapped headers back
 	mv "${ED}"/usr/include "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/include || die
 
-	# add polly libs to DT_NEEDED
+	# patch libLLVM.so to always load LLVMPolly.so
+	# die if it's not found to not break llvm
 	if use polly; then
-		# die if they don't exist in ldpath
-		local ldpath="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)"
-		[[ -f "${ldpath}/libPolly.so" ]] \
-			&& einfo "libPolly.so found (${ldpath}/libPolly.so)" || die "libPolly.so not found"
-		[[ -f "${ldpath}/libPollyISL.so" ]] \
-			&& einfo "libPollyISL.so found (${ldpath}/libPollyISL.so)" || die "libPollyISL.so not found"
-		einfo "patching libLLVM.so to include libPolly{,ISL}.so ..."
-		patchelf --add-needed libPolly.so \
-				 --add-needed libPollyISL.so \
-				 "${ED}/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)/libLLVM.so" \
-				 || die "failed patching libLLVM.so"
+		local llvm_libdir="/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)"
+		local polly="libPolly.so"
+		local llvm="libLLVM.so"
+		if [[ ! -f "${EPREFIX%/}/${llvm_libdir}/${polly}" ]]; then
+			die "${polly} not found"
+		fi
+		einfo "Polly found (${EPREFIX%/}/${llvm_libdir}/${polly})!"
+		einfo "Patching ${llvm} to include ${polly} ..."
+		patchelf --add-needed "${polly}" \
+				"${ED%/}/${llvm_libdir}/${llvm}" \
+				|| die "failed patching ${llvm}"
 	fi
 }
 

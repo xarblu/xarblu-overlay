@@ -43,10 +43,7 @@ RDEPEND="
 DEPEND="
 	${RDEPEND}
 	binutils-plugin? ( sys-libs/binutils-libs )
-	polly? (
-		sys-devel/polly:${LLVM_MAJOR}=
-		dev-util/patchelf
-	)
+	polly? ( sys-devel/polly:${LLVM_MAJOR} )
 "
 BDEPEND="
 	${PYTHON_DEPS}
@@ -56,6 +53,7 @@ BDEPEND="
 		<sys-libs/libcxx-${LLVM_VERSION}.9999
 	)
 	libffi? ( virtual/pkgconfig )
+	polly? ( dev-util/patchelf )
 "
 # There are no file collisions between these versions but having :0
 # installed means llvm-config there will take precedence.
@@ -350,6 +348,11 @@ get_distribution_components() {
 }
 
 multilib_src_configure() {
+	if use ppc && tc-is-gcc && [[ $(gcc-major-version) -lt 14 ]]; then
+		# Workaround for bug #880677
+		append-flags $(test-flags-CXX -fno-ipa-sra -fno-ipa-modref -fno-ipa-icf)
+	fi
+
 	# ODR violations (bug #917536, bug #926529). Just do it for GCC for now
 	# to avoid people grumbling. GCC is, anecdotally, more likely to miscompile
 	# LLVM with LTO anyway (which is not necessarily its fault).
@@ -512,16 +515,20 @@ src_install() {
 	# move wrapped headers back
 	mv "${ED}"/usr/include "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/include || die
 
-	# add polly lib to DT_NEEDED
+	# patch libLLVM.so to always load LLVMPolly.so
+	# die if it's not found to not break llvm
 	if use polly; then
-		# die if it's not in ldpath
-		local ldpath="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)"
-		( [[ -f "${ldpath}/libPolly.so" ]] \
-			&& einfo "libPolly.so found (${ldpath}/libPolly.so)" ) || die "libPolly.so not found"
-		einfo "patching libLLVM.so to include libPolly.so ..."
-		patchelf --add-needed libPolly.so \
-				 "${ED}/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)/libLLVM.so" \
-				 || die "failed patching libLLVM.so"
+		local llvm_libdir="/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)"
+		local polly="libPolly.so"
+		local llvm="libLLVM.so"
+		if [[ ! -f "${EPREFIX%/}/${llvm_libdir}/${polly}" ]]; then
+			die "${polly} not found"
+		fi
+		einfo "Polly found (${EPREFIX%/}/${llvm_libdir}/${polly})!"
+		einfo "Patching ${llvm} to include ${polly} ..."
+		patchelf --add-needed "${polly}" \
+				"${ED%/}/${llvm_libdir}/${llvm}" \
+				|| die "failed patching ${llvm}"
 	fi
 }
 
