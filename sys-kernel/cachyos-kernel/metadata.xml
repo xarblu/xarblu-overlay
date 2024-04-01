@@ -11,6 +11,7 @@
 	<use>
 		<flag name="bore">BORE Scheduler</flag>
 		<flag name="cachyos">CachyOS (BORE + SCHED-EXT) Scheduler</flag>
+		<flag name="echo">ECHO Scheduler</flag>
 		<flag name="eevdf">EEVDF (Mainline Linux) Scheduler</flag>
 		<flag name="generic-uki">
 			Build and install a generic initramfs and Unified Kernel Image,
