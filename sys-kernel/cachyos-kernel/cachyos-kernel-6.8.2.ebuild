@@ -101,27 +101,112 @@ cachy_get_version() {
 	done
 }
 
-# cpusched based config defaults
-cachy_get_cpusched_config() {
+# echo formatted kernel config line
+# $1 can be one of set, unset, mod or val
+# $2 config name as in CONFIG_<name>
+# $3 if $1 is val set val as a config string
+kconf() {
+	if [[ $# -lt 2 ]]; then
+		die "kconf needs at least 2 args"
+	fi
+	case "$1" in
+		set)
+			echo "CONFIG_$2=y"
+			;;
+		unset)
+			echo "# CONFIG_$2 is not set"
+			;;
+		mod)
+			echo "CONFIG_$2=m"
+			;;
+		val)
+			if [[ -z "${3}" ]]; then
+				die "kconv val requires a value"
+			fi
+			echo "CONFIG_$2=\"$3\""
+			;;
+		*)
+			die "invalid option $1 for kconf"
+			;;
+	esac
+}
+
+# config defaults from Arch PKGBUILD
+# sorted the same way as their prepare()
+cachy_get_config() {
+	# _config_cachy
+	kconf set CACHY
+	# _cpusched
 	if use cachyos || use sched-ext; then
-		echo "CONFIG_SCHED_CLASS_EXT=y" || die
+		kconf set SCHED_CLASS_EXT
 	fi
 	if use cachyos || use bore || use rt-bore || use hardened; then
-		echo "CONFIG_SCHED_BORE=y" || die
+		kconf set SCHED_BORE
 	fi
 	if use rt || use rt-bore; then
-		echo "CONFIG_PREEMPT_COUNT=y" || die
-		echo "CONFIG_PREEMPTION=y" || die
-		echo "CONFIG_PREEMPT_VOLUNTARY=y" || die
-		echo "CONFIG_PREEMPT=y" || die
-		echo "CONFIG_PREEMPT_NONE=y" || die
-		echo "CONFIG_PREEMPT_RT=y" || die
-		echo "CONFIG_PREEMPT_DYNAMIC=y" || die
-		echo "CONFIG_PREEMPT_BUILD=y" || die
+		kconf set PREEMPT_COUNT
+		kconf set PREEMPTION
+		kconf unset PREEMPT_VOLUNTARY
+		kconf unset PREEMPT
+		kconf unset PREEMPT_NONE
+		kconf set PREEMPT_RT
+		kconf unset PREEMPT_DYNAMIC
+		kconf unset PREEMPT_BUILD
 	fi
 	if use echo; then
-		echo "CONFIG_ECHO_SCHED=y" || die
+		kconf set ECHO_SCHED
 	fi
+	# _HZ_ticks
+	if use cachyos || use bore || use sched-ext || use rt || use rt-bore || use hardened || use eevdf; then
+		kconf unset HZ_300
+		kconf set HZ_1000
+		kconf val HZ 1000
+	elif use echo; then
+		kconf unset HZ_300
+		kconf set HZ_625
+		kconf val HZ 625
+	fi
+	# _nr_cpus
+	kconf val NR_CPUS 320
+	# _tickrate
+	kconf unset HZ_PERIODIC
+	kconf unset NO_HZ_IDLE
+	kconf unset CONTEXT_TRACKING_FORCE
+	kconf set NO_HZ_FULL_NODEF
+	kconf set NO_HZ_FULL
+	kconf set NO_HZ
+	kconf set NO_HZ_COMMON
+	kconf set CONTEXT_TRACKING
+	# _preempt
+	if ! use rt && ! use rt-bore; then
+		kconf set PREEMPT_BUILD
+		kconf unset PREEMPT_NONE
+		kconf unset PREEMPT_VOLUNTARY
+		kconf set PREEMPT
+		kconf set PREEMPT_COUNT
+		kconf set PREEMPTION
+		kconf set PREEMPT_DYNAMIC
+	fi
+	# _cc_harder
+	kconf unset CC_OPTIMIZE_FOR_PERFORMANCE
+	kconf set CC_OPTIMIZE_FOR_PERFORMANCE_O3
+	# _tcp_bbr3
+	kconf mod TCP_CONG_CUBIC
+	kconf unset DEFAULT_CUBIC
+	kconf set TCP_CONG_BBR
+	kconf val DEFAULT_TCP_CONG bbr
+	# _lru_config
+	kconf set LRU_GEN
+	kconf set LRU_GEN_ENABLED
+	kconf unset LRU_GEN_STATS
+	# _vma_config
+	kconf set PER_VMA_LOCK
+	kconf unset PER_VMA_LOCK_STATS
+	# _hugepage
+	kconf unset TRANSPARENT_HUGEPAGE_MADVISE
+	kconf set TRANSPARENT_HUGEPAGE_ALWAYS
+	# _user_ns
+	kconf set USER_NS
 }
 
 src_prepare() {
@@ -135,17 +220,14 @@ src_prepare() {
 
 	# Localversion
 	local myversion="$(cachy_get_version)"
-	echo "CONFIG_LOCALVERSION=\"-${myversion}\"" > "${T}"/version.config || die
+	kconf val LOCALVERSION "-${myversion}" > "${T}"/version.config || die
 
 	# CachyOS config as base
 	cp "${WORKDIR}/linux-cachyos-${CACHYOS_CONFIG_COMMIT}/${myversion}/config" \
 		.config || die
 
 	# Package defaults
-	# enable cachy tweaks
-	echo "CONFIG_CACHY=y" > "${T}"/cachy-defaults.config || die
-	# enable config items based on CPU_SCHED choice
-	cachy_get_cpusched_config >> "${T}"/cachy-defaults.config || die
+	cachy_get_config > "${T}"/cachy-defaults.config || die
 
 	# Gentoo defaults
 	local dist_conf_path="${WORKDIR}/gentoo-kernel-config-${GENTOO_CONFIG_VER}"
