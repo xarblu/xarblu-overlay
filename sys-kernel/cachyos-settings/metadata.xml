@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>xarblu@protonmail.com</email>
+		<name>Xarblu</name>
+	</maintainer>
+	<use>
+		<flag name="zram">Enable ZRAM configs via <pkg>sys-apps/zram-generator</pkg></flag>
+	</use>
+	<upstream>
+		<remote-id type="github">CachyOS/CachyOS-Settings</remote-id>
+		<bugs-to>https://github.com/CachyOS/CachyOS-Settings/issues</bugs-to>
+	</upstream>
+</pkgmetadata>
