@@ -71,7 +71,7 @@ cachy_get_patches() {
 	if use cachyos || use sched-ext; then
 		echo "${cachy_patch}/sched/0001-sched-ext.patch" || die
 	fi
-	if use cachyos || use bore || use hardened; then
+	if use bore || use hardened; then
 		echo "${cachy_patch}/sched/0001-bore-cachy.patch" || die
 	fi
 	if use rt || use rt-bore; then
@@ -140,7 +140,7 @@ cachy_get_config() {
 	if use cachyos || use sched-ext; then
 		kconf set SCHED_CLASS_EXT
 	fi
-	if use cachyos || use bore || use rt-bore || use hardened; then
+	if use bore || use rt-bore || use hardened; then
 		kconf set SCHED_BORE
 	fi
 	if use rt || use rt-bore; then
