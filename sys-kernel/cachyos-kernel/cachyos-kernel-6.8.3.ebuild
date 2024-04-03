@@ -17,7 +17,7 @@ GENTOO_CONFIG_VER=g11
 # https://github.com/CachyOS/linux-cachyos
 CACHYOS_CONFIG_COMMIT="0da0f89a18a59578b6ceddf7783f02aa37bec2aa"
 # https://github.com/CachyOS/kernel-patches
-CACHYOS_PATCH_COMMIT="1be22a4306f1de81e9cbfb7c38b3f162ce272c67"
+CACHYOS_PATCH_COMMIT="093449d1af73e9dfb6a62105ec31da240a282115"
 
 # CPU schdulers supported by cachyos-patches
 # there are more options but these are the ones from CachyOS/linux-cachyos
