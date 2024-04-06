@@ -18,7 +18,7 @@ CRATES="
 	anstyle-parse@0.2.3
 	anstyle-query@1.0.2
 	anstyle-wincon@3.0.2
-	anstyle@1.0.4
+	anstyle@1.0.5
 	anyhow@1.0.79
 	arrayref@0.3.7
 	arrayvec@0.7.4
@@ -366,7 +366,7 @@ CRATES="
 	parking_lot_core@0.8.6
 	parking_lot_core@0.9.9
 	paste@1.0.14
-	pem@1.1.1
+	pem@3.0.3
 	percent-encoding@2.3.1
 	pest@2.7.6
 	pest_derive@2.7.6
@@ -399,7 +399,7 @@ CRATES="
 	proc-macro-crate@1.3.1
 	proc-macro2@1.0.78
 	profiling@1.0.13
-	pulldown-cmark@0.9.5
+	pulldown-cmark@0.9.6
 	pure-rust-locales@0.7.0
 	qoi@0.4.1
 	quick-xml@0.30.0
@@ -412,7 +412,7 @@ CRATES="
 	raw-window-handle@0.5.2
 	rayon-core@1.12.1
 	rayon@1.8.1
-	rcgen@0.9.3
+	rcgen@0.12.1
 	redox_syscall@0.2.16
 	redox_syscall@0.4.1
 	redox_users@0.4.4
@@ -425,7 +425,7 @@ CRATES="
 	reqwest@0.11.23
 	resize@0.5.5
 	rgb@0.8.37
-	ring@0.16.20
+	ring@0.17.7
 	rle-decode-fast@1.0.3
 	rstest@0.18.2
 	rstest_macros@0.18.2
@@ -449,13 +449,13 @@ CRATES="
 	serde@1.0.196
 	serde_cbor@0.11.2
 	serde_derive@1.0.196
-	serde_json@1.0.112
+	serde_json@1.0.113
 	serde_repr@0.1.18
 	serde_spanned@0.6.5
 	serde_urlencoded@0.7.1
 	serde_with@2.3.3
 	serde_with_macros@2.3.3
-	serde_yaml@0.9.30
+	serde_yaml@0.9.31
 	serial-core@0.4.0
 	serial-unix@0.4.0
 	serial-windows@0.4.0
@@ -480,7 +480,6 @@ CRATES="
 	socket2@0.4.10
 	socket2@0.5.5
 	spa@0.3.1
-	spin@0.5.2
 	spin@0.9.8
 	spirv@0.2.0+1.5.4
 	sqlite-cache@0.1.3
@@ -546,7 +545,7 @@ CRATES="
 	unicode-width@0.1.11
 	unicode-xid@0.2.4
 	unsafe-libyaml@0.2.10
-	untrusted@0.7.1
+	untrusted@0.9.0
 	uom@0.30.0
 	url@2.5.0
 	utf8parse@0.2.1
@@ -654,20 +653,20 @@ declare -A GIT_CRATES=(
 	[xcb-imdkit]='https://github.com/wez/xcb-imdkit-rs;215ce4b08ac9c4822e541efd4f4ffb1062806051;xcb-imdkit-rs-%commit%'
 )
 
-inherit bash-completion-r1 desktop cargo xdg-utils
+inherit shell-completion desktop cargo xdg-utils
 
 DESCRIPTION="A GPU-accelerated cross-platform terminal emulator and multiplexer"
 HOMEPAGE="https://wezfurlong.org/wezterm/"
 
 if [[ "${PV}" == *_pre* ]]; then
-	MY_PV="e3cd2e93d0ee5f3af7f3fe0af86ffad0cf8c7ea8"
+	MY_PV=""
 	MY_P="${PN}-${MY_PV}"
 	SRC_URI="
 		https://github.com/wez/${PN}/archive/${MY_PV}.tar.gz -> ${MY_P}.tar.gz
 		${CARGO_CRATE_URIS}
 		"
 else
-	MY_PV="$(ver_rs 1 -)-1e552d76"
+	MY_PV="$(ver_rs 1 -)-5046fc22"
 	MY_P="${PN}-${MY_PV}"
 	SRC_URI="
 		https://github.com/wez/${PN}/releases/download/${MY_PV}/${MY_P}-src.tar.gz
@@ -693,12 +692,13 @@ SLOT="0"
 KEYWORDS="~amd64"
 IUSE="wayland"
 
-RESTRICT=test # tests require network
+RESTRICT="test" # tests require network
 
 DEPEND="
 	dev-libs/openssl
 	wayland? ( dev-libs/wayland )
 	media-fonts/jetbrains-mono
+	media-fonts/nerd-fonts[nerdfontssymbolsonly]
 	media-fonts/noto
 	media-fonts/noto-emoji
 	media-fonts/roboto
@@ -713,7 +713,10 @@ DEPEND="
 	x11-libs/xcb-util-wm
 	x11-themes/hicolor-icon-theme
 	x11-themes/xcursor-themes
-	~x11-terms/wezterm-terminfo-${PV}
+	|| (
+		>=sys-libs/ncurses-6.4_p20240330
+		~x11-terms/wezterm-terminfo-${PV}
+	)
 	~x11-terms/wezterm-shell-integration-${PV}
 "
 RDEPEND="${DEPEND}"
@@ -734,11 +737,9 @@ submodule_uris() {
 	for line in "${SUBMODULES[@]}"; do
 		read -r name hoster dep url commit <<< "${line}" || die
 
-		if [ ${hoster} == "github" ];
-		then
+		if [ "${hoster}" == "github" ]; then
 			SRC_URI+=" ${url}/archive/${commit}.tar.gz -> ${url##*/}-${commit}.tar.gz"
-		elif [ ${hoster} == "gitlab" ];
-		then
+		elif [ "${hoster}" == "gitlab" ]; then
 			SRC_URI+=" ${url}/-/archive/${commit}/${url##*/}-${commit}.tar.gz"
 		else
 			die
@@ -764,7 +765,7 @@ src_prepare() {
 				if [[ -z "${my_crate}" ]]; then
 					crate_dir="${crate}-${crate_commit}"
 				else
-					crate_dir="$(sed -e "s/%commit%/${crate_commit}/g" <<< "${my_crate}" || die)"
+					crate_dir="${my_crate//%commit%/${crate_commit}}"
 				fi
 				dest="${WORKDIR}/${crate_dir}/deps/${dep##*@}"
 				;;
@@ -772,13 +773,6 @@ src_prepare() {
 		mkdir -p "${dest}" || die
 		cp -r "${WORKDIR}/${url##*/}-${commit}/"* "${dest}" || die
 	done
-
-	# wezterm wants patched xcb via [patch.crates-io] but
-	# GIT_CRATES don't set this up
-	sed -i \
-		-e '/xcb =/p' \
-		-e '/xcb =/i [patch.crates-io]' \
-		"${CARGO_HOME}/config"
 
 	echo "${MY_PV}-gentoo" > .tag || die
 
@@ -789,18 +783,16 @@ src_prepare() {
 src_configure() {
 	local myfeatures=(
 		distro-defaults
-		vendor-nerd-font-symbols-font
 		$(usev wayland)
 	)
 	cargo_src_configure --no-default-features
 }
 
 src_install() {
-	exeinto /usr/bin
-	doexe target/$(usex debug "debug" "release")/wezterm
-	doexe target/$(usex debug "debug" "release")/wezterm-gui
-	doexe target/$(usex debug "debug" "release")/wezterm-mux-server
-	doexe target/$(usex debug "debug" "release")/strip-ansi-escapes
+	dobin "target/$(usex debug "debug" "release")/wezterm"
+	dobin "target/$(usex debug "debug" "release")/wezterm-gui"
+	dobin "target/$(usex debug "debug" "release")/wezterm-mux-server"
+	dobin "target/$(usex debug "debug" "release")/strip-ansi-escapes"
 
 	insinto /usr/share/icons/hicolor/128x128/apps
 	newins assets/icon/terminal.png org.wezfurlong.wezterm.png
@@ -810,15 +802,12 @@ src_install() {
 	insinto /usr/share/metainfo
 	newins assets/wezterm.appdata.xml org.wezfurlong.wezterm.appdata.xml
 
-	newbashcomp assets/shell-completion/bash ${PN}
+	insinto /usr/share/nautilus-python/extensions
+	newins assets/wezterm-nautilus.py "${PN}.py"
 
-	insopts -m 0644
-	insinto /usr/share/zsh/site-functions
-	newins assets/shell-completion/zsh _${PN}
-
-	insopts -m 0644
-	insinto /usr/share/fish/vendor_completions.d
-	newins assets/shell-completion/fish ${PN}.fish
+	newbashcomp assets/shell-completion/bash "${PN}"
+	newzshcomp assets/shell-completion/zsh "_${PN}"
+	newfishcomp assets/shell-completion/fish "${PN}.fish"
 }
 
 pkg_postinst() {
