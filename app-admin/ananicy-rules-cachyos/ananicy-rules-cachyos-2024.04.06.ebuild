@@ -3,7 +3,7 @@
 
 EAPI=8
 
-COMMIT="ead94ba4a75b56dc2783ac34b9623c77a4c9bc0b"
+COMMIT="af13eb389115dfb0fbcd148279414e1fcd004006"
 MY_PN="${PN%-cachyos}"
 
 DESCRIPTION="ananicy-cpp-rules from CachyOS"
@@ -13,8 +13,6 @@ SRC_URI="https://github.com/CachyOS/${MY_PN}/archive/${COMMIT}.tar.gz -> ${P}.ta
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~amd64"
-
-RDEPEND="app-admin/ananicy-cpp"
 
 S="${WORKDIR}/${MY_PN}-${COMMIT}"
 
