@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<name>Xarblu</name>
+		<email>xarblu@protonmail.com</email>
+	</maintainer>
+	<use>
+		<flag name="0xproto">Install 0xproto font</flag>
+		<flag name="3270">Install 3270 font</flag>
+		<flag name="agave">Install Agave font</flag>
+		<flag name="anonymouspro">Install AnonymousPro font</flag>
+		<flag name="arimo">Install Arimo font</flag>
+		<flag name="aurulentsansmono">Install AurulentSansMono font</flag>
+		<flag name="bigblueterminal">Install BigBlueTerminal font</flag>
+		<flag name="bitstreamverasansmono">Install BitstreamVeraSansMono font</flag>
+		<flag name="cascadiacode">Install CascadiaCode font</flag>
+		<flag name="cascadiamono">Install CascadiaMono font</flag>
+		<flag name="codenewroman">Install CodeNewRoman font</flag>
+		<flag name="comicshannsmono">Install ComicShannsMono font</flag>
+		<flag name="commitmono">Install CommitMono font</flag>
+		<flag name="cousine">Install Cousine font</flag>
+		<flag name="d2coding">Install D2Coding font</flag>
+		<flag name="daddytimemono">Install DaddyTimeMono font</flag>
+		<flag name="dejavusansmono">Install DejaVuSansMono font</flag>
+		<flag name="droidsansmono">Install DroidSansMono font</flag>
+		<flag name="envycoder">Install EnvyCodeR font</flag>
+		<flag name="fantasquesansmono">Install FantasqueSansMono font</flag>
+		<flag name="firacode">Install FiraCode font</flag>
+		<flag name="firamono">Install FiraMono font</flag>
+		<flag name="geistmono">Install GeistMono font</flag>
+		<flag name="go-mono">Install Go-Mono font</flag>
+		<flag name="gohu">Install Gohu font</flag>
+		<flag name="hack">Install Hack font</flag>
+		<flag name="hasklig">Install Hasklig font</flag>
+		<flag name="heavydata">Install HeavyData font</flag>
+		<flag name="hermit">Install Hermit font</flag>
+		<flag name="ia-writer">Install iA-Writer font</flag>
+		<flag name="ibmplexmono">Install IBMPlexMono font</flag>
+		<flag name="inconsolata">Install Inconsolata font</flag>
+		<flag name="inconsolatago">Install InconsolataGo font</flag>
+		<flag name="inconsolatalgc">Install InconsolataLGC font</flag>
+		<flag name="intelonemono">Install IntelOneMono font</flag>
+		<flag name="iosevka">Install Iosevka font</flag>
+		<flag name="iosevkaterm">Install IosevkaTerm font</flag>
+		<flag name="iosevkatermslab">Install IosevkaTermSlab font</flag>
+		<flag name="jetbrainsmono">Install JetBrainsMono font</flag>
+		<flag name="lekton">Install Lekton font</flag>
+		<flag name="liberationmono">Install LiberationMono font</flag>
+		<flag name="lilex">Install Lilex font</flag>
+		<flag name="martianmono">Install MartianMono font</flag>
+		<flag name="meslo">Install Meslo font</flag>
+		<flag name="monaspace">Install Monaspace font</flag>
+		<flag name="monofur">Install Monofur font</flag>
+		<flag name="monoid">Install Monoid font</flag>
+		<flag name="mononoki">Install Mononoki font</flag>
+		<flag name="mplus">Install MPlus font</flag>
+		<flag name="nerdfontssymbolsonly">Install NerdFontsSymbolsOnly font</flag>
+		<flag name="noto">Install Noto font</flag>
+		<flag name="opendyslexic">Install OpenDyslexic font</flag>
+		<flag name="overpass">Install Overpass font</flag>
+		<flag name="profont">Install ProFont font</flag>
+		<flag name="proggyclean">Install ProggyClean font</flag>
+		<flag name="recursive">Install Recursive font</flag>
+		<flag name="robotomono">Install RobotoMono font</flag>
+		<flag name="sharetechmono">Install ShareTechMono font</flag>
+		<flag name="sourcecodepro">Install SourceCodePro font</flag>
+		<flag name="spacemono">Install SpaceMono font</flag>
+		<flag name="terminus">Install Terminus font</flag>
+		<flag name="tinos">Install Tinos font</flag>
+		<flag name="ubuntu">Install Ubuntu font</flag>
+		<flag name="ubuntumono">Install UbuntuMono font</flag>
+		<flag name="victormono">Install VictorMono font</flag>
+		<flag name="zedmono">Install ZedMono font</flag>
+	</use>
+</pkgmetadata>
