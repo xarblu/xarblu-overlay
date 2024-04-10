@@ -21,7 +21,7 @@ CACHYOS_PATCH_COMMIT="b1ffade4e48f01afe3703c0801b35c90d59ab9cc"
 
 # CPU schdulers supported by cachyos-patches
 # there are more options but these are the ones from CachyOS/linux-cachyos
-CPU_SCHED="cachyos bore rt rt-bore hardened sched-ext eevdf echo"
+CPU_SCHED="cachyos bore rt rt-bore sched-ext eevdf echo bmq pds"
 
 DESCRIPTION="Linux kernel built with CachyOS and Gentoo patches"
 HOMEPAGE="
@@ -122,7 +122,7 @@ cachy_get_patches() {
 	if use cachyos; then
 		echo "${cachy_patch}/sched/0001-bore-cachy-ext.patch" || die
 	fi
-	if use bore || use hardened; then
+	if use bore; then
 		echo "${cachy_patch}/sched/0001-bore-cachy.patch" || die
 	fi
 	if use rt || use rt-bore; then
@@ -131,11 +131,11 @@ cachy_get_patches() {
 	if use rt-bore; then
 		echo "${cachy_patch}/sched/0001-bore-cachy-rt.patch" || die
 	fi
-	if use hardened; then
-		echo "${cachy_patch}/misc/0001-hardened.patch" || die
-	fi
 	if use echo; then
 		echo "${cachy_patch}/sched/0001-echo-cachy.patch" || die
+	fi
+	if use bmq || use pds; then
+		echo "${cachy_patch}/sched/0001-prjc-cachy.patch" || die
 	fi
 }
 
@@ -150,7 +150,7 @@ cachy_get_config() {
 	if use cachyos || use sched-ext; then
 		kconf set SCHED_CLASS_EXT
 	fi
-	if use cachyos || use bore || use rt-bore || use hardened; then
+	if use cachyos || use bore || use rt-bore; then
 		kconf set SCHED_BORE
 	fi
 	if use rt || use rt-bore; then
@@ -166,15 +166,24 @@ cachy_get_config() {
 	if use echo; then
 		kconf set ECHO_SCHED
 	fi
+	if use bmq; then
+		kconf set SCHED_ALT
+		kconf set SCHED_BMQ
+	fi
+	if use pds; then
+		kconf set SCHED_ALT
+		kconf set SCHED_PDS
+	fi
 	# _HZ_ticks
-	if use cachyos || use bore || use sched-ext || use rt || use rt-bore || use hardened || use eevdf; then
-		kconf unset HZ_300
-		kconf set HZ_1000
-		kconf val HZ 1000
-	elif use echo; then
+	# ECHO 625, everything else 1000
+	if use echo; then
 		kconf unset HZ_300
 		kconf set HZ_625
 		kconf val HZ 625
+	else
+		kconf unset HZ_300
+		kconf set HZ_1000
+		kconf val HZ 1000
 	fi
 	# _nr_cpus
 	kconf val NR_CPUS 320
@@ -229,11 +238,11 @@ src_prepare() {
 	default
 
 	# Localversion
-	local myversion="$(cachy_get_version)"
-	kconf val LOCALVERSION "-${myversion}" > "${T}"/version.config || die
+	kconf val LOCALVERSION "-$(cachy_get_version)" > "${T}"/version.config || die
 
 	# CachyOS config as base
-	cp "${WORKDIR}/linux-cachyos-${CACHYOS_CONFIG_COMMIT}/${myversion}/config" \
+	# they're all in sync (besides lts/rc) so use the main linux-cachyos config
+	cp "${WORKDIR}/linux-cachyos-${CACHYOS_CONFIG_COMMIT}/linux-cachyos/config" \
 		.config || die
 
 	# Package defaults
