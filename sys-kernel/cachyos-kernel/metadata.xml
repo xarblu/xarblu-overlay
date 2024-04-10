@@ -10,6 +10,7 @@
 	</upstream>
 	<use>
 		<flag name="bore">BORE Scheduler</flag>
+		<flag name="bmq">BMQ Scheduler</flag>
 		<flag name="cachyos">CachyOS (BORE + SCHED-EXT) Scheduler</flag>
 		<flag name="echo">ECHO Scheduler</flag>
 		<flag name="eevdf">EEVDF (Mainline Linux) Scheduler</flag>
@@ -18,10 +19,9 @@
 			this is intended for building binpkgs with a pre-generated UKI
 			included (EXPERIMENTAL).
 		</flag>
-		<flag name="hardened"> BORE Scheduler + Hardening Patches</flag>
-		<flag name="initramfs">
-			Build initramfs along with the kernel.
-		</flag>
+		<flag name="hardened">BORE Scheduler + Hardening Patches</flag>
+		<flag name="initramfs">Build initramfs along with the kernel.</flag>
+		<flag name="pds">PDS Scheduler</flag>
 		<flag name="rt">RT Patches</flag>
 		<flag name="rt-bore">BORE Scheduler + RT Patches</flag>
 		<flag name="sched-ext">SCHED-EXT Scheduler</flag>
