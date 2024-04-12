@@ -1,0 +1,41 @@
+diff --git a/polly/CMakeLists.txt b/polly/CMakeLists.txt
+index 5d0f2cd7f..43f3057a9 100644
+--- a/polly/CMakeLists.txt
++++ b/polly/CMakeLists.txt
+@@ -91,6 +91,10 @@ else()
+   set(ISL_TARGET PollyISL)
+ endif()
+ 
++# allow making the LLVMPolly target a dummy for packaging purposes
++# if all polly components are linked into libLLVM
++option(POLLY_DUMMY_LLVMPOLLY "Make the LLVMPolly target a dummy" OFF)
++
+ include_directories(
+   BEFORE
+   ${CMAKE_CURRENT_SOURCE_DIR}/include
+diff --git a/polly/cmake/CMakeLists.txt b/polly/cmake/CMakeLists.txt
+index cd1f5db84..d0c0f861b 100644
+--- a/polly/cmake/CMakeLists.txt
++++ b/polly/cmake/CMakeLists.txt
+@@ -23,7 +23,7 @@ else()
+ endif()
+ 
+ set(POLLY_CONFIG_EXPORTED_TARGETS Polly ${ISL_TARGET})
+-if (NOT (WIN32 OR CYGWIN) AND LLVM_ENABLE_PIC)
++if (NOT (WIN32 OR CYGWIN OR POLLY_DUMMY_LLVMPOLLY) AND LLVM_ENABLE_PIC)
+   # LLVMPolly is a dummy target on Win or if PIC code is disabled.
+   list(APPEND POLLY_CONFIG_EXPORTED_TARGETS LLVMPolly)
+ endif()
+diff --git a/polly/lib/CMakeLists.txt b/polly/lib/CMakeLists.txt
+index 4557878e5..e8e725167 100644
+--- a/polly/lib/CMakeLists.txt
++++ b/polly/lib/CMakeLists.txt
+@@ -116,7 +116,7 @@ target_link_libraries(Polly PUBLIC
+ 
+ # Create a loadable module Polly.so that can be loaded using
+ # LLVM's/clang's "-load" option.
+-if (WIN32 OR CYGWIN OR NOT LLVM_ENABLE_PIC)
++if (WIN32 OR CYGWIN OR NOT LLVM_ENABLE_PIC OR POLLY_DUMMY_LLVMPOLLY)
+   # Add dummy target, either because loadable modules are not supported
+   # as on Windows or because PIC code has been disabled
+   add_custom_target(LLVMPolly)
