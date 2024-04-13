@@ -140,7 +140,7 @@ check_distribution_components() {
 					LLVMTestingAnnotations|LLVMTestingSupport)
 						;;
 					# static libs
-					LLVM*|Polly)
+					LLVM*|Polly*)
 						continue
 						;;
 					# meta-targets
@@ -192,12 +192,23 @@ src_prepare() {
 	# Verify that the ebuild is up-to-date
 	check_uptodate
 
-	# make the LLVMPolly target a dummy
-	# we don't need it due to LLVM_POLLY_LINK_INTO_TOOLS=ON
-	# and it breaks LLVMExports.cmake by including things we don't install
+	# polly-dylib.patch:
+	# only affects the build when using
+	# LLVM_LINK_LLVM_DYLIB=ON
+	#
+	# 1)
+	# don't add polly libs as install_targets
+	# because it breaks LLVMExports.cmake by
+	# including static libs we don't install
+	#
+	# 2)
+	# keeps LLVMConfigExtensions empty
+	# we include all extensions (polly) in libLLVM.so so
+	# a build calling process_llvm_pass_plugins (e.g. clang)
+	# would fail since it expects these as static libs
 	if use polly; then
 		pushd .. >/dev/null || die
-		eapply "${FILESDIR}/18.1.3-dummy-LLVMPolly.patch"
+		eapply "${FILESDIR}/18.1.3-polly-dylib.patch"
 		popd >/dev/null || die
 	fi
 
@@ -230,14 +241,6 @@ get_distribution_components() {
 		llvm_gtest_main
 		LLVMTestingAnnotations
 		LLVMTestingSupport
-	)
-
-	# shouldn't be needed but I couldn't find
-	# a clean way to remove it from LLVMExports.cmake
-	# will be built either way but not installing will result
-	# in cmake not finding it when including LLVMExports.cmake
-	use polly && out+=(
-		PollyISL
 	)
 
 	if multilib_is_native_abi; then
@@ -428,7 +431,6 @@ multilib_src_configure() {
 
 	use polly && mycmakeargs+=(
 		-DLLVM_ENABLE_PROJECTS=polly
-		-DPOLLY_DUMMY_LLVMPOLLY=ON
 	)
 
 	local suffix=
@@ -542,14 +544,6 @@ multilib_src_install() {
 	# move headers to /usr/include for wrapping
 	rm -rf "${ED}"/usr/include || die
 	mv "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/include "${ED}"/usr/include || die
-
-	# keep LLVMConfigExtensions clean
-	# we include all extensions (e.g. polly) in libLLVM.so so
-	# a build calling process_llvm_pass_plugins (e.g. clang)
-	# would error out and not find those static libs later
-	# even though everything is present
-	echo "set(LLVM_STATIC_EXTENSIONS )" > \
-	  "${ED}/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)/cmake/llvm/LLVMConfigExtensions.cmake" || die
 
 	LLVM_LDPATHS+=( "${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)" )
 }

@@ -1,0 +1,38 @@
+diff --git a/llvm/cmake/modules/AddLLVM.cmake b/llvm/cmake/modules/AddLLVM.cmake
+index 693fd5669..89869bece 100644
+--- a/llvm/cmake/modules/AddLLVM.cmake
++++ b/llvm/cmake/modules/AddLLVM.cmake
+@@ -1180,9 +1180,16 @@ function(process_llvm_pass_plugins)
+       # LLVM_INSTALL_PACKAGE_DIR might be absolute, so don't reuse below.
+       string(REPLACE "${CMAKE_CFG_INTDIR}" "." llvm_cmake_builddir "${LLVM_LIBRARY_DIR}")
+       set(llvm_cmake_builddir "${llvm_cmake_builddir}/cmake/llvm")
+-      file(WRITE
+-          "${llvm_cmake_builddir}/LLVMConfigExtensions.cmake"
+-          "set(LLVM_STATIC_EXTENSIONS ${LLVM_STATIC_EXTENSIONS})")
++      if(LLVM_LINK_LLVM_DYLIB)
++          # Only install a dummy when linking to dylib
++          file(WRITE
++              "${llvm_cmake_builddir}/LLVMConfigExtensions.cmake"
++              "set(LLVM_STATIC_EXTENSIONS )")
++      else()
++          file(WRITE
++              "${llvm_cmake_builddir}/LLVMConfigExtensions.cmake"
++              "set(LLVM_STATIC_EXTENSIONS ${LLVM_STATIC_EXTENSIONS})")
++      endif()
+       install(FILES
+           ${llvm_cmake_builddir}/LLVMConfigExtensions.cmake
+           DESTINATION ${LLVM_INSTALL_PACKAGE_DIR}
+diff --git a/polly/cmake/polly_macros.cmake b/polly/cmake/polly_macros.cmake
+index df541eecc..11c4c6b07 100644
+--- a/polly/cmake/polly_macros.cmake
++++ b/polly/cmake/polly_macros.cmake
+@@ -41,7 +41,8 @@ macro(add_polly_library name)
+   if( LLVM_LINK_COMPONENTS )
+     llvm_config(${name} ${LLVM_LINK_COMPONENTS})
+   endif( LLVM_LINK_COMPONENTS )
+-  if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY OR ${name} STREQUAL "LLVMPolly")
++  if ((NOT LLVM_INSTALL_TOOLCHAIN_ONLY OR ${name} STREQUAL "LLVMPolly")
++    AND NOT LLVM_LINK_LLVM_DYLIB)
+     install(TARGETS ${name}
+       COMPONENT ${name}
+       EXPORT LLVMExports
