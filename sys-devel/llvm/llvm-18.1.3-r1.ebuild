@@ -19,7 +19,7 @@ HOMEPAGE="https://llvm.org/"
 
 LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA BSD public-domain rc"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
-#KEYWORDS="~amd64 ~arm ~arm64 ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux ~arm64-macos ~ppc-macos ~x64-macos"
+KEYWORDS="~amd64 ~arm ~arm64 ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux ~arm64-macos ~ppc-macos ~x64-macos"
 IUSE="
 	+binutils-plugin debug debuginfod doc exegesis libedit +libffi
 	ncurses polly test xml z3 zstd
@@ -192,23 +192,9 @@ src_prepare() {
 	# Verify that the ebuild is up-to-date
 	check_uptodate
 
-	# polly-dylib.patch:
-	# only affects the build when using
-	# LLVM_LINK_LLVM_DYLIB=ON
-	#
-	# 1)
-	# don't add polly libs as install_targets
-	# because it breaks LLVMExports.cmake by
-	# including static libs we don't install
-	#
-	# 2)
-	# keeps LLVMConfigExtensions empty
-	# we include all extensions (polly) in libLLVM.so so
-	# a build calling process_llvm_pass_plugins (e.g. clang)
-	# would fail since it expects these as static libs
 	if use polly; then
 		pushd .. >/dev/null || die
-		eapply "${FILESDIR}/18.1.3-polly-dylib.patch"
+		eapply "${FILESDIR}/polly-dylib.patch"
 		popd >/dev/null || die
 	fi
 
