@@ -44,7 +44,6 @@ RDEPEND="
 DEPEND="
 	${RDEPEND}
 	binutils-plugin? ( sys-libs/binutils-libs )
-	polly? ( sys-devel/polly:${LLVM_MAJOR} )
 "
 BDEPEND="
 	${PYTHON_DEPS}
@@ -58,7 +57,6 @@ BDEPEND="
 		dev-python/sphinx[${PYTHON_USEDEP}]
 	') )
 	libffi? ( virtual/pkgconfig )
-	polly? ( dev-util/patchelf )
 "
 # There are no file collisions between these versions but having :0
 # installed means llvm-config there will take precedence.
@@ -72,7 +70,7 @@ PDEPEND="
 	binutils-plugin? ( >=sys-devel/llvmgold-${LLVM_MAJOR} )
 "
 
-LLVM_COMPONENTS=( llvm cmake third-party )
+LLVM_COMPONENTS=( llvm cmake third-party polly )
 LLVM_MANPAGES=1
 LLVM_PATCHSET=${PV}
 LLVM_USE_TARGETS=provide
@@ -136,7 +134,7 @@ check_distribution_components() {
 					LLVMTestingAnnotations|LLVMTestingSupport)
 						;;
 					# static libs
-					LLVM*)
+					LLVM*|Polly*)
 						continue
 						;;
 					# meta-targets
@@ -187,6 +185,12 @@ src_prepare() {
 
 	# Verify that the ebuild is up-to-date
 	check_uptodate
+
+	if use polly; then
+		pushd .. >/dev/null || die
+		eapply "${FILESDIR}/polly-dylib.patch"
+		popd >/dev/null || die
+	fi
 
 	llvm.org_src_prepare
 }
@@ -405,6 +409,10 @@ multilib_src_configure() {
 		-DOCAMLFIND=NO
 	)
 
+	use polly && mycmakeargs+=(
+		-DLLVM_ENABLE_PROJECTS=polly
+	)
+
 	local suffix=
 	if [[ -n ${EGIT_VERSION} && ${EGIT_BRANCH} != release/* ]]; then
 		# the ABI of the main branch is not stable, so let's include
@@ -508,22 +516,6 @@ src_install() {
 
 	# move wrapped headers back
 	mv "${ED}"/usr/include "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/include || die
-
-	# patch libLLVM.so to always load LLVMPolly.so
-	# die if it's not found to not break llvm
-	if use polly; then
-		local llvm_libdir="/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)"
-		local polly="libPolly.so"
-		local llvm="libLLVM.so"
-		if [[ ! -f "${EPREFIX%/}/${llvm_libdir}/${polly}" ]]; then
-			die "${polly} not found"
-		fi
-		einfo "Polly found (${EPREFIX%/}/${llvm_libdir}/${polly})!"
-		einfo "Patching ${llvm} to include ${polly} ..."
-		patchelf --add-needed "${polly}" \
-				"${ED%/}/${llvm_libdir}/${llvm}" \
-				|| die "failed patching ${llvm}"
-	fi
 }
 
 multilib_src_install() {
