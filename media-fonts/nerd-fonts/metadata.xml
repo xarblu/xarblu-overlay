@@ -70,6 +70,7 @@
 		<flag name="tinos">Install Tinos font</flag>
 		<flag name="ubuntu">Install Ubuntu font</flag>
 		<flag name="ubuntumono">Install UbuntuMono font</flag>
+		<flag name="ubuntusans">Install UbuntuSans font</flag>
 		<flag name="victormono">Install VictorMono font</flag>
 		<flag name="zedmono">Install ZedMono font</flag>
 	</use>
