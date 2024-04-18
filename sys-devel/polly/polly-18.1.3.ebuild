@@ -12,15 +12,11 @@ KEYWORDS="~amd64 ~arm ~arm64 ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux 
 LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
 IUSE="+debug test"
-#RESTRICT="!test? ( test )"
-
-# test calls opt -load but opt already has patched LLVM
-RESTRICT="test"
+RESTRICT="!test? ( test )"
 
 # upstream says to build against the exact same version
-# but just depending on LLVM_MAJOR should be fine since we build
-# a shared library + this avoids circular dependencies unless it's
-# a major version upgrade
+# but just depending on LLVM_MAJOR should be fine since we link
+# to the shared library
 DEPEND="
 	sys-devel/llvm:${LLVM_MAJOR}=
 "
@@ -41,16 +37,6 @@ python_check_deps() {
 pkg_setup() {
 	LLVM_MAX_SLOT=${LLVM_MAJOR} llvm_pkg_setup
 	use test && python-any-r1_pkg_setup
-}
-
-src_prepare() {
-	# prepend the newly built test binaries
-	if use test; then
-		local polly_test_bin="${WORKDIR}/${PN}_build/bin"
-		sed -i -E -e "s|^(llvm_config.add_tool_substitutions\(tool_patterns)|\1,\[\'${polly_test_bin}\',llvm_config.config.llvm_tools_dir\]|" test/lit.cfg || die "sed: couldn't add test bin search dir"
-	fi
-	eapply_user
-	cmake_src_prepare
 }
 
 src_configure() {
@@ -75,12 +61,9 @@ src_test() {
 }
 
 pkg_postinst() {
-	# print a warning if building independent from sys-devel/llvm
-	if ! has_version "sys-devel/llvm:${LLVM_MAJOR}[polly]"; then
-		elog "sys-devel/llvm:${LLVM_MAJOR}[polly] wasn't found on the system!"
-		elog "If USE=\"polly\" isn't set you need to manually load polly as"
-		elog "a clang plugin by adding the following flag:"
-		elog "     \"-fplugin=LLVMPolly.so\""
-		elog "Then the usual \"-mllvm -polly\" should work."
-	fi
+	elog "To use the clang plugin add the following flag:"
+	elog "  \"-fpass-plugin=LLVMPolly.so\""
+	elog "Then pass polly args via (examples):"
+	elog "  \"-fplugin-arg-polly-polly\""
+	elog "  \"-fplugin-arg-polly-polly-vectorizer=stripmine\""
 }
