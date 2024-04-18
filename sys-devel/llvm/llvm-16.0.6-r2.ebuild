@@ -21,17 +21,13 @@ LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA BSD public-domain rc"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
 KEYWORDS="amd64 arm arm64 ~loong ppc ppc64 ~riscv sparc x86 ~amd64-linux ~arm64-macos ~ppc-macos ~x64-macos"
 IUSE="
-	+binutils-plugin debug debuginfod doc exegesis libedit +libffi
-	ncurses polly test xar xml z3 zstd
+	+binutils-plugin debug doc exegesis libedit +libffi ncurses polly test xar
+	xml z3 zstd
 "
 RESTRICT="!test? ( test )"
 
 RDEPEND="
 	sys-libs/zlib:0=[${MULTILIB_USEDEP}]
-	debuginfod? (
-		net-misc/curl:=
-		dev-cpp/cpp-httplib:=
-	)
 	exegesis? ( dev-libs/libpfm:= )
 	libedit? ( dev-libs/libedit:0=[${MULTILIB_USEDEP}] )
 	libffi? ( >=dev-libs/libffi-3.0.13-r1:0=[${MULTILIB_USEDEP}] )
@@ -44,6 +40,7 @@ RDEPEND="
 DEPEND="
 	${RDEPEND}
 	binutils-plugin? ( sys-libs/binutils-libs )
+	polly? ( sys-devel/polly:${LLVM_MAJOR} )
 "
 BDEPEND="
 	${PYTHON_DEPS}
@@ -57,6 +54,7 @@ BDEPEND="
 		dev-python/sphinx[${PYTHON_USEDEP}]
 	') )
 	libffi? ( virtual/pkgconfig )
+	polly? ( dev-util/patchelf )
 "
 # There are no file collisions between these versions but having :0
 # installed means llvm-config there will take precedence.
@@ -70,7 +68,8 @@ PDEPEND="
 	binutils-plugin? ( >=sys-devel/llvmgold-${LLVM_MAJOR} )
 "
 
-LLVM_COMPONENTS=( llvm cmake third-party polly )
+LLVM_COMPONENTS=( llvm cmake )
+LLVM_TEST_COMPONENTS=( third-party )
 LLVM_MANPAGES=1
 LLVM_PATCHSET=${PV}
 LLVM_USE_TARGETS=provide
@@ -130,11 +129,8 @@ check_distribution_components() {
 					# TableGen lib + deps
 					LLVMDemangle|LLVMSupport|LLVMTableGen)
 						;;
-					# testing libraries
-					LLVMTestingAnnotations|LLVMTestingSupport)
-						;;
 					# static libs
-					LLVM*|Polly*)
+					LLVM*)
 						continue
 						;;
 					# meta-targets
@@ -186,12 +182,6 @@ src_prepare() {
 	# Verify that the ebuild is up-to-date
 	check_uptodate
 
-	if use polly; then
-		pushd .. >/dev/null || die
-		eapply "${FILESDIR}/polly-dylib.patch"
-		popd >/dev/null || die
-	fi
-
 	llvm.org_src_prepare
 }
 
@@ -215,12 +205,6 @@ get_distribution_components() {
 		LLVMDemangle
 		LLVMSupport
 		LLVMTableGen
-
-		# testing libraries
-		llvm_gtest
-		llvm_gtest_main
-		LLVMTestingAnnotations
-		LLVMTestingSupport
 	)
 
 	if multilib_is_native_abi; then
@@ -255,6 +239,7 @@ get_distribution_components() {
 			llvm-cxxfilt
 			llvm-cxxmap
 			llvm-debuginfo-analyzer
+			llvm-debuginfod
 			llvm-debuginfod-find
 			llvm-diff
 			llvm-dis
@@ -335,9 +320,6 @@ get_distribution_components() {
 		use binutils-plugin && out+=(
 			LLVMgold
 		)
-		use debuginfod && out+=(
-			llvm-debuginfod
-		)
 	fi
 
 	printf "%s${sep}" "${out[@]}"
@@ -378,9 +360,8 @@ multilib_src_configure() {
 		-DLLVM_TARGETS_TO_BUILD=""
 		-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD="${LLVM_TARGETS// /;}"
 		-DLLVM_INCLUDE_BENCHMARKS=OFF
-		-DLLVM_INCLUDE_TESTS=ON
+		-DLLVM_INCLUDE_TESTS=$(usex test)
 		-DLLVM_BUILD_TESTS=$(usex test)
-		-DLLVM_INSTALL_GTEST=ON
 
 		-DLLVM_ENABLE_FFI=$(usex libffi)
 		-DLLVM_ENABLE_LIBEDIT=$(usex libedit)
@@ -393,8 +374,6 @@ multilib_src_configure() {
 		-DLLVM_ENABLE_Z3_SOLVER=$(usex z3)
 		-DLLVM_ENABLE_ZLIB=FORCE_ON
 		-DLLVM_ENABLE_ZSTD=$(usex zstd FORCE_ON OFF)
-		-DLLVM_ENABLE_CURL=$(usex debuginfod)
-		-DLLVM_ENABLE_HTTPLIB=$(usex debuginfod)
 
 		-DLLVM_HOST_TRIPLE="${CHOST}"
 
@@ -407,10 +386,6 @@ multilib_src_configure() {
 
 		# disable OCaml bindings (now in dev-ml/llvm-ocaml)
 		-DOCAMLFIND=NO
-	)
-
-	use polly && mycmakeargs+=(
-		-DLLVM_ENABLE_PROJECTS=polly
 	)
 
 	local suffix=
@@ -459,13 +434,11 @@ multilib_src_configure() {
 		)
 	fi
 
+	# On Macos prefix, Gentoo doesn't split sys-libs/ncurses to libtinfo and
+	# libncurses, but llvm tries to use libtinfo before libncurses, and ends up
+	# using libtinfo (actually, libncurses.dylib) from system instead of prefix
 	use kernel_Darwin && mycmakeargs+=(
-		# On Macos prefix, Gentoo doesn't split sys-libs/ncurses to libtinfo and
-		# libncurses, but llvm tries to use libtinfo before libncurses, and ends up
-		# using libtinfo (actually, libncurses.dylib) from system instead of prefix
 		-DTerminfo_LIBRARIES=-lncurses
-		# Use our libtool instead of looking it up with xcrun
-		-DCMAKE_LIBTOOL="${EPREFIX}/usr/bin/${CHOST}-libtool"
 	)
 
 	# LLVM can have very high memory consumption while linking,
@@ -478,7 +451,7 @@ multilib_src_configure() {
 
 	grep -q -E "^CMAKE_PROJECT_VERSION_MAJOR(:.*)?=${LLVM_MAJOR}$" \
 			CMakeCache.txt ||
-		die "Incorrect version, did you update _LLVM_MAIN_MAJOR?"
+		die "Incorrect version, did you update _LLVM_MASTER_MAJOR?"
 	multilib_is_native_abi && check_distribution_components
 }
 
@@ -516,6 +489,22 @@ src_install() {
 
 	# move wrapped headers back
 	mv "${ED}"/usr/include "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/include || die
+
+	# patch libLLVM.so to always load LLVMPolly.so
+	# die if it's not found to not break llvm
+	if use polly; then
+		local llvm_libdir="/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)"
+		local polly="LLVMPolly.so"
+		local llvm="libLLVM.so"
+		if [[ ! -f "${EPREFIX%/}/${llvm_libdir}/${polly}" ]]; then
+			die "${polly} not found"
+		fi
+		einfo "Polly found (${EPREFIX%/}/${llvm_libdir}/${polly})!"
+		einfo "Patching ${llvm} to include ${polly} ..."
+		patchelf --add-needed "${polly}" \
+				"${ED%/}/${llvm_libdir}/${llvm}" \
+				|| die "failed patching ${llvm}"
+	fi
 }
 
 multilib_src_install() {
