@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>xarblu@protonmail.com</email>
+		<name>Xarblu</name>
+	</maintainer>
+	<longdescription>
+		Java™ is the world's leading programming language and platform.
+		The code for Java is open source and available at OpenJDK™.
+	</longdescription>
+	<slots>
+		<slot name="22">Java™ version 22</slot>
+	</slots>
+	<use>
+		<flag name="headless-awt">Don't install the X backend for AWT, needed by some GUIs</flag>
+		<flag name="jbootstrap">Build OpenJDK twice, the second time using the result of the first</flag>
+		<flag name="source">Install JVM sources</flag>
+		<flag name="systemtap" restrict="&gt;=dev-java/openjdk-11">Enable SystemTAP/DTrace tracing</flag>
+	</use>
+	<upstream>
+		<remote-id type="github">openjdk/jdk22u</remote-id>
+	</upstream>
+</pkgmetadata>
