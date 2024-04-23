@@ -9,7 +9,6 @@ DESCRIPTION="Jellyfin puts you in control of managing and streaming your media"
 HOMEPAGE="https://jellyfin.org/"
 LICENSE="GPL-2"
 SLOT="0"
-IUSE="jellyscrub"
 RESTRICT="mirror test"
 
 MY_PN="${PN%-bin}"
@@ -68,13 +67,6 @@ BDEPEND="
 INST_DIR="/opt/${MY_PN}"
 QA_PREBUILT="${INST_DIR#/}/*.so ${INST_DIR#/}/jellyfin ${INST_DIR#/}/createdump"
 
-pkg_pretend() {
-	if use jellyscrub; then
-		ewarn "If your Jellyfin server uses a baseurl you need to set JF_BASEURL=<baseurl>."
-		ewarn "Otherwise the Jellyscrub plugin won't work."
-	fi
-}
-
 src_prepare() {
 	default
 
@@ -84,11 +76,6 @@ src_prepare() {
 }
 
 src_install() {
-	#Add jellyscrub plugin to index.html
-	if use jellyscrub; then
-		sed -i -e "s|</body>|<script plugin=\"Jellyscrub\" version=\"1.0.0.0\" src=\"${JF_BASEURL#/}/Trickplay/ClientScript\"></script>&|" "${S}/jellyfin-web/index.html" || die "Failed modifying index.html"
-	fi
-
 	# runtime dirs
 	keepdir /var/log/jellyfin
 	fowners jellyfin:jellyfin /var/log/jellyfin
