@@ -44,11 +44,14 @@ BDEPEND="
 
 src_configure() {
 	local mycmakeargs=(
+		-DAPPLE_SUPPORT_DEFAULT=OFF
 		-DNVIDIA_SUPPORT=$(usex video_cards_nvidia)
 		-DAMDGPU_SUPPORT=$(usex video_cards_amdgpu)
 		-DINTEL_SUPPORT=$(usex video_cards_intel)
 		-DMSM_SUPPORT=$(usex video_cards_freedreno)
 		-DPANFROST_SUPPORT=$(usex video_cards_panfrost)
+		-DPANTHOR_SUPPORT=OFF
+		-DASCEND_SUPPORT=OFF
 		-DUSE_LIBUDEV_OVER_LIBSYSTEMD=$(usex !systemd)
 	)
 	cmake_src_configure
