@@ -11,6 +11,8 @@ LICENSE="GPL-2"
 SLOT="0"
 RESTRICT="mirror test"
 
+IUSE="+vendored-ffmpeg"
+
 MY_PN="${PN%-bin}"
 
 if [[ "${PV}" == *_pre* ]]; then
@@ -18,7 +20,7 @@ if [[ "${PV}" == *_pre* ]]; then
 	MY_PV="${PV#*_pre}"
 	# should have -* but that also
 	# affects supported arches
-	KEYWORDS=""
+	#KEYWORDS=""
 	S="${WORKDIR}/${MY_PN}"
 else
 	TYPE="stable"
@@ -57,7 +59,8 @@ DEPEND="
 "
 RDEPEND="${DEPEND}
 	dev-libs/icu
-	media-video/ffmpeg[vpx,x264]
+	vendored-ffmpeg? ( media-video/jellyfin-ffmpeg )
+	!vendored-ffmpeg? ( media-video/ffmpeg[vpx,x264] )
 	sys-libs/glibc
 "
 BDEPEND="
@@ -90,9 +93,21 @@ src_install() {
 	pax-mark -m "${INST_DIR}/jellyfin"
 
 	# services
-	newinitd "${FILESDIR}/${MY_PN}.init-r1" "${MY_PN}"
-	newconfd "${FILESDIR}/${MY_PN}.confd" "${MY_PN}"
-	systemd_dounit "${FILESDIR}/${MY_PN}.service"
+	local f cmd
+	for f in "${FILESDIR}/${MY_PN}".{init-r2,confd-r1,service-r1}; do
+		case "${f}" in
+			*.init*) cmd="newinitd - ${MY_PN}";;
+			*.confd*) cmd="newconfd - ${MY_PN}";;
+			*.service*) cmd="systemd_newunit - ${MY_PN}.service";;
+			*) die "Don't know how to handle ${f}";;
+		esac
+		if ! use vendored-ffmpeg; then
+			sed -e 's#/usr/lib/jellyfin-ffmpeg/bin/ffmpeg#/usr/bin/ffmpeg#g' \
+				"${f}" || die
+		else
+			cat "${f}" || die
+		fi | ${cmd}
+	done
 }
 
 pkg_postinst() {
