@@ -265,19 +265,8 @@ src_configure() {
 		--enable-libzimg
 		--enable-libfdk-aac
 	)
-	use vulkan && myconf+=(
-		--enable-libshaderc
-		--enable-libplacebo
-		--enable-vulkan
-	)
-	use vaapi && myconf+=(
-		--enable-vaapi
-	)
 	use amf && myconf+=(
 		--enable-amf
-	)
-	use qsv && myconf+=(
-		--enable-libvpl
 	)
 	use cuda && myconf+=(
 		--enable-cuda
@@ -288,6 +277,20 @@ src_configure() {
 		--enable-ffnvcodec
 		--enable-nvdec
 		--enable-nvenc
+	)
+	use opencl && myconf+=(
+		--enable-opencl
+	)
+	use qsv && myconf+=(
+		--enable-libvpl
+	)
+	use vaapi && myconf+=(
+		--enable-vaapi
+	)
+	use vulkan && myconf+=(
+		--enable-libshaderc
+		--enable-libplacebo
+		--enable-vulkan
 	)
 
 	# Use --extra-libs if needed for LIBS
