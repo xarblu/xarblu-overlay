@@ -8,4 +8,7 @@
 	<upstream>
 		<remote-id type="github">sched-ext/scx</remote-id>	
 	</upstream>
+	<use>
+		<flag name="openrc">Enable <pkg>sys-apps/openrc</pkg> support.</flag>
+	</use>
 </pkgmetadata>
