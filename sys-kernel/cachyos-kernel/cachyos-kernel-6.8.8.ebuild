@@ -11,17 +11,17 @@ inherit kernel-build
 MY_P=linux-${PV%.*}
 
 # https://dev.gentoo.org/~mpagano/genpatches/kernels.html
-GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 1 ))
+GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 3 ))
 # https://github.com/projg2/gentoo-kernel-config
-GENTOO_CONFIG_VER=g11
+GENTOO_CONFIG_VER=g12
 # https://github.com/CachyOS/linux-cachyos
-CACHYOS_CONFIG_COMMIT="0da0f89a18a59578b6ceddf7783f02aa37bec2aa"
+CACHYOS_CONFIG_COMMIT="37578fd0d9f7cf54380d4e2f6797a9f0f5f152d4"
 # https://github.com/CachyOS/kernel-patches
-CACHYOS_PATCH_COMMIT="093449d1af73e9dfb6a62105ec31da240a282115"
+CACHYOS_PATCH_COMMIT="f3e87b869ab220d98c6df07b55ae54b7be0ac1b1"
 
 # CPU schdulers supported by cachyos-patches
 # there are more options but these are the ones from CachyOS/linux-cachyos
-CPU_SCHED="cachyos bore rt rt-bore hardened sched-ext eevdf echo"
+CPU_SCHED="cachyos bore rt rt-bore sched-ext eevdf echo bmq pds hardened"
 
 DESCRIPTION="Linux kernel built with CachyOS and Gentoo patches"
 HOMEPAGE="
@@ -33,6 +33,8 @@ SRC_URI+="
 	https://cdn.kernel.org/pub/linux/kernel/v$(ver_cut 1).x/${MY_P}.tar.xz
 	https://dev.gentoo.org/~mpagano/dist/genpatches/${GENPATCHES_P}.base.tar.xz
 	https://dev.gentoo.org/~mpagano/dist/genpatches/${GENPATCHES_P}.extras.tar.xz
+	https://dev.gentoo.org/~alicef/dist/genpatches/${GENPATCHES_P}.base.tar.xz
+	https://dev.gentoo.org/~alicef/dist/genpatches/${GENPATCHES_P}.extras.tar.xz
 	https://github.com/projg2/gentoo-kernel-config/archive/${GENTOO_CONFIG_VER}.tar.gz
 		-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
 	https://github.com/CachyOS/linux-cachyos/archive/${CACHYOS_CONFIG_COMMIT}.tar.gz
@@ -137,6 +139,9 @@ cachy_get_patches() {
 	if use echo; then
 		echo "${cachy_patch}/sched/0001-echo-cachy.patch" || die
 	fi
+	if use bmq || use pds; then
+		echo "${cachy_patch}/sched/0001-prjc-cachy.patch" || die
+	fi
 }
 
 # config defaults from Arch PKGBUILD
@@ -166,15 +171,24 @@ cachy_get_config() {
 	if use echo; then
 		kconf set ECHO_SCHED
 	fi
+	if use bmq; then
+		kconf set SCHED_ALT
+		kconf set SCHED_BMQ
+	fi
+	if use pds; then
+		kconf set SCHED_ALT
+		kconf set SCHED_PDS
+	fi
 	# _HZ_ticks
-	if use cachyos || use bore || use sched-ext || use rt || use rt-bore || use hardened || use eevdf; then
-		kconf unset HZ_300
-		kconf set HZ_1000
-		kconf val HZ 1000
-	elif use echo; then
+	# ECHO 625, everything else 1000
+	if use echo; then
 		kconf unset HZ_300
 		kconf set HZ_625
 		kconf val HZ 625
+	else
+		kconf unset HZ_300
+		kconf set HZ_1000
+		kconf val HZ 1000
 	fi
 	# _nr_cpus
 	kconf val NR_CPUS 320
@@ -229,11 +243,11 @@ src_prepare() {
 	default
 
 	# Localversion
-	local myversion="$(cachy_get_version)"
-	kconf val LOCALVERSION "-${myversion}" > "${T}"/version.config || die
+	kconf val LOCALVERSION "-$(cachy_get_version)" > "${T}"/version.config || die
 
 	# CachyOS config as base
-	cp "${WORKDIR}/linux-cachyos-${CACHYOS_CONFIG_COMMIT}/${myversion}/config" \
+	# they're all in sync (besides lts/rc) so use the main linux-cachyos config
+	cp "${WORKDIR}/linux-cachyos-${CACHYOS_CONFIG_COMMIT}/linux-cachyos/config" \
 		.config || die
 
 	# Package defaults
