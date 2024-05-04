@@ -8,4 +8,7 @@
 	<upstream>
 		<remote-id type="github">githubnext/monaspace</remote-id>
 	</upstream>
+	<use>
+		<flag name="variable">Install variable width fonts</flag>
+	</use>
 </pkgmetadata>
