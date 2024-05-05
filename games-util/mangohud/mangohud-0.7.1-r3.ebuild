@@ -75,7 +75,7 @@ DEPEND="
 	dbus? ( sys-apps/dbus[${MULTILIB_USEDEP}] )
 	mangoapp? (
 		media-libs/glew[${MULTILIB_USEDEP}]
-		media-libs/glfw[wayland-only(-),X(+),${MULTILIB_USEDEP}]
+		media-libs/glfw[-wayland-only(-),X(+),${MULTILIB_USEDEP}]
 	)
 	mangoplot? (
 		$(python_gen_cond_dep '
