@@ -1,0 +1,9 @@
+diff --git a/meson-scripts/get_clang_ver b/meson-scripts/get_clang_ver
+index 7e13adc..bd1ca53 100755
+--- a/meson-scripts/get_clang_ver
++++ b/meson-scripts/get_clang_ver
+@@ -1,3 +1,3 @@
+ #!/bin/bash
+ 
+-"$1" --version | sed -nr 's/^.*clang version ([\.0-9]*)(git)?( .*)?$/\1/p'
++"$1" --version | sed -nr 's/^.*clang version ([\.0-9]*)(git)?(\+libcxx)?( .*)?$/\1/p'
