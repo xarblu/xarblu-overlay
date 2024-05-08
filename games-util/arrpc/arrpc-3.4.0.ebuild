@@ -5,10 +5,6 @@ EAPI=8
 
 inherit systemd wrapper
 
-# currently there are no tags so use
-# "release: X.Y.Z" type commits
-COMMIT="c6e23e7eb733ad396d3eebc328404cc656fed581"
-
 NODE_DEPS="
 	ws@8.11.0
 	bufferutil@4.0.1
@@ -17,7 +13,7 @@ NODE_DEPS="
 
 DESCRIPTION="Open Discord RPC server for atypical setups"
 HOMEPAGE="https://arrpc.openasar.dev/"
-SRC_URI="https://github.com/OpenAsar/${PN}/archive/${COMMIT}.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/OpenAsar/${PN}/archive/refs/tags/${PV}.tar.gz"
 
 LICENSE="MIT"
 SLOT="0"
@@ -50,10 +46,10 @@ node_src_unpack() {
 	done
 }
 
-S="${WORKDIR}/${PN}-${COMMIT}"
+S="${WORKDIR}/${PN}-${PV}"
 
 src_unpack() {
-	unpack ${P}.tar.gz
+	unpack ${PV}.tar.gz
 	node_src_unpack
 }
 
