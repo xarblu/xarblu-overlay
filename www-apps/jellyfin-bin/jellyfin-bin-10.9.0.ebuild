@@ -11,6 +11,8 @@ LICENSE="GPL-2"
 SLOT="0"
 RESTRICT="mirror test"
 
+IUSE="+vendored-ffmpeg"
+
 MY_PN="${PN%-bin}"
 
 if [[ "${PV}" == *_pre* ]]; then
@@ -18,34 +20,33 @@ if [[ "${PV}" == *_pre* ]]; then
 	MY_PV="${PV#*_pre}"
 	# should have -* but that also
 	# affects supported arches
-	KEYWORDS=""
+	#KEYWORDS=""
 	S="${WORKDIR}/${MY_PN}"
 else
 	TYPE="stable"
 	MY_PV="${PV}"
 	KEYWORDS="-* ~amd64 ~arm64"
-	S="${WORKDIR}/${MY_PN}_${MY_PV}"
+	S="${WORKDIR}/${MY_PN}"
 fi
 
 src_uris() {
 	local baseuri="https://repo.jellyfin.org/files/server/linux"
+	case "${TYPE}" in
+		stable) baseuri+="/${TYPE}/v${MY_PV}";;
+		unstable) baseuri+="/${TYPE}/${MY_PV}";;
+	esac
 	for arch in arm64 amd64; do
-		case "${TYPE}" in
-			stable)
-				SRC_URI+="
-					${arch}? (
-						${baseuri}/${TYPE}/${MY_PV}/${arch}/${MY_PN}_${MY_PV}_${arch}.tar.gz
-					)
-				"
-				;;
-			unstable)
-				SRC_URI+="
-					${arch}? (
-						${baseuri}/${TYPE}/${MY_PV}/${arch}/${MY_PN}_${MY_PV}-${arch}.tar.gz
-					)
-				"
-				;;
-		esac
+		SRC_URI+="${arch}? ( "
+		for libc in glibc musl; do
+			SRC_URI+="elibc_${libc}? ( "
+			if [[ "${libc}" == "glibc" ]]; then
+				SRC_URI+="${baseuri}/${arch}/${MY_PN}_${MY_PV}-${arch}.tar.gz"
+			else
+				SRC_URI+="${baseuri}/${arch}-${libc}/${MY_PN}_${MY_PV}-${arch}-${libc}.tar.gz"
+			fi
+			SRC_URI+=" ) "
+		done
+		SRC_URI+=" ) "
 	done
 }
 src_uris
@@ -57,8 +58,9 @@ DEPEND="
 "
 RDEPEND="${DEPEND}
 	dev-libs/icu
-	media-video/ffmpeg[vpx,x264]
-	sys-libs/glibc
+	vendored-ffmpeg? ( media-video/jellyfin-ffmpeg )
+	!vendored-ffmpeg? ( media-video/ffmpeg[vpx,x264] )
+	|| ( sys-libs/glibc sys-libs/musl )
 "
 BDEPEND="
 	acct-user/jellyfin
@@ -90,9 +92,21 @@ src_install() {
 	pax-mark -m "${INST_DIR}/jellyfin"
 
 	# services
-	newinitd "${FILESDIR}/${MY_PN}.init-r1" "${MY_PN}"
-	newconfd "${FILESDIR}/${MY_PN}.confd" "${MY_PN}"
-	systemd_dounit "${FILESDIR}/${MY_PN}.service"
+	local f cmd
+	for f in "${FILESDIR}/${MY_PN}".{init-r2,confd-r1,service-r1}; do
+		case "${f}" in
+			*.init*) cmd="newinitd - ${MY_PN}";;
+			*.confd*) cmd="newconfd - ${MY_PN}";;
+			*.service*) cmd="systemd_newunit - ${MY_PN}.service";;
+			*) die "Don't know how to handle ${f}";;
+		esac
+		if ! use vendored-ffmpeg; then
+			sed -e 's#/usr/lib/jellyfin-ffmpeg/bin/ffmpeg#/usr/bin/ffmpeg#g' \
+				"${f}" || die
+		else
+			cat "${f}" || die
+		fi | ${cmd}
+	done
 }
 
 pkg_postinst() {
