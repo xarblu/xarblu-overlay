@@ -5,7 +5,7 @@ EAPI=8
 
 inherit udev tmpfiles systemd
 
-COMMIT="1e65d4696d0836b4b727ce61f3a29376a11e99a7"
+COMMIT="624e9fbf4967596bc4a258872a547f8781433576"
 DESCRIPTION="Configuration files and tweaks from CachyOS"
 HOMEPAGE="https://github.com/CachyOS/CachyOS-Settings"
 SRC_URI="https://github.com/CachyOS/CachyOS-Settings/archive/${COMMIT}.tar.gz -> ${P}.tar.gz"
@@ -72,6 +72,7 @@ src_install() {
 # all tmpfiles are "oneshot at reboot"
 pkg_postinst() {
 	udev_reload
+	tmpfiles_process thp.conf optimize-interruptfreq.conf
 }
 
 pkg_postrm() {
