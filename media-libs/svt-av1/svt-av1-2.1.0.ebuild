@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Gentoo Authors
+# Copyright 2020-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -21,6 +21,8 @@ fi
 LICENSE="BSD-2 Apache-2.0 BSD ISC LGPL-2.1+ MIT"
 SLOT="0"
 
+# CMakeLists.txt claims arm64 doesn't need yasm
+# needs testing
 BDEPEND="amd64? ( dev-lang/yasm )"
 
 PATCHES=(
@@ -40,7 +42,10 @@ multilib_src_configure() {
 		-DENABLE_AVX512=ON
 	)
 
-	[[ ${ABI} != amd64 ]] && mycmakeargs+=( -DCOMPILE_C_ONLY=ON )
+	case "${ABI}" in
+		amd64|arm64) ;;
+		*) mycmakeargs+=( -DCOMPILE_C_ONLY=ON );;
+	esac
 
 	cmake_src_configure
 }
