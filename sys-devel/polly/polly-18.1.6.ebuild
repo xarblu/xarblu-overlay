@@ -62,8 +62,7 @@ src_test() {
 
 pkg_postinst() {
 	elog "To use the clang plugin add the following flag:"
-	elog "  \"-fpass-plugin=LLVMPolly.so\""
+	elog "  \"-fplugin=LLVMPolly.so\""
 	elog "Then pass polly args via (examples):"
-	elog "  \"-fplugin-arg-polly-polly\""
-	elog "  \"-fplugin-arg-polly-polly-vectorizer=stripmine\""
+	elog "  \"-mllvm -polly\""
 }
