@@ -13,7 +13,7 @@ SRC_URI="https://github.com/jellyfin/jellyfin-ffmpeg/archive/v${MY_PV}.tar.gz ->
 
 SLOT="0"
 LICENSE="GPL-3"
-KEYWORDS="~amd64"
+KEYWORDS="~amd64 ~arm64"
 
 # only make hwaccel sulutions optional
 IUSE="amf cpudetection cuda nvenc opencl +pic qsv test vaapi vulkan"
