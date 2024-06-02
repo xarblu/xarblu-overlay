@@ -6,8 +6,8 @@
 		<name>Xarblu</name>
 	</maintainer>
 	<use>
-		<flag name="jellyscrub">Setup index.html for the jellyscrub plugin.</flag>
-		<flag name="vendored-ffmpeg">Use patched <pkg>media-video/jellyfin-ffmpeg</pkg>.</flag>
+		<flag name="intro-skipper">Setup index.html for the intro-skipper plugin</flag>
+		<flag name="vendored-ffmpeg">Use patched <pkg>media-video/jellyfin-ffmpeg</pkg></flag>
 	</use>
 	<upstream>
 		<remote-id type="github">jellyfin/jellyfin</remote-id>
