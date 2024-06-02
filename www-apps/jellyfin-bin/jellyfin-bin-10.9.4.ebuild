@@ -59,7 +59,10 @@ DEPEND="
 RDEPEND="${DEPEND}
 	dev-libs/icu
 	vendored-ffmpeg? ( media-video/jellyfin-ffmpeg )
-	!vendored-ffmpeg? ( media-video/ffmpeg[vpx,x264] )
+	!vendored-ffmpeg? (
+		media-video/ffmpeg[vpx,x264]
+		intro-skipper? ( media-video/ffmpeg[chromaprint] )
+	)
 	|| ( sys-libs/glibc sys-libs/musl )
 "
 BDEPEND="
