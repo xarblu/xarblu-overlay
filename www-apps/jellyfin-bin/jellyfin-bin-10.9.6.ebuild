@@ -11,7 +11,7 @@ LICENSE="GPL-2"
 SLOT="0"
 RESTRICT="mirror test"
 
-IUSE="+vendored-ffmpeg"
+IUSE="intro-skipper +vendored-ffmpeg"
 
 MY_PN="${PN%-bin}"
 
@@ -59,7 +59,10 @@ DEPEND="
 RDEPEND="${DEPEND}
 	dev-libs/icu
 	vendored-ffmpeg? ( media-video/jellyfin-ffmpeg )
-	!vendored-ffmpeg? ( media-video/ffmpeg[vpx,x264] )
+	!vendored-ffmpeg? (
+		media-video/ffmpeg[vpx,x264]
+		intro-skipper? ( media-video/ffmpeg[chromaprint] )
+	)
 	|| ( sys-libs/glibc sys-libs/musl )
 "
 BDEPEND="
@@ -78,6 +81,14 @@ src_prepare() {
 }
 
 src_install() {
+	# add intro-skipper plugin to index.html
+	# as per https://github.com/jumoog/intro-skipper/blob/10.9/v0.2.0.9/ConfusedPolarBear.Plugin.IntroSkipper/Plugin.cs#L401
+	if use intro-skipper; then
+		einfo "Patching index.html due to USE=\"intro-skipper\""
+		sed -i -e "s|</head>|<script src=\"configurationpage?name=skip-intro-button.js\"></script>&|" \
+			"${S}/jellyfin-web/index.html" || die "Failed modifying index.html"
+	fi
+
 	# runtime dirs
 	keepdir /var/log/jellyfin
 	fowners jellyfin:jellyfin /var/log/jellyfin
@@ -111,4 +122,12 @@ src_install() {
 
 pkg_postinst() {
 	tmpfiles_process jellyfin.conf
+
+	if use intro-skipper; then
+		einfo ""
+		einfo "USE='intro-skipper' only handles the web-injection."
+		einfo "To setup the rest of the plugin refer to"
+		einfo "https://github.com/jumoog/intro-skipper"
+		einfo ""
+	fi
 }
