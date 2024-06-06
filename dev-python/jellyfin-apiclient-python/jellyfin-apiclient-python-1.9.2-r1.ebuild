@@ -1,9 +1,10 @@
-# Copyright 2022 Gentoo Authors
+# Copyright 2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{8..11} )
+DISTUTILS_USE_PEP517="setuptools"
+PYTHON_COMPAT=( python3_{10..12} )
 inherit distutils-r1
 
 DESCRIPTION="Python API Client for Jellyfin"
@@ -19,6 +20,7 @@ DEPEND="
 	dev-python/urllib3[${PYTHON_USEDEP}]
 	dev-python/websocket-client[${PYTHON_USEDEP}]
 	dev-python/certifi[${PYTHON_USEDEP}]
+	${PYTHON_DEPS}
 "
 RDEPEND="${DEPEND}"
-BDEPEND=""
+BDEPEND="${PYTHON_DEPS}"
