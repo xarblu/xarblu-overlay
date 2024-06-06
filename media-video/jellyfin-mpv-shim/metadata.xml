@@ -5,9 +5,11 @@
 		<email>xarblu@protonmail.com</email>
 		<name>Xarblu</name>
 	</maintainer>
+	<upstream>
+		<remote-id type="github">jellyfin/jellyfin-mpv-shim</remote-id>
+	</upstream>
 	<use>
-		<flag name="display-mirroring">Enable display-mirroring</flag>
-		<flag name="systray">Enable systray via <pkg>dev-python/pystray</pkg></flag>
+		<flag name="systray">Enable systray support</flag>
 		<flag name="shaders">Install the default shader pack</flag>
 	</use>
 </pkgmetadata>
