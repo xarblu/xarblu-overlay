@@ -5,7 +5,7 @@ EAPI=8
 
 inherit udev tmpfiles systemd
 
-COMMIT="836f211165a46c804e4bcbf71d3485ddc2ed6aba"
+COMMIT="d11d7af5b722894fa05c6292f1ba336658adc0bd"
 DESCRIPTION="Configuration files and tweaks from CachyOS"
 HOMEPAGE="https://github.com/CachyOS/CachyOS-Settings"
 SRC_URI="https://github.com/CachyOS/CachyOS-Settings/archive/${COMMIT}.tar.gz -> ${P}.tar.gz"
@@ -29,26 +29,26 @@ DEPEND="
 RDEPEND="${DEPEND}"
 
 src_install() {
-	insinto /etc/modprobe.d
-	doins etc/modprobe.d/*
-
 	insinto /etc/security/limits.d
 	doins etc/security/limits.d/*
 
-	insinto /etc/sysctl.d
-	doins etc/sysctl.d/*
+	insinto /usr/lib/modprobe.d
+	doins usr/lib/modprobe.d/*
 
-	insinto /etc/systemd/journald.conf.d
-	doins etc/systemd/journald.conf.d/*
+	insinto /usr/lib/sysctl.d
+	doins usr/lib/sysctl.d/*
 
-	insinto /etc/systemd/system.conf.d
-	doins etc/systemd/system.conf.d/*
+	insinto /usr/lib/systemd/journald.conf.d
+	doins usr/lib/systemd/journald.conf.d/*
+
+	insinto /usr/lib/systemd/system.conf.d
+	doins usr/lib/systemd/system.conf.d/*
 
 	# this explicitly doesn't install the
 	# .service files because we don't install
-	# the scripts
+	# the cachyos specific scripts
 	local dir file unit
-	for dir in etc/systemd/system/*.d; do
+	for dir in usr/lib/systemd/system/*.d; do
 		unit="${dir##*/}"
 		unit="${unit%.d}"
 		for file in "${dir}"/*; do
@@ -56,17 +56,17 @@ src_install() {
 		done
 	done
 
-	insinto /etc/systemd/user.conf.d
-	doins etc/systemd/user.conf.d/*
+	insinto /usr/lib/systemd/user.conf.d
+	doins usr/lib/systemd/user.conf.d/*
 
 	if use zram; then
-		insinto /etc/systemd
-		doins etc/systemd/zram-generator.conf
+		insinto /usr/lib/systemd
+		doins usr/lib/systemd/zram-generator.conf
 	fi
 
-	dotmpfiles etc/tmpfiles.d/*
+	dotmpfiles usr/lib/tmpfiles.d/*
 
-	udev_dorules etc/udev/rules.d/*
+	udev_dorules usr/lib/udev/rules.d/*
 }
 
 # all tmpfiles are "oneshot at reboot"
