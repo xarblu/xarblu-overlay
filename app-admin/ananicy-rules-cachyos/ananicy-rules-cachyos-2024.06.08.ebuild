@@ -3,7 +3,7 @@
 
 EAPI=8
 
-COMMIT="8646faa8c0c8fc16d78ca3a25d65ddbd86b9d468"
+COMMIT="38b3e8c12801df68ba15c2d96ee96d7d2362b576"
 MY_PN="${PN%-cachyos}"
 
 DESCRIPTION="ananicy-cpp-rules from CachyOS"
