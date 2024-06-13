@@ -1,0 +1,64 @@
+diff --git a/gui/src/gui/browserbiometrics.blp b/gui/src/gui/browserbiometrics.blp
+index af50892..424fd2f 100644
+--- a/gui/src/gui/browserbiometrics.blp
++++ b/gui/src/gui/browserbiometrics.blp
+@@ -21,7 +21,7 @@ Adw.Window window {
+               description: "Run the following command in your terminal to set up the browser biometrics integration";
+ 
+               Adw.ActionRow setup_command_row {
+-                subtitle: "flatpak run --filesystem=home --command=goldwarden com.quexten.Goldwarden setup browserbiometrics";
++                subtitle: "goldwarden setup browserbiometrics";
+                 subtitle-selectable: true;
+               }
+             }
+@@ -41,4 +41,4 @@ Adw.Window window {
+       valign: start;
+     }
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/gui/src/gui/resources/commands.json b/gui/src/gui/resources/commands.json
+index cf323cc..3d872d2 100644
+--- a/gui/src/gui/resources/commands.json
++++ b/gui/src/gui/resources/commands.json
+@@ -1,5 +1,5 @@
+ {
+-    "browserbiometric-setup": "flatpak run --filesystem=home --command=goldwarden com.quexten.Goldwarden setup browserbiometrics",
+-    "add-ssh-key": "flatpak run --command=goldwarden com.quexten.Goldwarden ssh add --name MY_KEY_NAME",
+-    "ssh-socket-path": "export SSH_AUTH_SOCK=/home/$USER/.var/app/com.quexten.Goldwarden/data/ssh-auth-sock"
+-}
+\ No newline at end of file
++    "browserbiometric-setup": "goldwarden setup browserbiometrics",
++    "add-ssh-key": "goldwarden ssh add --name MY_KEY_NAME",
++    "ssh-socket-path": "export SSH_AUTH_SOCK=/home/$USER/.local/share/ssh-auth-sock"
++}
+diff --git a/gui/src/gui/ssh.blp b/gui/src/gui/ssh.blp
+index 9233813..3bce713 100644
+--- a/gui/src/gui/ssh.blp
++++ b/gui/src/gui/ssh.blp
+@@ -20,7 +20,7 @@ Adw.Window window {
+             Adw.PreferencesGroup add_ssh_key_group {
+               title: "Add an SSH Key";
+               Adw.ActionRow add_ssh_key_row {
+-                subtitle: "flatpak run --command=goldwarden com.quexten.Goldwarden ssh add --name MY_KEY_NAME";
++                subtitle: "goldwarden ssh add --name MY_KEY_NAME";
+                 subtitle-selectable: true;
+               }
+             }
+@@ -29,7 +29,7 @@ Adw.Window window {
+               title: "SSH Socket Path";
+               description: "Add this to your environment variables";
+               Adw.ActionRow ssh_socket_path_row {
+-                subtitle: "export SSH_AUTH_SOCK=/home/$USER/.var/app/com.quexten.Goldwarden/data/ssh-auth-sock";
++                subtitle: "export SSH_AUTH_SOCK=/home/$USER/.local/share/ssh-auth-sock";
+                 subtitle-selectable: true;
+               }
+             }
+@@ -54,4 +54,4 @@ Adw.Window window {
+       valign: start;
+     }
+   }
+-}
+\ No newline at end of file
++}
