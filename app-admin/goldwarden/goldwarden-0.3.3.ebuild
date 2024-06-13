@@ -31,23 +31,33 @@ DEPEND="
 		gui-libs/gtk:4
 		gui-libs/libadwaita
 		x11-themes/adwaita-icon-theme
+		${PYTHON_DEPS}
 	)
-	${PYTHON_DEPS}
 "
 RDEPEND="${DEPEND}"
-BDEPENDS="
+BDEPEND="
 	gui? (
-		$(python_gen_cond_dep '
-			dev-util/blueprint-compiler[${PYTHON_USEDEP}]
+		$(python_gen_any_dep '
+			dev-util/blueprint-compiler[${PYTHON_SINGLE_USEDEP}]
 		')
+		${PYTHON_DEPS}
 	)
-	${PYTHON_DEPS}
 "
 
 PATCHES=(
 	"${FILESDIR}/python-module-rename-0.3.3.patch"
 	"${FILESDIR}/un-flatpak-0.3.3.patch"
 )
+
+python_check_deps() {
+	if use gui; then
+		python_has_version "dev-util/blueprint-compiler[${PYTHON_SINGLE_USEDEP}]"
+	fi
+}
+
+pkg_setup() {
+	python_setup
+}
 
 src_prepare() {
 	echo "${PV}" > ./cli/cmd/version.txt || die
