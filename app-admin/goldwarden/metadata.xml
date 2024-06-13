@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>xarblu@protonmail.com</email>
+		<name>Xarblu</name>
+	</maintainer>
+	<use>
+		<flag name="fido2">Add FIDO2 support via <pkg>dev-libs/libfido2</pkg></flag>
+	</use>
+	<upstream>
+		<remote-id type="github">quexten/goldwarden</remote-id>
+	</upstream>
+</pkgmetadata>

@@ -1,0 +1,242 @@
+diff --git a/gui/goldwarden_ui_main.py b/gui/goldwarden_ui_main.py
+index e739a28..a746ba4 100755
+--- a/gui/goldwarden_ui_main.py
++++ b/gui/goldwarden_ui_main.py
+@@ -3,10 +3,10 @@
+ import platform
+ 
+ if platform.system() == 'Darwin':
+-    import src.macos.main as macos_main
++    import goldwarden.macos.main as macos_main
+     macos_main.main()
+ elif platform.system() == 'Linux':
+-    import src.linux.main as linux_main
++    import goldwarden.linux.main as linux_main
+     linux_main.main()
+ else:
+-    print("Unsupported OS " + platform.system() + "... exiting...")
+\ No newline at end of file
++    print("Unsupported OS " + platform.system() + "... exiting...")
+diff --git a/gui/src/gui/resource_loader.py b/gui/src/gui/resource_loader.py
+index 6c04d4c..61f3128 100644
+--- a/gui/src/gui/resource_loader.py
++++ b/gui/src/gui/resource_loader.py
+@@ -3,7 +3,7 @@ from gi.repository import Gtk
+ import json
+ 
+ isflatpak = os.path.exists("/.flatpak-info")
+-pathprefix = "/app/bin/src/gui/" if isflatpak else "./src/gui/"
++pathprefix = "/app/bin/goldwarden/gui/" if isflatpak else "./goldwarden/gui/"
+ 
+ def load_template(path):
+     builder = Gtk.Builder()
+@@ -13,4 +13,4 @@ def load_template(path):
+ def load_json(name):
+     with open(pathprefix + "resources/" + name + ".json", "r") as f:
+         result = json.load(f)
+-        return result
+\ No newline at end of file
++        return result
+diff --git a/gui/src/gui/settings.py b/gui/src/gui/settings.py
+index fc38fa2..e7b1c11 100644
+--- a/gui/src/gui/settings.py
++++ b/gui/src/gui/settings.py
+@@ -16,7 +16,7 @@ def run_window(name, token):
+     gui_path = os.path.dirname(os.path.realpath(__file__))
+     cwd = os.path.abspath(os.path.join(gui_path, os.pardir, os.pardir))
+     print(f"Running window {name} with path {cwd}")
+-    p = subprocess.Popen(["python3", "-m", "src.gui." + name], stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd, start_new_session=True)
++    p = subprocess.Popen(["python3", "-m", "goldwarden.gui." + name], stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd, start_new_session=True)
+     p.stdin.write(f"{token}\n".encode())
+     p.stdin.flush()
+ 
+diff --git a/gui/src/linux/flatpak/api.py b/gui/src/linux/flatpak/api.py
+index 9d9c927..a616e75 100644
+--- a/gui/src/linux/flatpak/api.py
++++ b/gui/src/linux/flatpak/api.py
+@@ -7,7 +7,7 @@ def register_autostart(autostart: bool):
+     if is_flatpak:
+         print("Running in flatpak, registering with background portal for autostart.")
+         try:
+-            subprocess.Popen(["python3", "/app/bin/src/linux/flatpak/autostart.py"], start_new_session=True)
++            subprocess.Popen(["python3", "/app/bin/goldwarden/linux/flatpak/autostart.py"], start_new_session=True)
+         except:
+             pass
+ 
+@@ -15,6 +15,6 @@ def register_autostart(autostart: bool):
+ def set_status(status: str):
+     if is_flatpak:
+         try:
+-            subprocess.Popen(["python3", "/app/bin/src/linux/flatpak/status.py", status], start_new_session=True)
++            subprocess.Popen(["python3", "/app/bin/goldwarden/linux/flatpak/status.py", status], start_new_session=True)
+         except:
+             pass
+diff --git a/gui/src/linux/main.py b/gui/src/linux/main.py
+index 96fefba..307b9b7 100644
+--- a/gui/src/linux/main.py
++++ b/gui/src/linux/main.py
+@@ -6,14 +6,14 @@ from .monitors import dbus_autofill_monitor
+ from .monitors import dbus_monitor
+ from .monitors import locked_monitor
+ import sys
+-from src.services import goldwarden
+-from src.services import pinentry
++from goldwarden.services import goldwarden
++from goldwarden.services import pinentry
+ from threading import Thread
+ import os
+ import secrets
+ import time
+ import os
+-import src.linux.flatpak.api as flatpak_api
++import goldwarden.linux.flatpak.api as flatpak_api
+ 
+ root_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
+ is_flatpak = os.path.exists("/.flatpak-info")
+@@ -43,7 +43,7 @@ def main():
+     pinentry.daemonize()
+ 
+     if not "--hidden" in sys.argv:
+-        p = subprocess.Popen(["python3", "-m", "src.gui.settings"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=root_path, start_new_session=True)
++        p = subprocess.Popen(["python3", "-m", "goldwarden.gui.settings"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=root_path, start_new_session=True)
+         p.stdin.write(f"{token}\n".encode())
+         p.stdin.flush()
+ 
+diff --git a/gui/src/linux/monitors/dbus_autofill_monitor.py b/gui/src/linux/monitors/dbus_autofill_monitor.py
+index 825710e..57cfe37 100644
+--- a/gui/src/linux/monitors/dbus_autofill_monitor.py
++++ b/gui/src/linux/monitors/dbus_autofill_monitor.py
+@@ -22,7 +22,7 @@ class GoldwardenDBUSService(dbus.service.Object):
+ 
+     @dbus.service.method('com.quexten.Goldwarden.Autofill')
+     def autofill(self):
+-        p = subprocess.Popen(["python3", "-m", "src.gui.quickaccess"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=root_path, start_new_session=True)
++        p = subprocess.Popen(["python3", "-m", "goldwarden.gui.quickaccess"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=root_path, start_new_session=True)
+         p.stdin.write(f"{daemon_token}\n".encode())
+         p.stdin.flush()
+         return ""
+@@ -38,4 +38,4 @@ def run_daemon(token):
+     daemon_token = token
+     thread = Thread(target=daemon)
+     thread.start()
+-    
+\ No newline at end of file
++
+diff --git a/gui/src/linux/monitors/dbus_monitor.py b/gui/src/linux/monitors/dbus_monitor.py
+index 766fb85..ce7d0cb 100644
+--- a/gui/src/linux/monitors/dbus_monitor.py
++++ b/gui/src/linux/monitors/dbus_monitor.py
+@@ -16,14 +16,14 @@ class GoldwardenDBUSService(dbus.service.Object):
+ 
+     @dbus.service.method('com.quexten.Goldwarden.gui.actions')
+     def quickaccess(self):
+-        p = subprocess.Popen(["python3", "-m", "src.gui.quickaccess"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=root_path, start_new_session=True)
++        p = subprocess.Popen(["python3", "-m", "goldwarden.gui.quickaccess"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=root_path, start_new_session=True)
+         p.stdin.write(f"{daemon_token}\n".encode())
+         p.stdin.flush()
+         return ""
+ 
+     @dbus.service.method('com.quexten.Goldwarden.gui.actions')
+     def settings(self):
+-        p = subprocess.Popen(["python3", "-m", "src.gui.settings"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=root_path, start_new_session=True)
++        p = subprocess.Popen(["python3", "-m", "goldwarden.gui.settings"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=root_path, start_new_session=True)
+         p.stdin.write(f"{daemon_token}\n".encode())
+         p.stdin.flush()
+         return ""
+@@ -38,4 +38,4 @@ def run_daemon(token):
+     global daemon_token
+     daemon_token = token
+     thread = Thread(target=daemon)
+-    thread.start()
+\ No newline at end of file
++    thread.start()
+diff --git a/gui/src/linux/monitors/locked_monitor.py b/gui/src/linux/monitors/locked_monitor.py
+index 81dc5ea..2995339 100644
+--- a/gui/src/linux/monitors/locked_monitor.py
++++ b/gui/src/linux/monitors/locked_monitor.py
+@@ -5,9 +5,9 @@ from dbus.mainloop.glib import DBusGMainLoop
+ from threading import Thread
+ import subprocess
+ import os
+-from src.services import goldwarden
++from goldwarden.services import goldwarden
+ import time
+-import src.linux.flatpak.api as flatpak_api
++import goldwarden.linux.flatpak.api as flatpak_api
+ 
+ daemon_token = None
+ 
+@@ -27,4 +27,4 @@ def run_daemon(token):
+     global daemon_token
+     daemon_token = token
+     thread = Thread(target=daemon)
+-    thread.start()
+\ No newline at end of file
++    thread.start()
+diff --git a/gui/src/macos/main.py b/gui/src/macos/main.py
+index cf8f94e..36ad9ef 100644
+--- a/gui/src/macos/main.py
++++ b/gui/src/macos/main.py
+@@ -2,8 +2,8 @@ import sys
+ import subprocess
+ import os
+ import secrets
+-from src.services import goldwarden
+-from src.services import pinentry
++from goldwarden.services import goldwarden
++from goldwarden.services import pinentry
+ import time
+ 
+ root_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
+@@ -17,7 +17,7 @@ def main():
+     time.sleep(1)
+     #pinentry.daemonize()
+     if not "--hidden" in sys.argv:
+-        p = subprocess.Popen(["python3", "-m", "src.gui.settings"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=root_path, start_new_session=True)
++        p = subprocess.Popen(["python3", "-m", "goldwarden.gui.settings"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=root_path, start_new_session=True)
+         p.stdin.write(f"{token}\n".encode())
+         p.stdin.flush()
+         # print stdout
+@@ -27,4 +27,4 @@ def main():
+                 break
+             print(line.decode().strip())
+     while True:
+-        time.sleep(60)
+\ No newline at end of file
++        time.sleep(60)
+diff --git a/gui/src/services/pinentry.py b/gui/src/services/pinentry.py
+index b8920f0..b6ef8c7 100644
+--- a/gui/src/services/pinentry.py
++++ b/gui/src/services/pinentry.py
+@@ -1,13 +1,13 @@
+ import subprocess
+ import os
+-from src.services import goldwarden
++from goldwarden.services import goldwarden
+ from threading import Thread
+ import time
+ 
+ root_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
+ 
+ def get_pin(message):
+-    p = subprocess.Popen(["python3", "-m", "src.gui.pinentry"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=root_path, start_new_session=True)
++    p = subprocess.Popen(["python3", "-m", "goldwarden.gui.pinentry"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=root_path, start_new_session=True)
+     p.stdin.write(f"{message}\n".encode())
+     p.stdin.flush()
+     pin = p.stdout.readline().decode().strip()
+@@ -16,7 +16,7 @@ def get_pin(message):
+     return pin
+ 
+ def get_approval(message):
+-    p = subprocess.Popen(["python3", "-m", "src.gui.pinentry_approval"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=root_path, start_new_session=True)
++    p = subprocess.Popen(["python3", "-m", "goldwarden.gui.pinentry_approval"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=root_path, start_new_session=True)
+     p.stdin.write(f"{message}\n".encode())
+     p.stdin.flush()
+     result = p.stdout.readline().decode().strip()
+@@ -31,4 +31,4 @@ def daemonize():
+     #todo fix this
+     time.sleep(3)
+     thread = Thread(target=daemon)
+-    thread.start()
+\ No newline at end of file
++    thread.start()
