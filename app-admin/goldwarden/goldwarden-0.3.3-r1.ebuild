@@ -5,7 +5,7 @@ EAPI=8
 
 PYTHON_COMPAT=( python3_{10..12} )
 
-inherit python-r1 desktop go-module
+inherit systemd python-r1 desktop go-module
 
 DESCRIPTION="A feature-packed Bitwarden compatible desktop client"
 HOMEPAGE="https://github.com/quexten/goldwarden"
@@ -61,6 +61,9 @@ pkg_setup() {
 
 src_prepare() {
 	echo "${PV}" > ./cli/cmd/version.txt || die
+
+	sed -i -e "s|@BINARY_PATH@|/usr/bin/${PN}|" \
+		"cli/cmd/${PN}.service" || die
 	# give the gui a sane name
 	if use gui; then
 		pushd gui || die
@@ -91,6 +94,11 @@ src_compile() {
 
 src_install() {
 	dobin "${PN}"
+
+	systemd_douserunit "cli/cmd/${PN}.service"
+
+	insinto /usr/share/polkit-1/actions
+	doins "cli/resources/com.quexten.goldwarden.policy"
 
 	if use gui; then
 		pushd gui || die
