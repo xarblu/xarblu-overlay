@@ -48,7 +48,7 @@ CPU_SCHED="cachyos bore rt rt-bore sched-ext eevdf echo bmq pds hardened"
 gen_cachy_patch_uris() {
 	local base spec cond patch
 	base="https://raw.githubusercontent.com/CachyOS/kernel-patches"
-	base+="/${CACHYOS_PATCH_COMMIT}/$(ver_cut 1-2)/"
+	base+="/${CACHYOS_PATCH_COMMIT}/$(ver_cut 1-2)"
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
 		IFS=":" read -r cond patch <<<"${spec}"
 		if [[ "${cond}" == "-" ]]; then
@@ -76,7 +76,7 @@ SRC_URI+="
 	https://github.com/projg2/gentoo-kernel-config/archive/${GENTOO_CONFIG_VER}.tar.gz
 		-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
 	https://raw.githubusercontent.com/CachyOS/linux-cachyos/${CACHYOS_CONFIG_COMMIT}/linux-cachyos/config
-		-> ${P}.config
+		-> ${P}-kernel.config
 	${CACHY_PATCH_URIS}
 "
 S=${WORKDIR}/${MY_P}
@@ -253,7 +253,7 @@ src_prepare() {
 	kconf val LOCALVERSION "-$(cachy_get_version)" > "${T}"/version.config || die
 
 	# CachyOS config as base
-	cp "${DISTDIR}/${P}.config" .config || die
+	cp "${DISTDIR}/${P}-kernel.config" .config || die
 
 	# Package defaults
 	cachy_get_config > "${T}"/cachy-defaults.config || die
