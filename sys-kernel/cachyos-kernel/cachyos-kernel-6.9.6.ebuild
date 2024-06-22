@@ -15,13 +15,51 @@ GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 1 ))
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g13
 # https://github.com/CachyOS/linux-cachyos
-CACHYOS_CONFIG_COMMIT="cd66bf54e59670dfe86c32a9b128fca4bdda2651"
+CACHYOS_CONFIG_COMMIT="5f0b8639b592d80f3fce63a573610ff57372562d"
 # https://github.com/CachyOS/kernel-patches
-CACHYOS_PATCH_COMMIT="78edba879afc3814378cc43544620668b6939f43"
+CACHYOS_PATCH_COMMIT="b2265a031cd053e5316d424c902075aa8caddc5f"
+
+# array of patches in format
+# <use>:<path/to.patch>
+# special use - always applies patch
+# applied in this order
+CACHY_PATCH_SPECS=(
+	-:all/0001-cachyos-base-all.patch
+	cachyos:sched/0001-sched-ext.patch
+	sched-ext:sched/0001-sched-ext.patch
+	cachyos:sched/0001-bore-cachy-ext.patch
+	bore:sched/0001-bore-cachy.patch
+	hardened:sched/0001-bore-cachy.patch
+	rt:misc/0001-rt.patch
+	rt-bore:misc/0001-rt.patch
+	rt-bore:sched/0001-bore-cachy-rt.patch
+	hardened:misc/0001-hardened.patch
+	echo:sched/0001-echo-cachy.patch
+	bmq:sched/0001-prjc-cachy.patch
+	pds:sched/0001-prjc-cachy.patch
+)
 
 # CPU schdulers supported by cachyos-patches
 # there are more options but these are the ones from CachyOS/linux-cachyos
 CPU_SCHED="cachyos bore rt rt-bore sched-ext eevdf echo bmq pds hardened"
+
+# build use dependent CACHY_PATCH_URIS
+# repo archive includes a bunch of old stuff we don't need
+gen_cachy_patch_uris() {
+	local base spec cond patch
+	base="https://raw.githubusercontent.com/CachyOS/kernel-patches"
+	base+="/${CACHYOS_PATCH_COMMIT}/$(ver_cut 1-2)"
+	for spec in "${CACHY_PATCH_SPECS[@]}"; do
+		IFS=":" read -r cond patch <<<"${spec}"
+		if [[ "${cond}" == "-" ]]; then
+			CACHY_PATCH_URIS+="${base}/${patch} -> ${P}-${patch##*/} "
+		else
+			CACHY_PATCH_URIS+="${cond}? ( ${base}/${patch} -> ${P}-${patch##*/} ) "
+		fi
+	done
+	export CACHY_PATCH_URIS
+}
+gen_cachy_patch_uris
 
 DESCRIPTION="Linux kernel built with CachyOS and Gentoo patches"
 HOMEPAGE="
@@ -38,9 +76,8 @@ SRC_URI+="
 	https://github.com/projg2/gentoo-kernel-config/archive/${GENTOO_CONFIG_VER}.tar.gz
 		-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
 	https://raw.githubusercontent.com/CachyOS/linux-cachyos/${CACHYOS_CONFIG_COMMIT}/linux-cachyos/config
-		-> cachyos-kernel-config-${CACHYOS_CONFIG_COMMIT}
-	https://github.com/CachyOS/kernel-patches/archive/${CACHYOS_PATCH_COMMIT}.tar.gz
-		-> cachyos-kernel-patches-${CACHYOS_PATCH_COMMIT}.tar.gz
+		-> ${P}-kernel.config
+	${CACHY_PATCH_URIS}
 "
 S=${WORKDIR}/${MY_P}
 
@@ -62,6 +99,34 @@ QA_FLAGS_IGNORED="
 	usr/src/linux-.*/vmlinux
 	usr/src/linux-.*/arch/powerpc/kernel/vdso.*/vdso.*.so.dbg
 "
+
+# get the "cachy name" of the kernel
+# as in CachyOS/linux-cachyos repo
+cachy_get_version() {
+	local sched
+	for sched in ${CPU_SCHED}; do
+		if use "${sched}"; then
+			if [[ "${sched}" == "cachyos" ]]; then
+				echo "linux-cachyos" || die
+			else
+				echo "linux-cachyos-${sched}" || die
+			fi
+			return
+		fi
+	done
+}
+
+# get the patches based on sched choice
+cachy_get_patches() {
+	local spec cond patch patches
+	for spec in "${CACHY_PATCH_SPECS[@]}"; do
+		IFS=":" read -r cond patch <<<"${spec}" || die
+		if [[ "${cond}" == "-" ]] || use "${cond}"; then
+			patches+="${DISTDIR}/${P}-${patch##*/} "
+		fi
+	done
+	echo ${patches} || die
+}
 
 # echo formatted kernel config line
 # $1 can be one of set, unset, mod or val
@@ -91,57 +156,6 @@ kconf() {
 			die "invalid option $1 for kconf"
 			;;
 	esac
-}
-
-# get the "cachy name" of the kernel
-# as in CachyOS/linux-cachyos repo
-cachy_get_version() {
-	for flag in ${CPU_SCHED}; do
-		if use "${flag}"; then
-			if use cachyos; then
-				echo "linux-cachyos" || die
-			else
-				echo "linux-cachyos-${flag}" || die
-			fi
-			return
-		fi
-	done
-}
-
-# get the patches based on sched choice
-# WARNING: default "cachyos sched" changes frequently
-# usually between bore+sched-ext and just sched-ext
-cachy_get_patches() {
-	local cachy_patch="${WORKDIR}/kernel-patches-${CACHYOS_PATCH_COMMIT}/${PV%.*}"
-
-	# unconditional base patches
-	echo "${cachy_patch}/all/0001-cachyos-base-all.patch" || die
-
-	# scheduler patches
-	if use cachyos || use sched-ext; then
-		echo "${cachy_patch}/sched/0001-sched-ext.patch" || die
-	fi
-	if use cachyos; then
-		echo "${cachy_patch}/sched/0001-bore-cachy-ext.patch" || die
-	fi
-	if use bore || use hardened; then
-		echo "${cachy_patch}/sched/0001-bore-cachy.patch" || die
-	fi
-	if use rt || use rt-bore; then
-		echo "${cachy_patch}/misc/0001-rt.patch" || die
-	fi
-	if use rt-bore; then
-		echo "${cachy_patch}/sched/0001-bore-cachy-rt.patch" || die
-	fi
-	if use hardened; then
-		echo "${cachy_patch}/misc/0001-hardened.patch" || die
-	fi
-	if use echo; then
-		echo "${cachy_patch}/sched/0001-echo-cachy.patch" || die
-	fi
-	if use bmq || use pds; then
-		echo "${cachy_patch}/sched/0001-prjc-cachy.patch" || die
-	fi
 }
 
 # config defaults from Arch PKGBUILD
@@ -239,8 +253,7 @@ src_prepare() {
 	kconf val LOCALVERSION "-$(cachy_get_version)" > "${T}"/version.config || die
 
 	# CachyOS config as base
-	# they're all in sync (besides lts/rc) so use the main linux-cachyos config
-	cp "${DISTDIR}/cachyos-kernel-config-${CACHYOS_CONFIG_COMMIT}" .config || die
+	cp "${DISTDIR}/${P}-kernel.config" .config || die
 
 	# Package defaults
 	cachy_get_config > "${T}"/cachy-defaults.config || die
