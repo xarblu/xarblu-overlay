@@ -1,0 +1,26 @@
+diff --git a/src/meson.build b/src/meson.build
+index 0ccc54e..d353812 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -22,7 +22,7 @@ configure_file(
+ cargo_bin = find_program('cargo')
+ cargo_env = get_option('cargo_env')
+ if get_option('flatpak') == false
+-    cargo_env += [ 'CARGO_HOME=' + meson.project_build_root()  / 'cargo-home' ]
++    cargo_env += []
+     cargo_opt  = []
+ else
+     cargo_opt  = []
+diff --git a/src/sys_info_v2/gatherer/meson.build b/src/sys_info_v2/gatherer/meson.build
+index 39d1a04..68aa560 100644
+--- a/src/sys_info_v2/gatherer/meson.build
++++ b/src/sys_info_v2/gatherer/meson.build
+@@ -11,7 +11,7 @@ patch_exe = find_program('patch')
+ cargo_bin = find_program('cargo')
+ cargo_opt  = [ '--manifest-path', meson.project_source_root() / project_path / 'Cargo.toml' ]
+ cargo_opt += [ '--target-dir', meson.project_build_root()  / project_path / 'src' ]
+-cargo_env  = [ 'CARGO_HOME=' + meson.project_build_root()  / project_path/ 'cargo-home' ]
++cargo_env  = []
+ 
+ if get_option('buildtype') == 'release'
+   cargo_opt += [ '--release' ]
