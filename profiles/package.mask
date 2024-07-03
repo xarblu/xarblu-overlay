@@ -1,3 +1,0 @@
-# Xarblu <xarblu@protonmail.com> (2024-01-10)
-# Masked as long as Plasma 6 isn't out
->=kde-misc/kde-rounded-corners-0.6.0

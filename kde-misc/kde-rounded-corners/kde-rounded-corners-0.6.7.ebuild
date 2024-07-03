@@ -16,7 +16,7 @@ HOMEPAGE="https://github.com/matinlotfali/KDE-Rounded-Corners"
 SRC_URI="https://github.com/matinlotfali/${MY_PN}/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="GPL-3"
-KEYWORDS="~amd64 ~x86"
+KEYWORDS="~amd64"
 
 DEPEND="
 	>=kde-frameworks/kconfigwidgets-${KFMIN}:${SLOT}=
@@ -28,3 +28,5 @@ DEPEND="
 RDEPEND="${DEPEND}"
 
 S="${WORKDIR}/${MY_PN}-${PV}"
+
+PATCHES=( "${FILESDIR}/0.6.7-sandbox.patch" )
