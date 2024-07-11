@@ -15,9 +15,13 @@ GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 1 ))
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g13
 # https://github.com/CachyOS/linux-cachyos
-CACHYOS_CONFIG_COMMIT="e973bc80ce671155bbacb89ea39d1fd90906ec8f"
+CONFIG_COMMIT="95918f1a56e93090f11761b9c2ab0d338368f17e"
+CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
+CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-CACHYOS_PATCH_COMMIT="af0a0661d7ca863978a617dc118d093319e1123e"
+PATCH_COMMIT="d1c68190ff202755f11516678e9bf68afbf7f469"
+PATCH_PV="${PV}-${PATCH_COMMIT::8}"
+PATCH_P="${PN}-${PATCH_PV}"
 
 # array of patches in format
 # <use>:<path/to.patch>
@@ -46,15 +50,16 @@ CPU_SCHED="cachyos bore rt rt-bore sched-ext eevdf echo bmq pds hardened"
 # build use dependent CACHY_PATCH_URIS
 # repo archive includes a bunch of old stuff we don't need
 gen_cachy_patch_uris() {
-	local base spec cond patch
+	local base spec cond patch file
 	base="https://raw.githubusercontent.com/CachyOS/kernel-patches"
-	base+="/${CACHYOS_PATCH_COMMIT}/$(ver_cut 1-2)"
+	base+="/${PATCH_COMMIT}/$(ver_cut 1-2)"
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
 		IFS=":" read -r cond patch <<<"${spec}"
+		file="${PATCH_P}-${patch##*/}"
 		if [[ "${cond}" == "-" ]]; then
-			CACHY_PATCH_URIS+="${base}/${patch} -> ${P}-${patch##*/} "
+			CACHY_PATCH_URIS+="${base}/${patch} -> ${file} "
 		else
-			CACHY_PATCH_URIS+="${cond}? ( ${base}/${patch} -> ${P}-${patch##*/} ) "
+			CACHY_PATCH_URIS+="${cond}? ( ${base}/${patch} -> ${file} ) "
 		fi
 	done
 	export CACHY_PATCH_URIS
@@ -75,8 +80,8 @@ SRC_URI+="
 	https://dev.gentoo.org/~alicef/dist/genpatches/${GENPATCHES_P}.extras.tar.xz
 	https://github.com/projg2/gentoo-kernel-config/archive/${GENTOO_CONFIG_VER}.tar.gz
 		-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
-	https://raw.githubusercontent.com/CachyOS/linux-cachyos/${CACHYOS_CONFIG_COMMIT}/linux-cachyos/config
-		-> ${P}-kernel.config
+	https://raw.githubusercontent.com/CachyOS/linux-cachyos/${CONFIG_COMMIT}/linux-cachyos/config
+		-> ${CONFIG_P}-kernel.config
 	${CACHY_PATCH_URIS}
 "
 S=${WORKDIR}/${MY_P}
@@ -122,7 +127,7 @@ cachy_get_patches() {
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
 		IFS=":" read -r cond patch <<<"${spec}" || die
 		if [[ "${cond}" == "-" ]] || use "${cond}"; then
-			patches+="${DISTDIR}/${P}-${patch##*/} "
+			patches+="${DISTDIR}/${PATCH_P}-${patch##*/} "
 		fi
 	done
 	echo ${patches} || die
@@ -171,6 +176,7 @@ cachy_get_config() {
 	fi
 	if use cachyos || use bore || use rt-bore || use hardened; then
 		kconf set SCHED_BORE
+		kconf val MIN_BASE_SLICE_NS 1000000
 	fi
 	if use rt || use rt-bore; then
 		kconf set PREEMPT_COUNT
@@ -253,7 +259,7 @@ src_prepare() {
 	kconf val LOCALVERSION "-$(cachy_get_version)" > "${T}"/version.config || die
 
 	# CachyOS config as base
-	cp "${DISTDIR}/${P}-kernel.config" .config || die
+	cp "${DISTDIR}/${CONFIG_P}-kernel.config" .config || die
 
 	# Package defaults
 	cachy_get_config > "${T}"/cachy-defaults.config || die
