@@ -74,12 +74,10 @@ Kernels including this are:
 BUILD_DIR="${WORKDIR}/${P}-build"
 
 src_unpack() {
+	# main src
 	git-r3_src_unpack
-	shopt -s globstar
-	for manifest in ${WORKDIR}/${P}/**/Cargo.toml; do
-		cargo fetch --manifest-path="$manifest"
-	done
-	shopt -u globstar
+
+	# bpf src
 	(
 		EGIT_REPO_URI="${BPFTOOL_REPO_URI}"
 		EGIT_CHECKOUT_DIR="${WORKDIR}/bpftool"
@@ -90,6 +88,40 @@ src_unpack() {
 		EGIT_COMMIT="${LIBBPF_COMMIT}"
 		git-r3_src_unpack
 	)
+
+	# rust src
+	# vendor each to it's own dir...
+	shopt -s globstar
+	for manifest in ${S}/**/Cargo.toml; do
+		(
+			S="${manifest%/*}"
+			ECARGO_VENDOR="${ECARGO_VENDOR}-${S##*/}"
+			cargo() {
+				local args=( "${@}" )
+				case "${args[0]}" in
+					vendor) /usr/bin/cargo vendor --versioned-dirs "${args[@]:1}";;
+					*) /usr/bin/cargo "${args[@]}";;
+				esac
+			}
+			einfo "Vendoring ${ECARGO_VENDOR}"
+			cargo_live_src_unpack
+		)
+	done
+	shopt -u globstar
+
+	# ...then merge
+	einfo "Merging ECARGO_VENDOR dirs"
+	mkdir -p "${ECARGO_VENDOR}" || die
+	for dir in "${ECARGO_VENDOR}"-*; do
+		for crate in "${dir}"/*; do
+			if [[ ! -d "${ECARGO_VENDOR}/${crate##*/}" ]]; then
+				einfo ">>> ${crate##*/}"
+				mv "${crate}" "${ECARGO_VENDOR}" || die
+			fi
+		done
+		rm -rf "${dir}" || die
+	done
+	cargo_gen_config
 }
 
 pkg_setup() {
