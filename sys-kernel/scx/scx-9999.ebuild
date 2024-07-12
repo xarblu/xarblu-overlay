@@ -109,6 +109,7 @@ src_prepare() {
 }
 
 src_configure() {
+    cargo_src_configure --frozen
 	local EMESON_BUILDTYPE="$(usex debug debug release)"
 	local emesonargs=(
 		-Dlibbpf_a=disabled
