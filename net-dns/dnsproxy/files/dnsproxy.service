@@ -1,0 +1,10 @@
+[Unit]
+Description=Simple DNS proxy with DoH, DoT, DoQ and DNSCrypt support
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/dnsproxy --config-path=/etc/dnsproxy/config.yaml
+
+[Install]
+WantedBy=multi-user.target
