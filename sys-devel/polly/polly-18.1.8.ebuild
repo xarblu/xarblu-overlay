@@ -4,7 +4,7 @@
 EAPI=8
 
 PYTHON_COMPAT=( python3_{10..13} )
-inherit cmake llvm llvm.org python-any-r1
+inherit cmake llvm.org python-any-r1
 
 DESCRIPTION="Polyhedral optimizations for LLVM"
 HOMEPAGE="https://polly.llvm.org/"
@@ -35,7 +35,6 @@ python_check_deps() {
 }
 
 pkg_setup() {
-	LLVM_MAX_SLOT=${LLVM_MAJOR} llvm_pkg_setup
 	use test && python-any-r1_pkg_setup
 }
 
