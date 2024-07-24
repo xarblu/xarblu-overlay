@@ -1,3 +1,0 @@
-# Xarblu <xarblu@protonmail.com> (2024-03-12)
-# patches not available (yet)
->=sys-kernel/cachyos-kernel-6.10.0 hardened bmq pds
