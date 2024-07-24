@@ -73,12 +73,8 @@ src_test() {
 }
 
 pkg_postinst() {
-	# print a warning if building independent from sys-devel/llvm
-	if ! $(has_version sys-devel/llvm:${LLVM_MAJOR}[polly]); then
-		elog "sys-devel/llvm:${LLVM_MAJOR}[polly] wasn't found on the system!"
-		elog "If USE=\"polly\" isn't set you need to manually load polly as"
-		elog "a clang extension by adding the following flags:"
-		elog "     \"-Xclang -load -Xclang LLVMPolly.so\""
-		elog "Then the usual \"-mllvm -polly\" should work."
-	fi
+	elog "To use the clang plugin add the following flag:"
+	elog "  \"-fplugin=LLVMPolly.so\""
+	elog "Then pass polly args via (examples):"
+	elog "  \"-mllvm -polly\""
 }
