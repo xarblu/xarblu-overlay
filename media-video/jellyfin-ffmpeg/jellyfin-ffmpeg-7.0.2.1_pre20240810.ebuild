@@ -9,14 +9,28 @@ inherit flag-o-matic toolchain-funcs
 
 DESCRIPTION="FFmpeg for Jellyfin"
 HOMEPAGE="https://github.com/jellyfin/jellyfin-ffmpeg"
-SRC_URI="https://github.com/jellyfin/jellyfin-ffmpeg/archive/v${MY_PV}.tar.gz -> ${P}.tar.gz"
+
+if [[ "${PV}" == *_pre* ]]; then
+	COMMIT="59881f07d0c9c7acfceb68d468bff06f27141572"
+	SRC_URI="
+		https://github.com/jellyfin/jellyfin-ffmpeg/archive/${COMMIT}.tar.gz
+			-> ${P}.tar.gz
+	"
+	S="${WORKDIR}/${PN}-${COMMIT}"
+else
+	SRC_URI="
+		https://github.com/jellyfin/jellyfin-ffmpeg/archive/v${MY_PV}.tar.gz
+			-> ${P}.tar.gz
+	"
+	S="${WORKDIR}/${PN}-${MY_PV}"
+	KEYWORDS="~amd64 ~arm64"
+fi
 
 SLOT="0"
 LICENSE="GPL-3"
-KEYWORDS="~amd64 ~arm64"
 
 # only make hwaccel sulutions optional
-IUSE="amf cpudetection cuda nvenc opencl +pic qsv test vaapi vulkan"
+IUSE="amf cpudetection nvenc opencl +pic qsv test vaapi vulkan"
 
 # Strings for CPU features in the useflag[:configure_option] form
 # if :configure_option isn't set, it will use 'useflag' as configure option
@@ -28,6 +42,8 @@ ARM_CPU_FEATURES=(
 	cpu_flags_arm_vfp:vfp
 	cpu_flags_arm_vfpv3:vfpv3
 	cpu_flags_arm_v8:armv8
+	cpu_flags_arm_asimddp:dotprod
+	cpu_flags_arm_i8mm:i8mm
 )
 ARM_CPU_REQUIRED_USE="
 	arm64? ( cpu_flags_arm_v8 )
@@ -85,16 +101,20 @@ CPU_REQUIRED_USE="
 "
 
 RDEPEND="
+	>=app-arch/xz-utils-5.0.5-r1
 	>=dev-libs/fribidi-0.19.6
 	>=dev-libs/gmp-6:0=
+	>=dev-libs/openssl-1.0.1h-r2:0=
 	>=media-libs/chromaprint-1.2-r1
-	>=media-libs/dav1d-0.4.0:0=
+	>=media-libs/dav1d-0.5.0:0=
 	>=media-libs/fdk-aac-0.1.3:=
 	>=media-libs/fontconfig-2.10.92
 	>=media-libs/freetype-2.5.0.1:2
 	>=media-libs/libass-0.11.0:=
 	>=media-libs/libbluray-0.3.0-r1:=
 	>=media-libs/libogg-1.3.0
+	>=media-libs/libopenmpt-0.6.6
+	>=media-libs/libtheora-1.1.1[encode]
 	>=media-libs/libvorbis-1.3.3-r1
 	>=media-libs/libvpx-1.4.0:=
 	>=media-libs/libwebp-0.3.0:=
@@ -105,16 +125,21 @@ RDEPEND="
 	>=media-libs/zimg-2.7.4:=
 	>=media-libs/zvbi-0.2.35
 	>=media-sound/lame-3.99.5-r1
-	>=media-libs/libopenmpt-0.6.6
-	>=net-libs/gnutls-2.12.23-r6:=
-	x11-libs/libdrm
+	>=net-libs/srt-1.3.0:=
+	>=sys-libs/zlib-1.2.8-r1
+	>=virtual/libiconv-0-r1
+	dev-libs/libxml2:=
+	media-libs/harfbuzz:=
 	amf? ( media-video/amdgpu-pro-amf:= )
-	nvenc? ( media-libs/nv-codec-headers )
+	nvenc? ( >=media-libs/nv-codec-headers-11.1.5.3 )
 	opencl? ( virtual/opencl )
 	qsv? ( media-libs/libvpl )
-	vaapi? ( >=media-libs/libva-1.2.1-r1:0= )
+	vaapi? (
+		>=media-libs/libva-1.2.1-r1:0=
+		x11-libs/libdrm
+	)
 	vulkan? (
-		>=media-libs/vulkan-loader-1.2.189:=
+		>=media-libs/vulkan-loader-1.3.277:=
 		>=media-libs/libplacebo-4.192.0:=
 		media-libs/shaderc
 	)
@@ -122,36 +147,40 @@ RDEPEND="
 
 DEPEND="${RDEPEND}
 	amf? ( >=media-libs/amf-headers-1.4.28 )
+	vulkan? ( >=dev-util/vulkan-headers-1.3.277 )
 "
 
 BDEPEND="
 	>=dev-build/make-3.81
 	virtual/pkgconfig
 	cpu_flags_x86_mmx? ( || ( >=dev-lang/nasm-2.13 >=dev-lang/yasm-1.3 ) )
-	cuda? ( >=sys-devel/clang-7[llvm_targets_NVPTX] )
+	nvenc? ( >=sys-devel/clang-7[llvm_targets_NVPTX] )
 	test? ( net-misc/wget app-alternatives/bc )
 "
 
 REQUIRED_USE="
-	cuda? ( nvenc )
+	!amd64? ( !amf !nvenc !qsv !vaapi )
 	${CPU_REQUIRED_USE}"
 RESTRICT="
 	!test? ( test )
 "
 
-S="${WORKDIR}/${PN}-${MY_PV}"
-
 src_prepare() {
-	local patch
-	for patch in debian/patches/*.patch; do
-		eapply "${patch}"
-	done
+	# Jellyfin patches
+	eapply debian/patches/
 
 	default
 
 	# -fdiagnostics-color=auto gets appended after user flags which
 	# will ignore user's preference.
 	sed -i -e '/check_cflags -fdiagnostics-color=auto/d' configure || die
+	# We need to detect LTO usage before multilib stuff and filter-lto is called (bug #923491)
+	if tc-is-lto ; then
+		# Respect -flto value, e.g -flto=thin
+		local v="$(get-flag flto)"
+		[[ ${v} != -flto ]] && LTO_FLAG="--enable-lto=${v}" || LTO_FLAG="--enable-lto"
+	fi
+	filter-lto
 }
 
 src_configure() {
@@ -191,11 +220,16 @@ src_configure() {
 	done
 
 	# LTO support, bug #566282, bug #754654, bug #772854
-	[[ ${ABI} != x86 ]] && tc-is-lto && myconf+=( "--enable-lto" )
-	filter-lto
+	if [[ ${ABI} != x86 && ! -z ${LTO_FLAG} ]]; then
+		myconf+=( ${LTO_FLAG} )
+	fi
 
 	# Mandatory configuration
-	myconf+=(
+	myconf=(
+		--disable-libaribcaption # libaribcaption is not packaged (yet?)
+		--disable-libxeve
+		--disable-libxevd
+		--disable-d3d12va
 		--enable-avfilter
 		--disable-stripping
 		# This is only for hardcoded cflags; those are used in configure checks that may
@@ -203,6 +237,7 @@ src_configure() {
 		# We use optflags, so that overrides them anyway.
 		--disable-optimizations
 		--disable-libcelt # bug #664158
+		"${myconf[@]}"
 	)
 
 	# cross compile support
@@ -218,83 +253,95 @@ src_configure() {
 		esac
 	fi
 
-	# jellyfin conf
-	local JFPREFIX="${EPREFIX}/usr/lib/jellyfin-ffmpeg"
+	# Custom Gentoo Jellyfin flags
 	myconf+=(
-		# install prefix
-		--prefix="${JFPREFIX}"
-		--libdir="${JFPREFIX}/$(get_libdir)"
-		--shlibdir="${JFPREFIX}/$(get_libdir)"
+		--disable-autodetect
+		--disable-devices
 		--enable-rpath
 		--extra-version=Jellyfin
-		# disabled components
-		--disable-devices
-		--disable-doc
-		--disable-ffplay
-		--disable-ptx-compression
-		--disable-autodetect
-		# shlib options
-		--enable-shared
-		--disable-static
 		$(use_enable cpudetection runtime-cpudetect)
-		# licensing
+	)
+
+	# emulate builder/build.sh linux64{,arm} gpl-shared
+	# builder/variants/defaults-gpl.sh
+	myconf+=(
 		--enable-gpl
 		--enable-version3
-		# external libs
-		--enable-gmp
-		--enable-gnutls
-		--enable-chromaprint
-		--enable-libdrm
-		--enable-libass
+		--disable-ffplay
+		--disable-debug
+		--disable-doc
+		--disable-ptx-compression
+		--disable-sdl2
+		--disable-libxcb
+		--disable-xlib
+	)
+	# builder/variants/defaults-gpl-shared.sh
+	myconf+=(
+		--enable-shared
+		--disable-static
+	)
+	# builder/scripts.d/*.sh
+	myconf+=(
+		--enable-iconv
+		--enable-zlib
 		--enable-libfreetype
 		--enable-libfribidi
-		--enable-libfontconfig
+		--enable-gmp
+		--enable-libxml2
+		--enable-openssl
+		--enable-lzma
+		--enable-fontconfig
+		--enable-libharfbuzz
+		--enable-libvorbis
+		$(use_enable opencl)
+		$(use_enable amf)
+		--enable-chromaprint
+		--enable-libdav1d
+		--disable-dxva2
+		--disable-d3d11va
+		--disable-d3d12va
+		--enable-libfdk-aac
+		$(use_enable nvenc ffnvcodec)
+		$(use_enable nvenc cuda)
+		$(use_enable nvenc cuda-llvm)
+		$(use_enable nvenc cuvid)
+		$(use_enable nvenc nvdec)
+		$(use_enable nvenc nvenc)
+		--enable-libass
 		--enable-libbluray
 		--enable-libmp3lame
 		--enable-libopus
 		--enable-libtheora
-		--enable-libvorbis
-		--enable-libopenmpt
-		--enable-libdav1d
-		--enable-libsvtav1
-		--enable-libwebp
+		$(use_enable qsv libvpl)
 		--enable-libvpx
+		--enable-libwebp
+		--enable-libopenmpt
+		--enable-libsrt
+		--enable-libsvtav1
 		--enable-libx264
 		--enable-libx265
-		--enable-libzvbi
 		--enable-libzimg
-		--enable-libfdk-aac
+		--enable-libzvbi
 	)
-	use amf && myconf+=(
-		--enable-amf
+
+	# builder/scripts.d/50-vaapi/*.sh
+	myconf+=(
+		$(use_enable vaapi libdrm)
+		$(use_enable vaapi)
 	)
-	use cuda && myconf+=(
-		--enable-cuda
-		--enable-cuda-llvm
-		--enable-cuvid
-	)
-	use nvenc && myconf+=(
-		--enable-ffnvcodec
-		--enable-nvdec
-		--enable-nvenc
-	)
-	use opencl && myconf+=(
-		--enable-opencl
-	)
-	use qsv && myconf+=(
-		--enable-libvpl
-	)
-	use vaapi && myconf+=(
-		--enable-vaapi
-	)
-	use vulkan && myconf+=(
-		--enable-libshaderc
-		--enable-libplacebo
-		--enable-vulkan
+
+	# builder/scripts.d/50-vulkan/*.sh
+	myconf+=(
+		$(use_enable vulkan)
+		$(use_enable vulkan libshaderc)
+		$(use_enable vulkan libplacebo)
 	)
 
 	# Use --extra-libs if needed for LIBS
 	set -- "${S}/configure" \
+		--prefix="${EPREFIX}/usr/lib/jellyfin-ffmpeg" \
+		--libdir="${EPREFIX}/usr/lib/jellyfin-ffmpeg/$(get_libdir)" \
+		--shlibdir="${EPREFIX}/usr/lib/jellyfin-ffmpeg/$(get_libdir)" \
 		--cc="$(tc-getCC)" \
 		--cxx="$(tc-getCXX)" \
 		--ar="$(tc-getAR)" \
