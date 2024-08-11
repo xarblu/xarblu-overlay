@@ -795,10 +795,10 @@ src_configure() {
 }
 
 src_install() {
-	dobin "target/$(usex debug "debug" "release")/wezterm"
-	dobin "target/$(usex debug "debug" "release")/wezterm-gui"
-	dobin "target/$(usex debug "debug" "release")/wezterm-mux-server"
-	dobin "target/$(usex debug "debug" "release")/strip-ansi-escapes"
+	dobin "$(cargo_target_dir)/wezterm"
+	dobin "$(cargo_target_dir)/wezterm-gui"
+	dobin "$(cargo_target_dir)/wezterm-mux-server"
+	dobin "$(cargo_target_dir)/strip-ansi-escapes"
 
 	insinto /usr/share/icons/hicolor/128x128/apps
 	newins assets/icon/terminal.png org.wezfurlong.wezterm.png
