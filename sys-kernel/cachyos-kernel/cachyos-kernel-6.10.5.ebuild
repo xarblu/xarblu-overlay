@@ -11,15 +11,15 @@ inherit kernel-build
 MY_P=linux-${PV%.*}
 
 # https://dev.gentoo.org/~mpagano/genpatches/kernels.html
-GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 2 ))
+GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 3 ))
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g13
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="d3b85a2168c88c579dce908c5ffadbb14c4320ec"
+CONFIG_COMMIT="05a1d11e17673a290e77378363541a6bb1e38568"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="b3e402b9fd98aeec63d8aaa6251c14f947afd3c5"
+PATCH_COMMIT="303fede69c55b8804d604f4e8a3dbc5b9f0b348d"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
@@ -164,9 +164,6 @@ kconf() {
 }
 
 # config defaults from Arch PKGBUILD
-# sorted the same way as their prepare()
-# WARNING: default "cachyos sched" changes frequently
-# usually between bore+sched-ext and just sched-ext
 cachy_get_config() {
 	# _config_cachy
 	kconf set CACHY
@@ -184,9 +181,11 @@ cachy_get_config() {
 		kconf unset PREEMPT_VOLUNTARY
 		kconf unset PREEMPT
 		kconf unset PREEMPT_NONE
-		kconf set PREEMPT_RT
+		kconf unset PREEMPT_RT
 		kconf unset PREEMPT_DYNAMIC
-		kconf unset PREEMPT_BUILD
+		kconf set PREEMPT_BUILD
+		kconf set PREEMPT_BUILD_AUTO
+		kconf set PREEMPT_AUTO
 	fi
 	if use echo; then
 		kconf set ECHO_SCHED
