@@ -11,10 +11,10 @@ DESCRIPTION="FFmpeg for Jellyfin"
 HOMEPAGE="https://github.com/jellyfin/jellyfin-ffmpeg"
 
 if [[ "${PV}" == *_pre* ]]; then
-	COMMIT="59881f07d0c9c7acfceb68d468bff06f27141572"
+	COMMIT="acea6976b1899436f52fe39e35d9c25ef49b8c49"
 	SRC_URI="
 		https://github.com/jellyfin/jellyfin-ffmpeg/archive/${COMMIT}.tar.gz
-			-> ${P}.tar.gz
+			-> ${PN}-${COMMIT::8}.tar.gz
 	"
 	S="${WORKDIR}/${PN}-${COMMIT}"
 else
