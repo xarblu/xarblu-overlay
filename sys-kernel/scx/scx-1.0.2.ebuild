@@ -303,6 +303,10 @@ DEPEND="
 "
 RDEPEND="${DEPEND}"
 
+PATCHES=(
+	"${FILESDIR}/1.0.2.cargo-dep.patch" #https://github.com/sched-ext/scx/commit/099b6c266a37c7af5a066c100d6331f33968d1d4
+)
+
 CONFIG_CHECK="
 	~BPF
 	~BPF_EVENTS
