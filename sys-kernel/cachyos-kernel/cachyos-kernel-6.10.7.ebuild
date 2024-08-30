@@ -15,11 +15,11 @@ GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 3 ))
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g13
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="9acd0ecd413d57ee8c05a1238edc4ba225a305ca"
+CONFIG_COMMIT="947f6953b873a4dffb1f452ed744d9c28f12d60e"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="14801d80ef9b9346de90f3f2479603118c48ec5c"
+PATCH_COMMIT="6df1ab94e174708e3bd6fc5b7ba1f01a7da8c714"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
