@@ -11,7 +11,7 @@ DESCRIPTION="FFmpeg for Jellyfin"
 HOMEPAGE="https://github.com/jellyfin/jellyfin-ffmpeg"
 
 if [[ "${PV}" == *_pre* ]]; then
-	COMMIT="acea6976b1899436f52fe39e35d9c25ef49b8c49"
+	COMMIT=""
 	SRC_URI="
 		https://github.com/jellyfin/jellyfin-ffmpeg/archive/${COMMIT}.tar.gz
 			-> ${PN}-${COMMIT::8}.tar.gz
@@ -23,7 +23,8 @@ else
 			-> ${P}.tar.gz
 	"
 	S="${WORKDIR}/${PN}-${MY_PV}"
-	KEYWORDS="~amd64 ~arm64"
+	# not fully compatible with stable JF 10.9.X
+	#KEYWORDS="~amd64 ~arm64"
 fi
 
 SLOT="0"
@@ -119,7 +120,7 @@ RDEPEND="
 	>=media-libs/libvpx-1.4.0:=
 	>=media-libs/libwebp-0.3.0:=
 	>=media-libs/opus-1.0.2-r2
-	>=media-libs/svt-av1-0.9.0
+	>=media-libs/svt-av1-0.9.0:=
 	>=media-libs/x264-0.0.20130506:=
 	>=media-libs/x265-1.6:=
 	>=media-libs/zimg-2.7.4:=
@@ -282,6 +283,8 @@ src_configure() {
 	)
 	# builder/scripts.d/*.sh
 	myconf+=(
+		--disable-w32threads
+		--enable-pthreads
 		--enable-iconv
 		--enable-zlib
 		--enable-libfreetype
@@ -367,9 +370,4 @@ src_test() {
 
 src_install() {
 	emake V=1 DESTDIR="${D}" install
-
-	# remove stuff we don't actually need
-	# (nothing should ever link to jellyfin-ffmpeg)
-	local JFD="${D}/usr/lib/jellyfin-ffmpeg"
-	rm -r "${JFD}"/{include,share} || die "Removing unneeded dirs failed"
 }
