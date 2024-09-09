@@ -23,7 +23,8 @@ else
 			-> ${P}.tar.gz
 	"
 	S="${WORKDIR}/${PN}-${MY_PV}"
-	KEYWORDS="~amd64 ~arm64"
+	# not fully compatible with stable JF 10.9.X
+	#KEYWORDS="~amd64 ~arm64"
 fi
 
 SLOT="0"
