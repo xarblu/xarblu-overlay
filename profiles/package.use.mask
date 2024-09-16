@@ -1,0 +1,2 @@
+# no patches yet
+>=sys-kernel/cachyos-kernel-6.11.0 hardened echo
