@@ -158,15 +158,6 @@ src_prepare() {
 src_configure() {
 	local myconf=( )
 
-	# bug 842201
-	use ia64 && tc-is-gcc && append-flags \
-		-fno-tree-ccp \
-		-fno-tree-dominator-opts \
-		-fno-tree-fre \
-		-fno-code-hoisting \
-		-fno-tree-pre \
-		-fno-tree-vrp
-
 	# CPU features
 	for i in "${CPU_FEATURES_MAP[@]}" ; do
 		use ${i%:*} || myconf+=( --disable-${i#*:} )
