@@ -24,7 +24,7 @@ else
 	"
 	S="${WORKDIR}/${PN}-${MY_PV}"
 	# not fully compatible with stable JF 10.9.X
-	#KEYWORDS="~amd64 ~arm64"
+	KEYWORDS="~amd64 ~arm64"
 fi
 
 SLOT="0"
@@ -147,7 +147,7 @@ RDEPEND="
 "
 
 DEPEND="${RDEPEND}
-	amf? ( >=media-libs/amf-headers-1.4.28 )
+	amf? ( media-libs/amf-headers )
 	vulkan? ( >=dev-util/vulkan-headers-1.3.277 )
 "
 
@@ -187,14 +187,6 @@ src_prepare() {
 src_configure() {
 	local myconf=( )
 
-	# bug 842201
-	use ia64 && tc-is-gcc && append-flags \
-		-fno-tree-ccp \
-		-fno-tree-dominator-opts \
-		-fno-tree-fre \
-		-fno-code-hoisting \
-		-fno-tree-pre \
-		-fno-tree-vrp
 
 	# CPU features
 	for i in "${CPU_FEATURES_MAP[@]}" ; do
