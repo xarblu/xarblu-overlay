@@ -23,29 +23,32 @@ PATCH_COMMIT="168986ed56fa48061ec89d77a0f124c049a9699b"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
+# supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
+FLAVOURS="cachyos bmq bore deckify eevdf hardened rt-bore sched-ext server"
+
 # array of patches in format
 # <use>:<path/to.patch>
 # special use - always applies patch
 # applied in this order
 CACHY_PATCH_SPECS=(
+	# global
 	-:all/0001-cachyos-base-all.patch
+	deckify:misc/0001-acpi-call.patch
+	deckify:misc/0001-handheld.patch
+	deckify:misc/0001-wifi-ath11k-Rename-QCA2066-fw-dir-to-QCA206X.patch
+	# _cpusched
 	cachyos:sched/0001-sched-ext.patch
-	sched-ext:sched/0001-sched-ext.patch
 	cachyos:sched/0001-bore-cachy-ext.patch
 	bore:sched/0001-bore-cachy.patch
-	#hardened:sched/0001-bore-cachy.patch
-	rt:misc/0001-rt.patch
+	bmq:sched/0001-prjc-cachy.patch
+	eevdf:sched/0001-eevdf-next.patch
+	server:sched/0001-eevdf-next.patch # server selects eevdf
 	rt-bore:misc/0001-rt.patch
 	rt-bore:sched/0001-bore-cachy-rt.patch
+	#hardened:sched/0001-bore-cachy.patch
 	#hardened:misc/0001-hardened.patch
-	bmq:sched/0001-prjc-cachy.patch
-	pds:sched/0001-prjc-cachy.patch
-	eevdf:sched/0001-eevdf-next.patch
+	sched-ext:sched/0001-sched-ext.patch
 )
-
-# CPU schdulers supported by cachyos-patches
-# there are more options but these are the ones from CachyOS/linux-cachyos
-CPU_SCHED="cachyos bore rt rt-bore sched-ext eevdf bmq pds hardened"
 
 # build use dependent CACHY_PATCH_URIS
 # repo archive includes a bunch of old stuff we don't need
@@ -87,9 +90,9 @@ SRC_URI+="
 S=${WORKDIR}/${MY_P}
 
 KEYWORDS="~amd64"
-IUSE="debug ${CPU_SCHED/cachyos/+cachyos}"
+IUSE="debug ${FLAVOURS/cachyos/+cachyos}"
 REQUIRED_USE="
-	^^ ( ${CPU_SCHED} )
+	^^ ( ${FLAVOURS} )
 "
 
 BDEPEND="
@@ -108,20 +111,20 @@ QA_FLAGS_IGNORED="
 # get the "cachy name" of the kernel
 # as in CachyOS/linux-cachyos repo
 cachy_get_version() {
-	local sched
-	for sched in ${CPU_SCHED}; do
-		if use "${sched}"; then
-			if [[ "${sched}" == "cachyos" ]]; then
+	local flavour
+	for flavour in ${FLAVOURS}; do
+		if use "${flavour}"; then
+			if [[ "${flavour}" == "cachyos" ]]; then
 				echo "linux-cachyos" || die
 			else
-				echo "linux-cachyos-${sched}" || die
+				echo "linux-cachyos-${flavour}" || die
 			fi
 			return
 		fi
 	done
 }
 
-# get the patches based on sched choice
+# get the patches based on flavour choice
 cachy_get_patches() {
 	local spec cond patch patches
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
@@ -165,72 +168,210 @@ kconf() {
 
 # config defaults from Arch PKGBUILD
 cachy_get_config() {
-	# _config_cachy
-	kconf set CACHY
+	# first setup the _* vars (only those that differ)
+	local _cachy_config _cpusched _HZ_ticks _tickrate _preempt _hugepage
+	if use cachyos; then
+		_cachy_config=y
+		_cpusched=cachyos
+		_HZ_ticks=1000
+		_tickrate=full
+		_preempt=full
+		_hugepage=always
+	elif use bmq; then
+		_cachy_config=y
+		_cpusched=bmq
+		_HZ_ticks=1000
+		_tickrate=full
+		_preempt=full
+		_hugepage=always
+	elif use bore; then
+		_cachy_config=y
+		_cpusched=bore
+		_HZ_ticks=1000
+		_tickrate=full
+		_preempt=full
+		_hugepage=always
+	elif use deckify; then
+		_cachy_config=y
+		_cpusched=cachyos
+		_HZ_ticks=1000
+		_tickrate=full
+		_preempt=full
+		_hugepage=always
+	elif use eevdf; then
+		_cachy_config=y
+		_cpusched=eevdf
+		_HZ_ticks=1000
+		_tickrate=full
+		_preempt=full
+		_hugepage=always
+	elif use hardened; then
+		_cachy_config=y
+		_cpusched=hardened
+		_HZ_ticks=1000
+		_tickrate=full
+		_preempt=full
+		_hugepage=madvise
+	elif use rt-bore; then
+		_cachy_config=y
+		_cpusched=rt-bore
+		_HZ_ticks=1000
+		_tickrate=full
+		_preempt=full
+		_hugepage=always
+	elif use sched-ext; then
+		_cachy_config=y
+		_cpusched=sched-ext
+		_HZ_ticks=1000
+		_tickrate=full
+		_preempt=full
+		_hugepage=always
+	elif use server; then
+		_cachy_config=
+		_cpusched=eevdf
+		_HZ_ticks=300
+		_tickrate=idle
+		_preempt=server
+		_hugepage=always
+	fi
+
+	# _cachy_config
+	if [[ -n "${_cachy_config}" ]]; then
+		kconf set CACHY
+	fi
+
 	# _cpusched
-	if use cachyos || use sched-ext; then
-		kconf set SCHED_CLASS_EXT
-	fi
-	if use cachyos || use bore || use rt-bore || use hardened; then
-		kconf set SCHED_BORE
-		kconf val MIN_BASE_SLICE_NS 1000000
-	fi
-	if use rt || use rt-bore; then
-		kconf set PREEMPT_COUNT
-		kconf set PREEMPTION
-		kconf unset PREEMPT_VOLUNTARY
-		kconf unset PREEMPT
-		kconf unset PREEMPT_NONE
-		kconf unset PREEMPT_RT
-		kconf unset PREEMPT_DYNAMIC
-		kconf set PREEMPT_BUILD
-		kconf set PREEMPT_BUILD_AUTO
-		kconf set PREEMPT_AUTO
-	fi
-	if use bmq; then
-		kconf set SCHED_ALT
-		kconf set SCHED_BMQ
-	fi
-	if use pds; then
-		kconf set SCHED_ALT
-		kconf set SCHED_PDS
-	fi
+	case "${_cpusched}" in
+		cachyos)
+			kconf set SCHED_CLASS_EXT
+			kconf set SCHED_BORE
+			kconf val MIN_BASE_SLICE_NS 1000000
+			;;
+		bore|hardened)
+			kconf set SCHED_BORE
+			kconf val MIN_BASE_SLICE_NS 1000000
+			;;
+		bmq)
+			kconf set SCHED_ALT
+			kconf set SCHED_BMQ
+			;;
+		eevdf) ;;
+		rt-bore)
+			kconf set SCHED_BORE
+			kconf val MIN_BASE_SLICE_NS 1000000
+			kconf set PREEMPT_COUNT
+			kconf set PREEMPTION
+			kconf unset PREEMPT_VOLUNTARY
+			kconf unset PREEMPT
+			kconf unset PREEMPT_NONE
+			kconf unset PREEMPT_RT
+			kconf unset PREEMPT_DYNAMIC
+			kconf set PREEMPT_BUILD
+			kconf set PREEMPT_BUILD_AUTO
+			kconf set PREEMPT_AUTO
+			;;
+		sched-ext)
+			kconf set SCHED_CLASS_EXT
+			;;
+		*)
+			die "Invalid _cpusched value: ${_cpusched}"
+			;;
+	esac
+
 	# _HZ_ticks
-	kconf unset HZ_300
-	kconf set HZ_1000
-	kconf val HZ 1000
+	case "${_HZ_ticks}" in
+		100|250|500|600|625|750|1000)
+			kconf unset HZ_300
+			kconf set "HZ_${_HZ_ticks}"
+			kconf val HZ "${_HZ_ticks}"
+			;;
+		300)
+			kconf set HZ_300
+			kconf val HZ 300
+			;;
+		*)
+			die "Invalid _HZ_ticks value: ${_HZ_ticks}"
+			;;
+	esac
+
 	# _nr_cpus
 	kconf val NR_CPUS 320
+
 	# _tickrate
-	kconf unset HZ_PERIODIC
-	kconf unset NO_HZ_IDLE
-	kconf unset CONTEXT_TRACKING_FORCE
-	kconf set NO_HZ_FULL_NODEF
-	kconf set NO_HZ_FULL
-	kconf set NO_HZ
-	kconf set NO_HZ_COMMON
-	kconf set CONTEXT_TRACKING
+	case "${_tickrate}" in
+		idle)
+			kconf unset HZ_PERIODIC
+			kconf unset NO_HZ_FULL
+			kconf set NO_HZ_IDLE
+			kconf set NO_HZ
+			kconf set NO_HZ_COMMON
+			;;
+		full)
+			kconf unset HZ_PERIODIC
+			kconf unset NO_HZ_IDLE
+			kconf unset CONTEXT_TRACKING_FORCE
+			kconf set NO_HZ_FULL_NODEF
+			kconf set NO_HZ_FULL
+			kconf set NO_HZ
+			kconf set NO_HZ_COMMON
+			kconf set CONTEXT_TRACKING
+			;;
+		*)
+			die "Invalid _tickrate value: ${_tickrate}"
+			;;
+	esac
+
 	# _preempt
-	if ! use rt && ! use rt-bore; then
-		kconf set PREEMPT_BUILD
-		kconf unset PREEMPT_NONE
-		kconf unset PREEMPT_VOLUNTARY
-		kconf set PREEMPT
-		kconf set PREEMPT_COUNT
-		kconf set PREEMPTION
-		kconf set PREEMPT_DYNAMIC
+	if [[ "${_cpusched}" != rt* ]]; then
+		case "${_preempt}" in
+			full)
+				kconf set PREEMPT_BUILD
+				kconf unset PREEMPT_NONE
+				kconf unset PREEMPT_VOLUNTARY
+				kconf set PREEMPT
+				kconf set PREEMPT_COUNT
+				kconf set PREEMPTION
+				kconf set PREEMPT_DYNAMIC
+				;;
+			server)
+				kconf set PREEMPT_NONE_BUILD
+				kconf set PREEMPT_NONE
+				kconf unset PREEMPT_VOLUNTARY
+				kconf unset PREEMPT
+				kconf unset PREEMPTION
+				kconf unset PREEMPT_DYNAMIC
+				;;
+		*)
+			die "Invalid _preempt value: ${_preempt}"
+			;;
+		esac
 	fi
+
 	# _cc_harder
 	kconf unset CC_OPTIMIZE_FOR_PERFORMANCE
 	kconf set CC_OPTIMIZE_FOR_PERFORMANCE_O3
+
 	# _tcp_bbr3
 	kconf mod TCP_CONG_CUBIC
 	kconf unset DEFAULT_CUBIC
 	kconf set TCP_CONG_BBR
 	kconf val DEFAULT_TCP_CONG bbr
+
 	# _hugepage
-	kconf unset TRANSPARENT_HUGEPAGE_MADVISE
-	kconf set TRANSPARENT_HUGEPAGE_ALWAYS
+	case "${_hugepage}" in
+		always)
+			kconf unset TRANSPARENT_HUGEPAGE_MADVISE
+			kconf set TRANSPARENT_HUGEPAGE_ALWAYS
+			;;
+		madvise)
+			kconf unset TRANSPARENT_HUGEPAGE_ALWAYS
+			kconf set TRANSPARENT_HUGEPAGE_MADVISE
+			;;
+		*)
+			die "Invalid _hugepage value: ${_hugepage}"
+			;;
+	esac
+
 	# _user_ns
 	kconf set USER_NS
 }
