@@ -12,6 +12,7 @@
 		<flag name="bore">BORE Scheduler</flag>
 		<flag name="bmq">BMQ Scheduler</flag>
 		<flag name="cachyos">CachyOS (BORE + SCHED-EXT) Scheduler</flag>
+		<flag name="deckify">CachyOS (BORE + SCHED-EXT) Scheduler + Steam Deck Patches</flag>
 		<flag name="echo">ECHO Scheduler</flag>
 		<flag name="eevdf">EEVDF (Mainline Linux) Scheduler</flag>
 		<flag name="generic-uki">
