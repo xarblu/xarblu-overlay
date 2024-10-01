@@ -25,5 +25,6 @@
 		<flag name="rt">RT Patches</flag>
 		<flag name="rt-bore">BORE Scheduler + RT Patches</flag>
 		<flag name="sched-ext">SCHED-EXT Scheduler</flag>
+		<flag name="server">EEVDF Scheduler + Server Tuning</flag>
 	</use>
 </pkgmetadata>
