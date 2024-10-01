@@ -158,7 +158,7 @@ kconf() {
 			if [[ -z "${3}" ]]; then
 				die "kconf val requires a value"
 			fi
-			echo "CONFIG_$2=\"$3\""
+			echo "CONFIG_$2=$3"
 			;;
 		*)
 			die "invalid option $1 for kconf"
@@ -355,7 +355,7 @@ cachy_get_config() {
 	kconf mod TCP_CONG_CUBIC
 	kconf unset DEFAULT_CUBIC
 	kconf set TCP_CONG_BBR
-	kconf val DEFAULT_TCP_CONG bbr
+	kconf val DEFAULT_TCP_CONG "\"bbr\""
 
 	# _hugepage
 	case "${_hugepage}" in
@@ -386,7 +386,7 @@ src_prepare() {
 	default
 
 	# Localversion
-	kconf val LOCALVERSION "-$(cachy_get_version)" > "${T}"/version.config || die
+	kconf val LOCALVERSION "\"-$(cachy_get_version)\"" > "${T}"/version.config || die
 
 	# CachyOS config as base
 	cp "${DISTDIR}/${CONFIG_P}-kernel.config" .config || die
