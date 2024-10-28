@@ -85,7 +85,7 @@ src_install() {
 	# https://github.com/intro-skipper/intro-skipper/blob/10.10/v1.10.10.2/IntroSkipper/Plugin.cs#L574
 	if use intro-skipper; then
 		einfo "Patching index.html due to USE=\"intro-skipper\""
-		sed -i -e "s|</head>|<script src=\"configurationpage?name=skip-intro-button.js&release=${PV}\"></script>&|" \
+		sed -i -e "s|</head>|<script src=\"configurationpage?name=skip-intro-button.js\\&release=${PV}\"></script>&|" \
 			"${S}/jellyfin-web/index.html" || die "Failed modifying index.html"
 	fi
 
