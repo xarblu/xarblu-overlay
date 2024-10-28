@@ -1,4 +1,1 @@
-# From upstream:
-# 7.0 version is NOT fully compatible with Jellyfin 10.9.z.
-# Downstream should wait until Jellyfin 10.10.z is released before upgrading to this version.
->=media-video/jellyfin-ffmpeg-7.0.2
+# package.mask
