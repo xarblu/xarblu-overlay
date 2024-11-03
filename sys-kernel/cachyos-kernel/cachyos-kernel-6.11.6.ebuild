@@ -11,15 +11,15 @@ inherit kernel-build toolchain-funcs
 MY_P=linux-${PV%.*}
 
 # https://dev.gentoo.org/~mpagano/genpatches/kernels.html
-GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 1 ))
+GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 2 ))
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g14
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="09e013c94deb83c04783ca3bdf24f43cda012c8f"
+CONFIG_COMMIT="450048a1621bd7a3d965e00f32901dbe1c8f1a3f"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="e89f332a77abdc44271088242e55a13e9b07bc02"
+PATCH_COMMIT="51010ad7c0212c798097e2849982de165d390fb4"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
