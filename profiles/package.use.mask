@@ -1,2 +1,3 @@
 # no patches yet
->=sys-kernel/cachyos-kernel-6.11.0 hardened echo
+~sys-kernel/cachyos-kernel-6.11.5 hardened
+~sys-kernel/cachyos-kernel-6.11.6 hardened
