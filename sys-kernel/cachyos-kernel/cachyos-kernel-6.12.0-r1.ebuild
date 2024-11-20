@@ -15,7 +15,7 @@ GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 1 ))
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g14
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="503f4835a29d4ea7925a5fd82344a553915091e1"
+CONFIG_COMMIT="0fbf5707c186ff3d15c53ac283ca2ccea8a0cd68"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
@@ -293,6 +293,27 @@ cachy_get_use_config() {
 			;;
 	esac
 
+	# _use_llvm_lto
+	case "${_use_llvm_lto}" in
+		thin)
+			kconf set LTO
+			kconf set LTO_CLANG
+			kconf set ARCH_SUPPORTS_LTO_CLANG
+			kconf set ARCH_SUPPORTS_LTO_CLANG_THIN
+			kconf unset LTO_NONE
+			kconf set HAS_LTO_CLANG
+			kconf unset LTO_CLANG_FULL
+			kconf set LTO_CLANG_THIN
+			kconf set HAVE_GCC_PLUGINS
+			;;
+		none)
+			kconf set LTO_NONE
+			;;
+		*)
+			die "Invalid _use_llvm_lto value: ${_use_llvm_lto}"
+			;;
+	esac
+
 	# _HZ_ticks
 	case "${_HZ_ticks}" in
 		100|250|500|600|625|750|1000)
@@ -309,11 +330,15 @@ cachy_get_use_config() {
 			;;
 	esac
 
-	# _nr_cpus
-	kconf val NR_CPUS 320
-
 	# _tickrate
 	case "${_tickrate}" in
+		periodic)
+			kconf unset NO_HZ_IDLE
+			kconf unset NO_HZ_FULL
+			kconf unset NO_HZ
+			kconf unset NO_HZ_COMMON
+			kconf set HZ_PERIODIC
+			;;
 		idle)
 			kconf unset HZ_PERIODIC
 			kconf unset NO_HZ_FULL
@@ -407,27 +432,6 @@ cachy_get_use_config() {
 
 	# _user_ns
 	kconf set USER_NS
-
-	# _use_llvm_lto
-	case "${_use_llvm_lto}" in
-		thin)
-			kconf set LTO
-			kconf set LTO_CLANG
-			kconf set ARCH_SUPPORTS_LTO_CLANG
-			kconf set ARCH_SUPPORTS_LTO_CLANG_THIN
-			kconf unset LTO_NONE
-			kconf set HAS_LTO_CLANG
-			kconf unset LTO_CLANG_FULL
-			kconf set LTO_CLANG_THIN
-			kconf set HAVE_GCC_PLUGINS
-			;;
-		none)
-			kconf set LTO_NONE
-			;;
-		*)
-			die "Invalid _use_llvm_lto value: ${_use_llvm_lto}"
-			;;
-	esac
 }
 
 pkg_setup() {
