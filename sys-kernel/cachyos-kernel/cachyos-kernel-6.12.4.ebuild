@@ -15,16 +15,16 @@ GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 2 ))
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g14
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="87397251123612ccf0dbfd4c18b59fee52dcb474"
+CONFIG_COMMIT="8fb665eaca5e58bc1252d70c2410490b2dc827b3"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="16708558112c0d7c3cfcc0783d8e43d65a522dd0"
+PATCH_COMMIT="af40666868cb026503f29f6b1de8a9209b13cffd"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
-FLAVOURS="cachyos bmq bore deckify eevdf hardened rt-bore sched-ext server"
+FLAVOURS="cachyos bmq bore deckify eevdf hardened rt-bore server"
 
 # array of patches in format
 # <use>:<path/to.patch>
@@ -35,20 +35,33 @@ CACHY_PATCH_SPECS=(
 	-:all/0001-cachyos-base-all.patch
 	deckify:misc/0001-acpi-call.patch
 	deckify:misc/0001-handheld.patch
-	deckify:misc/0001-wifi-ath11k-Rename-QCA2066-fw-dir-to-QCA206X.patch
 	# _cpusched
-	cachyos:sched/0001-sched-ext.patch
-	cachyos:sched/0001-bore-cachy-ext.patch
+	cachyos:sched/0001-bore-cachy.patch
 	bore:sched/0001-bore-cachy.patch
 	bmq:sched/0001-prjc-cachy.patch
-	eevdf:sched/0001-eevdf-next.patch
-	server:sched/0001-eevdf-next.patch # server selects eevdf
+	rt-bore:sched/0001-bore-cachy.patch
 	rt-bore:misc/0001-rt.patch
-	rt-bore:sched/0001-bore-cachy-rt.patch
 	hardened:sched/0001-bore-cachy.patch
 	hardened:misc/0001-hardened.patch
-	sched-ext:sched/0001-sched-ext.patch
 )
+
+# build use dependent CACHY_CONFIG_URIS
+# repo archive includes a bunch of old stuff we don't need
+gen_cachy_config_uris() {
+	local base spec cond patch file
+	base="https://raw.githubusercontent.com/CachyOS/linux-cachyos"
+	base+="/${CONFIG_COMMIT}"
+	for flavour in ${FLAVOURS}; do
+		file="${CONFIG_P}-${flavour}.config"
+		if [[ "${flavour}" == "cachyos" ]]; then
+			CACHY_CONFIG_URIS+="${flavour}? ( ${base}/linux-cachyos/config -> ${file} ) "
+		else
+			CACHY_CONFIG_URIS+="${flavour}? ( ${base}/linux-cachyos-${flavour}/config -> ${file} ) "
+		fi
+	done
+	export CACHY_CONFIG_URIS
+}
+gen_cachy_config_uris
 
 # build use dependent CACHY_PATCH_URIS
 # repo archive includes a bunch of old stuff we don't need
@@ -83,9 +96,7 @@ SRC_URI+="
 	https://dev.gentoo.org/~alicef/dist/genpatches/${GENPATCHES_P}.extras.tar.xz
 	https://github.com/projg2/gentoo-kernel-config/archive/${GENTOO_CONFIG_VER}.tar.gz
 		-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
-	https://raw.githubusercontent.com/CachyOS/linux-cachyos/${CONFIG_COMMIT}/linux-cachyos/config
-		-> ${CONFIG_P}-kernel.config
-	${CACHY_PATCH_URIS}
+	${CACHY_CONFIG_URIS} ${CACHY_PATCH_URIS}
 "
 S=${WORKDIR}/${MY_P}
 
@@ -121,11 +132,21 @@ cachy_get_version() {
 	for flavour in ${FLAVOURS}; do
 		if use "${flavour}"; then
 			if [[ "${flavour}" == "cachyos" ]]; then
-				echo "linux-cachyos" || die
+				echo "-cachyos" || die
 			else
-				echo "linux-cachyos-${flavour}" || die
+				echo "-cachyos-${flavour}" || die
 			fi
 			return
+		fi
+	done
+}
+
+# get the config file name
+cachy_get_base_config() {
+	local flavour
+	for flavour in ${FLAVOURS}; do
+		if use ${flavour}; then
+			echo "${CONFIG_P}-${flavour}.config"
 		fi
 	done
 }
@@ -173,12 +194,13 @@ kconf() {
 }
 
 # config defaults from Arch PKGBUILD
-cachy_get_config() {
+cachy_get_use_config() {
 	# first setup the _* vars (only those that differ)
-	local _cachy_config _cpusched _HZ_ticks _tickrate _preempt _hugepage _use_llvm_lto
+	local _cachy_config _cpusched _tcp_bbr3 _HZ_ticks _tickrate _preempt _hugepage _use_llvm_lto
 	if use cachyos; then
 		_cachy_config=y
 		_cpusched=cachyos
+		_tcp_bbr3=n
 		_HZ_ticks=1000
 		_tickrate=full
 		_preempt=full
@@ -186,6 +208,7 @@ cachy_get_config() {
 	elif use bmq; then
 		_cachy_config=y
 		_cpusched=bmq
+		_tcp_bbr3=n
 		_HZ_ticks=1000
 		_tickrate=full
 		_preempt=full
@@ -193,6 +216,7 @@ cachy_get_config() {
 	elif use bore; then
 		_cachy_config=y
 		_cpusched=bore
+		_tcp_bbr3=n
 		_HZ_ticks=1000
 		_tickrate=full
 		_preempt=full
@@ -200,6 +224,7 @@ cachy_get_config() {
 	elif use deckify; then
 		_cachy_config=y
 		_cpusched=cachyos
+		_tcp_bbr3=n
 		_HZ_ticks=1000
 		_tickrate=full
 		_preempt=full
@@ -207,6 +232,7 @@ cachy_get_config() {
 	elif use eevdf; then
 		_cachy_config=y
 		_cpusched=eevdf
+		_tcp_bbr3=n
 		_HZ_ticks=1000
 		_tickrate=full
 		_preempt=full
@@ -214,6 +240,7 @@ cachy_get_config() {
 	elif use hardened; then
 		_cachy_config=y
 		_cpusched=hardened
+		_tcp_bbr3=n
 		_HZ_ticks=1000
 		_tickrate=full
 		_preempt=full
@@ -221,20 +248,15 @@ cachy_get_config() {
 	elif use rt-bore; then
 		_cachy_config=y
 		_cpusched=rt-bore
-		_HZ_ticks=1000
-		_tickrate=full
-		_preempt=full
-		_hugepage=always
-	elif use sched-ext; then
-		_cachy_config=y
-		_cpusched=sched-ext
+		_tcp_bbr3=n
 		_HZ_ticks=1000
 		_tickrate=full
 		_preempt=full
 		_hugepage=always
 	elif use server; then
-		_cachy_config=
+		_cachy_config=n
 		_cpusched=eevdf
+		_tcp_bbr3=n
 		_HZ_ticks=300
 		_tickrate=idle
 		_preempt=server
@@ -248,17 +270,19 @@ cachy_get_config() {
 	fi
 
 	# _cachy_config
-	if [[ -n "${_cachy_config}" ]]; then
-		kconf set CACHY
-	fi
+	case "${_cachy_config}" in
+		y)
+			kconf set CACHY
+			;;
+		n)	;;
+		*)
+			die "Invalid _cachy_config value: ${_cachy_config}"
+			;;
+	esac
 
 	# _cpusched
 	case "${_cpusched}" in
-		cachyos)
-			kconf set SCHED_CLASS_EXT
-			kconf set SCHED_BORE
-			;;
-		bore|hardened)
+		cachyos|bore|hardened)
 			kconf set SCHED_BORE
 			;;
 		bmq)
@@ -266,24 +290,40 @@ cachy_get_config() {
 			kconf set SCHED_BMQ
 			;;
 		eevdf) ;;
+		rt)
+			kconf unset PREEMPT
+			kconf unset PREEMPT_DYNAMIC
+			kconf set PREEMPT_RT
+			;;
 		rt-bore)
 			kconf set SCHED_BORE
-			kconf set PREEMPT_COUNT
-			kconf set PREEMPTION
-			kconf unset PREEMPT_VOLUNTARY
 			kconf unset PREEMPT
-			kconf unset PREEMPT_NONE
-			kconf unset PREEMPT_RT
 			kconf unset PREEMPT_DYNAMIC
-			kconf set PREEMPT_BUILD
-			kconf set PREEMPT_BUILD_AUTO
-			kconf set PREEMPT_AUTO
-			;;
-		sched-ext)
-			kconf set SCHED_CLASS_EXT
+			kconf set PREEMPT_RT
 			;;
 		*)
 			die "Invalid _cpusched value: ${_cpusched}"
+			;;
+	esac
+
+	# _use_llvm_lto
+	case "${_use_llvm_lto}" in
+		thin)
+			kconf set LTO
+			kconf set LTO_CLANG
+			kconf set ARCH_SUPPORTS_LTO_CLANG
+			kconf set ARCH_SUPPORTS_LTO_CLANG_THIN
+			kconf unset LTO_NONE
+			kconf set HAS_LTO_CLANG
+			kconf unset LTO_CLANG_FULL
+			kconf set LTO_CLANG_THIN
+			kconf set HAVE_GCC_PLUGINS
+			;;
+		none)
+			kconf set LTO_NONE
+			;;
+		*)
+			die "Invalid _use_llvm_lto value: ${_use_llvm_lto}"
 			;;
 	esac
 
@@ -303,11 +343,15 @@ cachy_get_config() {
 			;;
 	esac
 
-	# _nr_cpus
-	kconf val NR_CPUS 320
-
 	# _tickrate
 	case "${_tickrate}" in
+		periodic)
+			kconf unset NO_HZ_IDLE
+			kconf unset NO_HZ_FULL
+			kconf unset NO_HZ
+			kconf unset NO_HZ_COMMON
+			kconf set HZ_PERIODIC
+			;;
 		idle)
 			kconf unset HZ_PERIODIC
 			kconf unset NO_HZ_FULL
@@ -342,17 +386,25 @@ cachy_get_config() {
 				kconf set PREEMPTION
 				kconf set PREEMPT_DYNAMIC
 				;;
-			server)
-				kconf set PREEMPT_NONE_BUILD
-				kconf set PREEMPT_NONE
-				kconf unset PREEMPT_VOLUNTARY
+			voluntary)
+				kconf set PREEMPT_BUILD
+				kconf unset PREEMPT_NONE
+				kconf set PREEMPT_VOLUNTARY
 				kconf unset PREEMPT
-				kconf unset PREEMPTION
+				kconf set PREEMPT_COUNT
+				kconf set PREEMPTION
 				kconf unset PREEMPT_DYNAMIC
 				;;
-		*)
-			die "Invalid _preempt value: ${_preempt}"
-			;;
+			server)
+				kconf unset PREEMPT_DYNAMIC
+				kconf set PREEMPT_NONE_BUILD
+				kconf unset PREEMPT
+				kconf unset PREEMPT_VOLUNTARY
+				kconf set PREEMPT_NONE
+				;;
+			*)
+				die "Invalid _preempt value: ${_preempt}"
+				;;
 		esac
 	fi
 
@@ -361,10 +413,24 @@ cachy_get_config() {
 	kconf set CC_OPTIMIZE_FOR_PERFORMANCE_O3
 
 	# _tcp_bbr3
-	kconf mod TCP_CONG_CUBIC
-	kconf unset DEFAULT_CUBIC
-	kconf set TCP_CONG_BBR
-	kconf val DEFAULT_TCP_CONG "\"bbr\""
+	case "${_tcp_bbr3}" in
+		y)
+			kconf mod TCP_CONG_CUBIC
+			kconf unset DEFAULT_CUBIC
+			kconf set TCP_CONG_BBR
+			kconf val DEFAULT_TCP_CONG "\"bbr\""
+			if ! use server; then
+				kconf mod NET_SCH_FQ_CODEL
+				kconf set NET_SCH_FQ
+				kconf unset CONFIG_DEFAULT_FQ_CODEL
+				kconf set CONFIG_DEFAULT_FQ
+			fi
+			;;
+		n)	;;
+		*)
+			die "Invalid _tcp_bbr3 value: ${_tcp_bbr3}"
+			;;
+	esac
 
 	# _hugepage
 	case "${_hugepage}" in
@@ -383,27 +449,6 @@ cachy_get_config() {
 
 	# _user_ns
 	kconf set USER_NS
-
-	# _use_llvm_lto
-	case "${_use_llvm_lto}" in
-		thin)
-			kconf set LTO
-			kconf set LTO_CLANG
-			kconf set ARCH_SUPPORTS_LTO_CLANG
-			kconf set ARCH_SUPPORTS_LTO_CLANG_THIN
-			kconf unset LTO_NONE
-			kconf set HAS_LTO_CLANG
-			kconf unset LTO_CLANG_FULL
-			kconf set LTO_CLANG_THIN
-			kconf set HAVE_GCC_PLUGINS
-			;;
-		none)
-			kconf set LTO_NONE
-			;;
-		*)
-			die "Invalid _use_llvm_lto value: ${_use_llvm_lto}"
-			;;
-	esac
 }
 
 pkg_setup() {
@@ -432,6 +477,7 @@ pkg_setup() {
 		einfo "STRIP: ${OLD_STRIP} -> ${STRIP}"
 		einfo "Setting LLVM=1 LLVM_IAS=1"
 	fi
+	kernel-build_pkg_setup
 }
 
 src_prepare() {
@@ -444,13 +490,13 @@ src_prepare() {
 	default
 
 	# Localversion
-	kconf val LOCALVERSION "\"-$(cachy_get_version)\"" > "${T}"/version.config || die
+	kconf val LOCALVERSION "\"$(cachy_get_version)\"" > "${T}"/version.config || die
 
 	# CachyOS config as base
-	cp "${DISTDIR}/${CONFIG_P}-kernel.config" .config || die
+	cp "${DISTDIR}/$(cachy_get_base_config)" .config || die
 
 	# Package defaults
-	cachy_get_config > "${T}"/cachy-defaults.config || die
+	cachy_get_use_config > "${T}"/cachy-flavour-defaults.config || die
 
 	# Gentoo defaults
 	local dist_conf_path="${WORKDIR}/gentoo-kernel-config-${GENTOO_CONFIG_VER}"
@@ -458,7 +504,7 @@ src_prepare() {
 	local merge_configs=(
 		"${T}"/version.config
 		"${dist_conf_path}"/base.config
-		"${T}"/cachy-defaults.config
+		"${T}"/cachy-flavour-defaults.config
 	)
 	use debug || merge_configs+=(
 		"${dist_conf_path}"/no-debug.config
