@@ -8,6 +8,7 @@ inherit font check-reqs
 # curl https://raw.githubusercontent.com/ryanoasis/nerd-fonts/v${PV}/bin/scripts/lib/fonts.json |
 # jq --raw-output '.fonts[] | "\"\(.folderName):\(.licenseId)\""'
 FONTS=(
+	"0xProto:OFL-1.1-no-RFN"
 	"3270:BSD-3-Clause"
 	"Agave:MIT"
 	"AnonymousPro:OFL-1.1-RFN"
