@@ -23,6 +23,7 @@
 		<flag name="d2coding">Install D2Coding font</flag>
 		<flag name="daddytimemono">Install DaddyTimeMono font</flag>
 		<flag name="dejavusansmono">Install DejaVuSansMono font</flag>
+		<flag name="departuremono">Install DepartureMono font</flag>
 		<flag name="droidsansmono">Install DroidSansMono font</flag>
 		<flag name="envycoder">Install EnvyCodeR font</flag>
 		<flag name="fantasquesansmono">Install FantasqueSansMono font</flag>
