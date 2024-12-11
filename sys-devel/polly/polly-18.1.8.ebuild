@@ -18,7 +18,7 @@ RESTRICT="!test? ( test )"
 # but just depending on LLVM_MAJOR should be fine since we link
 # to the shared library
 DEPEND="
-	sys-devel/llvm:${LLVM_MAJOR}=
+	llvm-core/llvm:${LLVM_MAJOR}=
 "
 RDEPEND="${DEPEND}"
 BDEPEND="

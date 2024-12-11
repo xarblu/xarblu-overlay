@@ -15,7 +15,7 @@ IUSE="+debug test"
 RESTRICT="!test? ( test )"
 
 DEPEND="
-	sys-devel/llvm:${LLVM_MAJOR}=
+	llvm-core/llvm:${LLVM_MAJOR}=
 "
 RDEPEND="${DEPEND}"
 BDEPEND="

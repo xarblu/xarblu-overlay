@@ -20,7 +20,7 @@ RESTRICT="!test? ( test )"
 # a shared library + this avoids circular dependencies unless it's
 # a major version upgrade
 DEPEND="
-	sys-devel/llvm:${LLVM_MAJOR}=
+	llvm-core/llvm:${LLVM_MAJOR}=
 "
 RDEPEND="${DEPENDS}"
 BDEPEND="
