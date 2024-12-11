@@ -1,4 +1,1 @@
-# no patches yet
-~sys-kernel/cachyos-kernel-6.11.5 hardened
-~sys-kernel/cachyos-kernel-6.11.6 hardened
->=sys-kernel/cachyos-kernel-6.12.0 hardened
+# Mask use flags on specific packages / versions
