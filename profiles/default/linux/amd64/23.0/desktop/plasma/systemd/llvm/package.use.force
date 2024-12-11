@@ -2,12 +2,12 @@
 # Distributed under the terms of the GNU General Public License v2
 
 # build 32 bit LLVM runtimes so clang -m32 works
-sys-devel/clang-runtime abi_x86_32
-sys-libs/compiler-rt abi_x86_32
-sys-libs/compiler-rt-sanitizers abi_x86_32
-sys-libs/libcxx abi_x86_32
-sys-libs/libcxxabi abi_x86_32
-sys-libs/libomp abi_x86_32
+llvm-core/clang-runtime abi_x86_32
+llvm-runtimes/compiler-rt abi_x86_32
+llvm-runtimes/compiler-rt-sanitizers abi_x86_32
+llvm-runtimes/libcxx abi_x86_32
+llvm-runtimes/libcxxabi abi_x86_32
+llvm-runtimes/libunwind abi_x86_32
+llvm-runtimes/openmp abi_x86_32
 sys-libs/libxcrypt abi_x86_32
-sys-libs/llvm-libunwind abi_x86_32
 virtual/libcrypt abi_x86_32
