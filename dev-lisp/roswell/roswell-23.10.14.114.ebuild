@@ -22,7 +22,7 @@ RDEPEND="
 DEPEND="${RDEPEND}"
 
 PATCHES=(
-	# sys-devel/llvm provides windres but bfd/lld
+	# llvm-core/llvm provides windres but bfd/lld
 	# don't understand the resulting object
 	"${FILESDIR}/no-windres.patch"
 )
