@@ -109,9 +109,9 @@ REQUIRED_USE="
 
 BDEPEND="
 	clang? (
-		sys-devel/clang
-		sys-devel/lld
-		sys-devel/llvm
+		llvm-core/clang
+		llvm-core/lld
+		llvm-core/llvm
 	)
 	debug? ( dev-util/pahole )
 "

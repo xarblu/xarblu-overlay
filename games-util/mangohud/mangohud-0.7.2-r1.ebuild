@@ -3,7 +3,7 @@
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{10..12} )
+PYTHON_COMPAT=( python3_{10..13} )
 
 inherit toolchain-funcs flag-o-matic python-r1 desktop meson-multilib
 
@@ -56,7 +56,8 @@ RESTRICT="!test? ( test )"
 BDEPEND="
 	app-arch/unzip
 	test? ( dev-util/cmocka[${MULTILIB_USEDEP}] )
-	$(python_gen_any_dep 'dev-python/mako[${PYTHON_USEDEP}]')
+	$(python_gen_cond_dep 'dev-python/mako[${PYTHON_USEDEP}]')
+	${PYTHON_DEPS}
 "
 
 DEPEND="
@@ -69,12 +70,6 @@ DEPEND="
 	mangoapp? (
 		media-libs/glew[${MULTILIB_USEDEP}]
 		media-libs/glfw[-wayland-only(-),X(+),${MULTILIB_USEDEP}]
-	)
-	mangoplot? (
-		$(python_gen_cond_dep '
-			dev-python/numpy[${PYTHON_USEDEP}]
-			dev-python/matplotlib[${PYTHON_USEDEP}]
-		')
 	)
 	system-spdlog? ( dev-libs/spdlog[${MULTILIB_USEDEP}] )
 	video_cards_nvidia? (
@@ -89,13 +84,25 @@ DEPEND="
 	${PYTHON_DEPS}
 "
 
-RDEPEND="${DEPEND}"
-
-python_check_deps() {
-	python_has_version "dev-python/mako[${PYTHON_USEDEP}]"
-}
+RDEPEND="
+	mangoplot? (
+		$(python_gen_cond_dep '
+			dev-python/numpy[${PYTHON_USEDEP}]
+			dev-python/matplotlib[${PYTHON_USEDEP}]
+		')
+	)
+	${DEPEND}
+"
 
 S="${WORKDIR}/MangoHud-${PV}"
+
+python_check_deps() {
+	python_has_version -b "dev-python/mako[${PYTHON_USEDEP}]"
+}
+
+pkg_setup() {
+	python_setup
+}
 
 src_unpack() {
 	default

@@ -23,7 +23,6 @@
 		<flag name="hardened">BORE Scheduler + Hardening Patches</flag>
 		<flag name="initramfs">Build initramfs along with the kernel.</flag>
 		<flag name="rt-bore">BORE Scheduler + RT Patches</flag>
-		<flag name="sched-ext">SCHED-EXT Scheduler</flag>
 		<flag name="server">EEVDF Scheduler + Server Tuning</flag>
 	</use>
 </pkgmetadata>

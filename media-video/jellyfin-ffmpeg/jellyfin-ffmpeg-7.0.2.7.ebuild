@@ -154,7 +154,7 @@ BDEPEND="
 	>=dev-build/make-3.81
 	virtual/pkgconfig
 	cpu_flags_x86_mmx? ( || ( >=dev-lang/nasm-2.13 >=dev-lang/yasm-1.3 ) )
-	nvenc? ( >=sys-devel/clang-7[llvm_targets_NVPTX] )
+	nvenc? ( >=llvm-core/clang-7[llvm_targets_NVPTX] )
 	test? ( net-misc/wget app-alternatives/bc )
 "
 
