@@ -10,13 +10,14 @@
 		<flag name="energize-a">Beam your windows away</flag>
 		<flag name="energize-b">Using different transporter technology results in an alternative visual effect</flag>
 		<flag name="fire">The classic effect inspired by Compiz</flag>
+		<flag name="focus">Focus dude, focus!</flag>
 		<flag name="glide">Fade the window to transparency with subtle 3D effects</flag>
 		<flag name="glitch">This effect applies some intentional graphics issues to your windows</flag>
 		<flag name="hexagon">With glowing lines and hexagon-shaped tiles, this effect looks very sci-fi</flag>
 		<flag name="incinerate">A less snappy but definitely more fancy take on the fire effect</flag>
-		<flag name="pixelate">Pixelate the window and randomly hide the pixels</flag>
 		<flag name="pixel-wheel">Pixelate the window and hide the pixels in a wheel-like fashion</flag>
 		<flag name="pixel-wipe">Pixelate the window and hide the pixels radially, starting from the pointer position</flag>
+		<flag name="pixelate">Pixelate the window and randomly hide the pixels</flag>
 		<flag name="portal">Transfer your windows to other locations in space and time</flag>
 		<flag name="tv">Make windows close like turning off a TV</flag>
 		<flag name="tv-glitch">Make your windows close like a very glitchy old-school TV</flag>
