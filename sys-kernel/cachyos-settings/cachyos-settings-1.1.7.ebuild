@@ -16,7 +16,7 @@ KEYWORDS="~amd64"
 IUSE="systemd zram"
 REQUIRED_USE="zram? ( systemd )"
 
-DEPEND="
+RDEPEND="
 	sys-apps/hdparm
 	sys-process/procps
 	virtual/udev
@@ -25,19 +25,19 @@ DEPEND="
 		app-arch/zstd
 	)
 "
-RDEPEND="${DEPEND}"
 
 src_install() {
-	insinto /etc/security/limits.d
-	doins etc/security/limits.d/*
-
 	# only install script that make sense
 	dobin usr/bin/kerver
 	dobin usr/bin/ksmctl
 	dobin usr/bin/ksmstats
+	dobin usr/bin/zink-run
 
 	insinto /usr/lib/modprobe.d
 	doins usr/lib/modprobe.d/*
+
+	insinto /usr/lib/modules-load.d
+	doins usr/lib/modules-load.d/*
 
 	insinto /usr/lib/sysctl.d
 	doins usr/lib/sysctl.d/*
@@ -77,7 +77,7 @@ src_install() {
 
 pkg_postinst() {
 	udev_reload
-	tmpfiles_process thp.conf optimize-interruptfreq.conf
+	tmpfiles_process coredump.conf disable-zswap.conf optimize-interruptfreq.conf thp.conf
 }
 
 pkg_postrm() {
