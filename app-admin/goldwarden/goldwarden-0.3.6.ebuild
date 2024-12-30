@@ -3,9 +3,9 @@
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{10..12} )
+PYTHON_COMPAT=( python3_{11..13} )
 
-inherit systemd python-r1 desktop go-module
+inherit systemd python-single-r1 desktop wrapper go-module
 
 DESCRIPTION="A feature-packed Bitwarden compatible desktop client"
 HOMEPAGE="https://github.com/quexten/goldwarden"
@@ -19,7 +19,7 @@ LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="fido2 +gui"
-REQUIRED_USE="${PYTHON_REQUIRED_USE}"
+REQUIRED_USE="gui? ( ${PYTHON_REQUIRED_USE} )"
 
 DEPEND="
 	fido2? ( dev-libs/libfido2 )
@@ -37,40 +37,30 @@ DEPEND="
 RDEPEND="${DEPEND}"
 BDEPEND="
 	gui? (
-		$(python_gen_any_dep '
-			dev-util/blueprint-compiler[${PYTHON_SINGLE_USEDEP}]
-		')
+		dev-util/blueprint-compiler
 		${PYTHON_DEPS}
 	)
 "
 
 PATCHES=(
-	"${FILESDIR}/python-module-rename-0.3.3.patch"
 	"${FILESDIR}/un-flatpak-0.3.3.patch"
 )
 
-python_check_deps() {
-	if use gui; then
-		python_has_version "dev-util/blueprint-compiler[${PYTHON_SINGLE_USEDEP}]"
-	fi
-}
-
 pkg_setup() {
-	python_setup
+	python-single-r1_pkg_setup
 }
 
 src_prepare() {
+	# set version
 	echo "${PV}" > ./cli/cmd/version.txt || die
 
+	# set binary path
 	sed -i -e "s|@BINARY_PATH@|/usr/bin/${PN}|" \
 		"cli/cmd/${PN}.service" || die
-	# give the gui a sane name
-	if use gui; then
-		pushd gui || die
-		sed -i -e "s/goldwarden_ui_main\.py/goldwarden-gui/" \
-			com.quexten.Goldwarden.desktop || die
-		popd || die
-	fi
+
+	# desktop file should call our wrapper
+	sed -i -e "s/goldwarden_ui_main\.py/${PN}-gui/" \
+		gui/com.quexten.Goldwarden.desktop || die
 	default
 }
 
@@ -102,13 +92,25 @@ src_install() {
 
 	if use gui; then
 		pushd gui || die
-		mv src "${PN}" || die
-		python_foreach_impl python_domodule goldwarden
-		python_foreach_impl python_newscript goldwarden_ui_main.py goldwarden-gui
+
+		# install python gui files
+		local guidir="/usr/lib/${PN}"
+		insinto "${guidir}"
+		doins -r ./*
+		python_optimize "${D}${guidir}"
+
+		# create wrapper
+		make_wrapper \
+			"${PN}-gui" \
+			"${PYTHON} goldwarden_ui_main.py" \
+			"${guidir}"
+
+		# metadata files
 		domenu com.quexten.Goldwarden.desktop
-		newicon -s scalable goldwarden.svg com.quexten.Goldwarden.svg
+		doicon -s scalable com.quexten.Goldwarden.svg
 		insinto /usr/share/metainfo
 		doins com.quexten.Goldwarden.metainfo.xml
+
 		popd || die
 	fi
 }

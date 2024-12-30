@@ -37,5 +37,5 @@ src_install() {
 	dobin "${PN}"
 	insinto /etc/dnsproxy
 	newins config.yaml.dist config.yaml
-	systemd_dounit "${FILESDIR}/dnsproxy.service"
+	systemd_newunit "${FILESDIR}"/dnsproxy.service-r1 dnsproxy.service
 }
