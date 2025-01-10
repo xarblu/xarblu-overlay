@@ -1,1 +1,5 @@
 # Mask use flags on specific packages / versions
+
+# Xarblu <xarblu@protonmail.com> (2025-01-10)
+# Incompatible/broken hardened patch
+>=sys-kernel/cachyos-kernel-6.12.9 hardened
