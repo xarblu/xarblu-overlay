@@ -1,0 +1,18 @@
+diff --git a/resources/ui/window.blp b/resources/ui/window.blp
+index 506ba2f..df4621d 100644
+--- a/resources/ui/window.blp
++++ b/resources/ui/window.blp
+@@ -160,9 +160,9 @@ template $MissionCenterWindow : Adw.ApplicationWindow {
+           halign: center;
+           hexpand: true;
+ 
+-          Adw.Spinner loading_spinner {
+-            width-request: 42;
+-            height-request: 42;
++          Spinner loading_spinner {
++            spinning: true;
++            halign: center;
+           }
+ 
+           Label {
+
