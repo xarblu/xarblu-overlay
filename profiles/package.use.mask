@@ -2,7 +2,7 @@
 
 # Xarblu <xarblu@protonmail.com> (2025-01-20)
 # Missing patches
->=sys-kernel/cachyos-kernel-6.13.0 bmq hardened
+>=sys-kernel/cachyos-kernel-6.13.0 hardened
 
 # Xarblu <xarblu@protonmail.com> (2025-01-10)
 # Incompatible/broken hardened patch

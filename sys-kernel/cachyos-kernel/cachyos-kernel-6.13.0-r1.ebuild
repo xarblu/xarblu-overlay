@@ -6,7 +6,10 @@ EAPI=8
 KERNEL_IUSE_GENERIC_UKI=1
 KERNEL_IUSE_MODULES_SIGN=1
 
-inherit kernel-build toolchain-funcs
+LLVM_COMPAT=( {17..19} )
+LLVM_OPTIONAL=1
+
+inherit llvm-r2 kernel-build
 
 MY_P=linux-${PV%.*}
 
@@ -15,11 +18,11 @@ GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 1 ))
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g15
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="baea61cb7f46030c1f24a65b789370e526629b92"
+CONFIG_COMMIT="8a63eb57721d23a2c062fa4e75ceac74eab001ab"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="0e7abfd91ef5f628f9d9f6f370ff8dbe468f43ef"
+PATCH_COMMIT="87e9ac4a0f9f5d190deab6db0bad361c4cae05b7"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
@@ -33,16 +36,19 @@ FLAVOURS="cachyos bmq bore deckify eevdf hardened rt-bore server"
 CACHY_PATCH_SPECS=(
 	# global
 	-:all/0001-cachyos-base-all.patch
+	# flavours
+	cachyos:sched/0001-bore-cachy.patch
+	bmq:sched/0001-prjc-cachy.patch
+	bore:sched/0001-bore-cachy.patch
 	deckify:misc/0001-acpi-call.patch
 	deckify:misc/0001-handheld.patch
-	# _cpusched
-	cachyos:sched/0001-bore-cachy.patch
-	bore:sched/0001-bore-cachy.patch
-	#bmq:sched/0001-prjc-cachy.patch
+	deckify:sched/0001-bore-cachy.patch
+	hardened:sched/0001-bore-cachy.patch
+	#hardened:misc/0001-hardened.patch
 	rt-bore:sched/0001-bore-cachy.patch
 	rt-bore:misc/0001-rt-i915.patch
-	#hardened:sched/0001-bore-cachy.patch
-	#hardened:misc/0001-hardened.patch
+	# lto
+	lto:misc/dkms-clang.patch
 )
 
 # build use dependent CACHY_CONFIG_URIS
@@ -103,14 +109,15 @@ IUSE="clang debug lto ${FLAVOURS/cachyos/+cachyos}"
 REQUIRED_USE="
 	^^ ( ${FLAVOURS} )
 	lto? ( clang )
+	clang? ( ${LLVM_REQUIRED_USE} )
 "
 
 BDEPEND="
-	clang? (
-		llvm-core/clang
-		llvm-core/lld
-		llvm-core/llvm
-	)
+	clang? ( $(llvm_gen_dep '
+		llvm-core/clang:${LLVM_SLOT}=
+		llvm-core/lld:${LLVM_SLOT}=
+		llvm-core/llvm:${LLVM_SLOT}=
+	') )
 	debug? ( dev-util/pahole )
 "
 PDEPEND="
@@ -193,7 +200,7 @@ kconf() {
 
 # config defaults from Arch PKGBUILD
 cachy_get_use_config() {
-	# first setup the _* vars (only those that differ)
+	# relevent config vars
 	local _cachy_config _cpusched _tcp_bbr3 _HZ_ticks _tickrate _preempt _hugepage _use_llvm_lto
 	if use cachyos; then
 		_cachy_config=y
@@ -445,29 +452,29 @@ cachy_get_use_config() {
 
 pkg_setup() {
 	if use clang; then
-		OLD_AR="${AR}"; AR="llvm-ar"
-		OLD_AS="${AS}"; AS="llvm-as"
-		OLD_CC="${CC}"; CC="clang"
-		OLD_LD="${LD}"; LD="ld.lld"
-		OLD_NM="${NM}"; NM="llvm-nm"
-		OLD_OBJCOPY="${OBJCOPY}"; OBJCOPY="llvm-objcopy"
-		OLD_OBJDUMP="${OBJDUMP}"; OBJDUMP="llvm-objcopy"
-		OLD_READELF="${READELF}"; READELF="llvm-readelf"
-		OLD_STRIP="${STRIP}"; STRIP="llvm-strip"
-		tc-export AS CC LD AR NM STRIP OBJCOPY OBJDUMP READELF
-		export LLVM="1"
-		export LLVM_IAS="1"
-		einfo "Forcing LLVM toolchain due to USE=clang:"
-		einfo "AR: ${OLD_AR} -> ${AR}"
-		einfo "AS: ${OLD_AS} -> ${AS}"
-		einfo "CC: ${OLD_CC} -> ${CC}"
-		einfo "LD: ${OLD_LD} -> ${LD}"
-		einfo "NM: ${OLD_NM} -> ${NM}"
-		einfo "OBJCOPY: ${OLD_OBJCOPY} -> ${OBJCOPY}"
-		einfo "OBJDUMP: ${OLD_OBJDUMP} -> ${OBJDUMP}"
-		einfo "READELF: ${OLD_READELF} -> ${READELF}"
-		einfo "STRIP: ${OLD_STRIP} -> ${STRIP}"
-		einfo "Setting LLVM=1 LLVM_IAS=1"
+		# tools passed as MAKEARGS in kernel-build.eclass
+		einfo "Forcing LLVM toolchain due to USE=clang"
+		declare -g AS="llvm-as"
+		declare -g CC="clang"
+		declare -g LD="ld.lld"
+		declare -g AR="llvm-ar"
+		declare -g NM="llvm-nm"
+		declare -g STRIP="llvm-strip"
+		declare -g OBJCOPY="llvm-objcopy"
+		declare -g OBJDUMP="llvm-objdump"
+		declare -g READELF="llvm-readelf"
+		# explicit prepend_path to ensure vars point to correct version
+		llvm_prepend_path -b "${LLVM_SLOT}"
+		llvm-r2_pkg_setup
+		einfo "AS: ${AS}"
+		einfo "CC: ${CC}"
+		einfo "LD: ${LD}"
+		einfo "AR: ${AR}"
+		einfo "NM: ${NM}"
+		einfo "STRIP: ${STRIP}"
+		einfo "OBJCOPY: ${OBJCOPY}"
+		einfo "OBJDUMP: ${OBJDUMP}"
+		einfo "READELF: ${READELF}"
 	fi
 	kernel-build_pkg_setup
 }
