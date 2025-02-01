@@ -3,3 +3,4 @@
 # Xarblu <xarblu@protonmail.com> (2025-01-31)
 # RC version stays masked for now
 ~games-util/mangohud-0.8.0_rc1
+~games-util/mangohud-0.8.0_rc2
