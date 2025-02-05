@@ -19,8 +19,9 @@ LICENSE="GPL-3"
 KEYWORDS="~amd64"
 
 DEPEND="
-	>=kde-frameworks/kconfigwidgets-${KFMIN}:${SLOT}=
 	>=kde-frameworks/kcmutils-${KFMIN}:${SLOT}=
+	>=kde-frameworks/kconfigwidgets-${KFMIN}:${SLOT}=
+	>=kde-frameworks/ki18n-${KFMIN}:${SLOT}=
 	kde-plasma/kwin:${SLOT}=
 	media-libs/libepoxy
 	x11-libs/libxcb
@@ -28,5 +29,3 @@ DEPEND="
 RDEPEND="${DEPEND}"
 
 S="${WORKDIR}/${MY_PN}-${PV}"
-
-PATCHES=( "${FILESDIR}/0.6.7-sandbox.patch" )
