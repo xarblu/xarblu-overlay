@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Gentoo Authors
+# Copyright 2020-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -6,20 +6,23 @@ EAPI=8
 KERNEL_IUSE_GENERIC_UKI=1
 KERNEL_IUSE_MODULES_SIGN=1
 
-inherit kernel-build toolchain-funcs
+LLVM_COMPAT=( {17..21} )
+LLVM_OPTIONAL=1
+
+inherit llvm-r2 kernel-build
 
 MY_P=linux-${PV%.*}
 
 # https://dev.gentoo.org/~mpagano/genpatches/kernels.html
-GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 3 ))
+GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 1 ))
 # https://github.com/projg2/gentoo-kernel-config
-GENTOO_CONFIG_VER=g14
+GENTOO_CONFIG_VER=g15
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="57a671fd2248be40ea640628e19db3a2eace851f"
+CONFIG_COMMIT="7a5cff1a4ecfb705e59ce097d245f7a89f586d83"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="fe9a04ee21c450af984a5609e69f00176b6bf97e"
+PATCH_COMMIT="d18ba2d7dc27a2d1efd0a11f3b3ac07df0a32e4a"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
@@ -33,16 +36,19 @@ FLAVOURS="cachyos bmq bore deckify eevdf hardened rt-bore server"
 CACHY_PATCH_SPECS=(
 	# global
 	-:all/0001-cachyos-base-all.patch
+	# flavours
+	cachyos:sched/0001-bore-cachy.patch
+	bmq:sched/0001-prjc-cachy.patch
+	bore:sched/0001-bore-cachy.patch
 	deckify:misc/0001-acpi-call.patch
 	deckify:misc/0001-handheld.patch
-	# _cpusched
-	cachyos:sched/0001-bore-cachy.patch
-	bore:sched/0001-bore-cachy.patch
-	bmq:sched/0001-prjc-cachy.patch
-	rt-bore:sched/0001-bore-cachy.patch
-	rt-bore:misc/0001-rt.patch
+	deckify:sched/0001-bore-cachy.patch
 	hardened:sched/0001-bore-cachy.patch
-	hardened:misc/0001-hardened.patch
+	#hardened:misc/0001-hardened.patch
+	rt-bore:sched/0001-bore-cachy.patch
+	rt-bore:misc/0001-rt-i915.patch
+	# lto
+	lto:misc/dkms-clang.patch
 )
 
 # build use dependent CACHY_CONFIG_URIS
@@ -103,14 +109,15 @@ IUSE="clang debug lto ${FLAVOURS/cachyos/+cachyos}"
 REQUIRED_USE="
 	^^ ( ${FLAVOURS} )
 	lto? ( clang )
+	clang? ( ${LLVM_REQUIRED_USE} )
 "
 
 BDEPEND="
-	clang? (
-		llvm-core/clang
-		llvm-core/lld
-		llvm-core/llvm
-	)
+	clang? ( $(llvm_gen_dep '
+		llvm-core/clang:${LLVM_SLOT}=
+		llvm-core/lld:${LLVM_SLOT}=
+		llvm-core/llvm:${LLVM_SLOT}=
+	') )
 	debug? ( dev-util/pahole )
 "
 PDEPEND="
@@ -193,7 +200,7 @@ kconf() {
 
 # config defaults from Arch PKGBUILD
 cachy_get_use_config() {
-	# first setup the _* vars (only those that differ)
+	# relevent config vars
 	local _cachy_config _cpusched _tcp_bbr3 _HZ_ticks _tickrate _preempt _hugepage _use_llvm_lto
 	if use cachyos; then
 		_cachy_config=y
@@ -257,7 +264,7 @@ cachy_get_use_config() {
 		_tcp_bbr3=n
 		_HZ_ticks=300
 		_tickrate=idle
-		_preempt=server
+		_preempt=none
 		_hugepage=always
 	fi
 
@@ -289,14 +296,10 @@ cachy_get_use_config() {
 			;;
 		eevdf) ;;
 		rt)
-			kconf unset PREEMPT
-			kconf unset PREEMPT_DYNAMIC
 			kconf set PREEMPT_RT
 			;;
 		rt-bore)
 			kconf set SCHED_BORE
-			kconf unset PREEMPT
-			kconf unset PREEMPT_DYNAMIC
 			kconf set PREEMPT_RT
 			;;
 		*)
@@ -307,15 +310,10 @@ cachy_get_use_config() {
 	# _use_llvm_lto
 	case "${_use_llvm_lto}" in
 		thin)
-			kconf set LTO
-			kconf set LTO_CLANG
-			kconf set ARCH_SUPPORTS_LTO_CLANG
-			kconf set ARCH_SUPPORTS_LTO_CLANG_THIN
-			kconf unset LTO_NONE
-			kconf set HAS_LTO_CLANG
-			kconf unset LTO_CLANG_FULL
 			kconf set LTO_CLANG_THIN
-			kconf set HAVE_GCC_PLUGINS
+			;;
+		full)
+			kconf set LTO_CLANG_FULL
 			;;
 		none)
 			kconf set LTO_NONE
@@ -327,7 +325,7 @@ cachy_get_use_config() {
 
 	# _HZ_ticks
 	case "${_HZ_ticks}" in
-		100|250|500|600|625|750|1000)
+		100|250|500|600|750|1000)
 			kconf unset HZ_300
 			kconf set "HZ_${_HZ_ticks}"
 			kconf val HZ "${_HZ_ticks}"
@@ -376,28 +374,31 @@ cachy_get_use_config() {
 	if [[ "${_cpusched}" != rt* ]]; then
 		case "${_preempt}" in
 			full)
-				kconf set PREEMPT_BUILD
-				kconf unset PREEMPT_NONE
-				kconf unset PREEMPT_VOLUNTARY
-				kconf set PREEMPT
-				kconf set PREEMPT_COUNT
-				kconf set PREEMPTION
 				kconf set PREEMPT_DYNAMIC
+				kconf set PREEMPT
+				kconf unset PREEMPT_VOLUNTARY
+				kconf unset PREEMPT_LAZY
+				kconf unset PREEMPT_NONE
+				;;
+			lazy)
+				kconf set PREEMPT_DYNAMIC
+				kconf unset PREEMPT
+				kconf unset PREEMPT_VOLUNTARY
+				kconf set PREEMPT_LAZY
+				kconf unset PREEMPT_NONE
 				;;
 			voluntary)
-				kconf set PREEMPT_BUILD
-				kconf unset PREEMPT_NONE
-				kconf set PREEMPT_VOLUNTARY
+				kconf unset PREEMPT_DYNAMIC
 				kconf unset PREEMPT
-				kconf set PREEMPT_COUNT
-				kconf set PREEMPTION
-				kconf unset PREEMPT_DYNAMIC
+				kconf set PREEMPT_VOLUNTARY
+				kconf unset PREEMPT_LAZY
+				kconf unset PREEMPT_NONE
 				;;
-			server)
+			none)
 				kconf unset PREEMPT_DYNAMIC
-				kconf set PREEMPT_NONE_BUILD
 				kconf unset PREEMPT
 				kconf unset PREEMPT_VOLUNTARY
+				kconf unset PREEMPT_LAZY
 				kconf set PREEMPT_NONE
 				;;
 			*)
@@ -451,34 +452,37 @@ cachy_get_use_config() {
 
 pkg_setup() {
 	if use clang; then
-		OLD_AR="${AR}"; AR="llvm-ar"
-		OLD_AS="${AS}"; AS="llvm-as"
-		OLD_CC="${CC}"; CC="clang"
-		OLD_LD="${LD}"; LD="ld.lld"
-		OLD_NM="${NM}"; NM="llvm-nm"
-		OLD_OBJCOPY="${OBJCOPY}"; OBJCOPY="llvm-objcopy"
-		OLD_OBJDUMP="${OBJDUMP}"; OBJDUMP="llvm-objcopy"
-		OLD_READELF="${READELF}"; READELF="llvm-readelf"
-		OLD_STRIP="${STRIP}"; STRIP="llvm-strip"
-		tc-export AS CC LD AR NM STRIP OBJCOPY OBJDUMP READELF
-		export LLVM="1"
-		export LLVM_IAS="1"
-		einfo "Forcing LLVM toolchain due to USE=clang:"
-		einfo "AR: ${OLD_AR} -> ${AR}"
-		einfo "AS: ${OLD_AS} -> ${AS}"
-		einfo "CC: ${OLD_CC} -> ${CC}"
-		einfo "LD: ${OLD_LD} -> ${LD}"
-		einfo "NM: ${OLD_NM} -> ${NM}"
-		einfo "OBJCOPY: ${OLD_OBJCOPY} -> ${OBJCOPY}"
-		einfo "OBJDUMP: ${OLD_OBJDUMP} -> ${OBJDUMP}"
-		einfo "READELF: ${OLD_READELF} -> ${READELF}"
-		einfo "STRIP: ${OLD_STRIP} -> ${STRIP}"
-		einfo "Setting LLVM=1 LLVM_IAS=1"
+		# tools passed as MAKEARGS in kernel-build.eclass
+		einfo "Forcing LLVM toolchain due to USE=clang"
+		declare -g AS="llvm-as"
+		declare -g CC="clang"
+		declare -g LD="ld.lld"
+		declare -g AR="llvm-ar"
+		declare -g NM="llvm-nm"
+		declare -g STRIP="llvm-strip"
+		declare -g OBJCOPY="llvm-objcopy"
+		declare -g OBJDUMP="llvm-objdump"
+		declare -g READELF="llvm-readelf"
+		# explicit prepend_path to ensure vars point to correct version
+		llvm_prepend_path -b "${LLVM_SLOT}"
+		llvm-r2_pkg_setup
+		einfo "AS: ${AS}"
+		einfo "CC: ${CC}"
+		einfo "LD: ${LD}"
+		einfo "AR: ${AR}"
+		einfo "NM: ${NM}"
+		einfo "STRIP: ${STRIP}"
+		einfo "OBJCOPY: ${OBJCOPY}"
+		einfo "OBJDUMP: ${OBJDUMP}"
+		einfo "READELF: ${READELF}"
 	fi
 	kernel-build_pkg_setup
 }
 
 src_prepare() {
+	# remove genpatches that conflict with / exist in cachy patches
+	rm "${WORKDIR}/2980_GCC15-gnu23-to-gnu11-fix.patch" || die
+
 	local PATCHES=(
 		# meh, genpatches have no directory
 		"${WORKDIR}"/*.patch

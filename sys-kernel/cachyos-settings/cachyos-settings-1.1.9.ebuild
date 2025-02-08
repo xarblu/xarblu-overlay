@@ -1,4 +1,4 @@
-# Copyright 2024 Gentoo Authors
+# Copyright 2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -18,6 +18,7 @@ REQUIRED_USE="zram? ( systemd )"
 
 RDEPEND="
 	sys-apps/hdparm
+	sys-apps/pciutils
 	sys-process/procps
 	virtual/udev
 	zram? (
@@ -28,9 +29,10 @@ RDEPEND="
 
 src_install() {
 	# only install script that make sense
+	dobin usr/bin/amdpstate-guided
+	dobin usr/bin/game-performance
 	dobin usr/bin/kerver
-	dobin usr/bin/ksmctl
-	dobin usr/bin/ksmstats
+	dobin usr/bin/pci-latency
 	dobin usr/bin/zink-run
 
 	insinto /usr/lib/modprobe.d
@@ -41,6 +43,9 @@ src_install() {
 
 	insinto /usr/lib/sysctl.d
 	doins usr/lib/sysctl.d/*
+
+	insinto /usr/share/X11/xorg.conf.d
+	doins usr/share/X11/xorg.conf.d/*
 
 	if use systemd; then
 		# can't use systemd_get_utildir directly
@@ -55,9 +60,10 @@ src_install() {
 		insinto "${systemd_utildir}/system.conf.d"
 		doins usr/lib/systemd/system.conf.d/*
 
-		# this explicitly doesn't install the
-		# .service files (only dropins) because we
-		# don't install the cachyos specific scripts
+		# units
+		systemd_dounit usr/lib/systemd/system/pci-latency.service
+
+		# dropins (doins to preserve names)
 		insinto "${systemd_utildir}/system"
 		doins -r  usr/lib/systemd/system/*.service.d
 
@@ -77,7 +83,8 @@ src_install() {
 
 pkg_postinst() {
 	udev_reload
-	tmpfiles_process coredump.conf disable-zswap.conf optimize-interruptfreq.conf thp.conf
+	tmpfiles_process coredump.conf disable-zswap.conf \
+		optimize-interruptfreq.conf thp-shrinker.conf thp.conf
 }
 
 pkg_postrm() {
