@@ -41,7 +41,6 @@ src_install() {
 			dir="${path##"${ED}/${MPV_INSTALL_DIR}/"}"
 			dir="${dir%/*}"
 			file="${path##*/}"
-			einfo "${dir} ${file}"
 			dosym "../../../${MPV_INSTALL_DIR#/}/${dir}/${file}" "/etc/mpv/${dir}/${file}"
 		done
 	fi
