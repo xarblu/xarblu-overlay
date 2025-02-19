@@ -28,6 +28,9 @@ PATCH_P="${PN}-${PATCH_PV}"
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf hardened rt-bore server"
 
+# RCs only have main flavour
+[[ ${PV} == *_rc* ]] && FLAVOURS="cachyos"
+
 # array of patches in format
 # <use>:<path/to.patch>
 # special use - always applies patch
@@ -38,13 +41,13 @@ CACHY_PATCH_SPECS=(
 	# flavours
 	cachyos:sched/0001-bore-cachy.patch
 	#bmq:sched/0001-prjc-cachy.patch
-	bore:sched/0001-bore-cachy.patch
-	deckify:misc/0001-acpi-call.patch
+	#bore:sched/0001-bore-cachy.patch
+	#deckify:misc/0001-acpi-call.patch
 	#deckify:misc/0001-handheld.patch
-	deckify:sched/0001-bore-cachy.patch
+	#deckify:sched/0001-bore-cachy.patch
 	#hardened:sched/0001-bore-cachy.patch
 	#hardened:misc/0001-hardened.patch
-	rt-bore:sched/0001-bore-cachy.patch
+	#rt-bore:sched/0001-bore-cachy.patch
 	#rt-bore:misc/0001-rt-i915.patch
 	# lto
 	lto:misc/dkms-clang.patch
@@ -100,14 +103,19 @@ cachy_config_env_setup() {
 	local cachy_config_uris=""
 	base="https://raw.githubusercontent.com/CachyOS/linux-cachyos"
 	base+="/${CONFIG_COMMIT}"
-	for flavour in ${FLAVOURS}; do
-		file="${CONFIG_P}-${flavour}.config"
-		if [[ "${flavour}" == "cachyos" ]]; then
-			cachy_config_uris+="${flavour}? ( ${base}/linux-cachyos/config -> ${file} ) "
-		else
-			cachy_config_uris+="${flavour}? ( ${base}/linux-cachyos-${flavour}/config -> ${file} ) "
-		fi
-	done
+	if [[ ${PV} == *_rc* ]]; then
+		# RC only has cachyos flavour
+		cachy_config_uris+="${base}/linux-cachyos-rc/config -> ${CONFIG_P}-cachyos.config "
+	else
+		for flavour in ${FLAVOURS}; do
+			file="${CONFIG_P}-${flavour}.config"
+			if [[ "${flavour}" == "cachyos" ]]; then
+				cachy_config_uris+="${flavour}? ( ${base}/linux-cachyos/config -> ${file} ) "
+			else
+				cachy_config_uris+="${flavour}? ( ${base}/linux-cachyos-${flavour}/config -> ${file} ) "
+			fi
+		done
+	fi
 	export SRC_URI="${SRC_URI} ${cachy_config_uris}"
 }
 
