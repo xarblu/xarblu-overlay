@@ -5,7 +5,7 @@ EAPI=8
 
 DESCRIPTION="Virtual to depend on any Distribution Kernel"
 SLOT="0/${PVR}"
-KEYWORDS="~amd64"
+[[ ${PV} != *_rc* ]] && KEYWORDS="~amd64"
 
 RDEPEND="
 	|| (

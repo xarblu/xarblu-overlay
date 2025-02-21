@@ -11,23 +11,25 @@ LLVM_OPTIONAL=1
 
 inherit llvm-r2 kernel-build
 
-MY_P=linux-${PV%.*}
-
 # https://dev.gentoo.org/~mpagano/genpatches/kernels.html
-GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 1 ))
+# not available for RCs
+[[ ${PV} != *_rc* ]] && GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 2 ))
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g15
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="7a5cff1a4ecfb705e59ce097d245f7a89f586d83"
+CONFIG_COMMIT="9fad6b33949b24b715a31d22c35286b3ec39fc77"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="d18ba2d7dc27a2d1efd0a11f3b3ac07df0a32e4a"
+PATCH_COMMIT="ba60fcffc6b1a5df65ca84a858d98dff897b8f6e"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf hardened rt-bore server"
+
+# RCs only have main flavour
+[[ ${PV} == *_rc* ]] && FLAVOURS="cachyos"
 
 # array of patches in format
 # <use>:<path/to.patch>
@@ -43,7 +45,7 @@ CACHY_PATCH_SPECS=(
 	deckify:misc/0001-acpi-call.patch
 	deckify:misc/0001-handheld.patch
 	deckify:sched/0001-bore-cachy.patch
-	hardened:sched/0001-bore-cachy.patch
+	#hardened:sched/0001-bore-cachy.patch
 	#hardened:misc/0001-hardened.patch
 	rt-bore:sched/0001-bore-cachy.patch
 	rt-bore:misc/0001-rt-i915.patch
@@ -51,42 +53,90 @@ CACHY_PATCH_SPECS=(
 	lto:misc/dkms-clang.patch
 )
 
+# append a list of kernel sources and incremental patches to SRC_URI
+# and sets S to the correct directory
+kernel_base_env_setup() {
+	local kernel_base_src_uris=""
+	local kernel_base_version="${PV%.*}"
+	if [[ "${PV}" == *_rc* ]]; then
+		# for RCs fetch the last stable as a base
+		kernel_base_version="$(ver_cut 1).$(( $(ver_cut 2) - 1 ))"
+		kernel_base_src_uris+="
+			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/linux-${kernel_base_version}.tar.xz
+		"
+		# then the big RC1 patch, patches follow genpatches 1000+ convention
+		kernel_base_src_uris+="
+			https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc1/v${kernel_base_version}
+				-> 1000_linux-${PV%_rc*}-rc1.patch
+		"
+
+		# then incremental patches between RCs
+		# assumes there never is a RC10 since
+		# the last RC is usually RC8
+		local incr=2
+		local target_incr="${PV##*_rc}"
+		while (( incr <= target_incr )); do
+			kernel_base_src_uris+="
+				https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc${incr}/v${PV%_rc*}-rc$(( incr - 1 ))
+					-> 100$(( incr - 1 ))_linux-${PV%_rc*}-rc${incr}.patch
+			"
+			incr=$(( incr + 1 ))
+		done
+	else
+		# for stable releases we have the base
+		# incremental patches are supplied by genpatches
+		kernel_base_src_uris+="
+			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/linux-${kernel_base_version}.tar.xz
+			https://dev.gentoo.org/~mpagano/dist/genpatches/${GENPATCHES_P}.base.tar.xz
+			https://dev.gentoo.org/~mpagano/dist/genpatches/${GENPATCHES_P}.extras.tar.xz
+		"
+	fi
+
+	export SRC_URI="${SRC_URI} ${kernel_base_src_uris}"
+	export S="${WORKDIR}/linux-${kernel_base_version}"
+}
+
 # build use dependent CACHY_CONFIG_URIS
 # repo archive includes a bunch of old stuff we don't need
-gen_cachy_config_uris() {
+cachy_config_env_setup() {
 	local base spec cond patch file
+	local cachy_config_uris=""
 	base="https://raw.githubusercontent.com/CachyOS/linux-cachyos"
 	base+="/${CONFIG_COMMIT}"
-	for flavour in ${FLAVOURS}; do
-		file="${CONFIG_P}-${flavour}.config"
-		if [[ "${flavour}" == "cachyos" ]]; then
-			CACHY_CONFIG_URIS+="${flavour}? ( ${base}/linux-cachyos/config -> ${file} ) "
-		else
-			CACHY_CONFIG_URIS+="${flavour}? ( ${base}/linux-cachyos-${flavour}/config -> ${file} ) "
-		fi
-	done
-	export CACHY_CONFIG_URIS
+	if [[ ${PV} == *_rc* ]]; then
+		# RC only has cachyos flavour
+		cachy_config_uris+="${base}/linux-cachyos-rc/config -> ${CONFIG_P}-cachyos.config "
+	else
+		for flavour in ${FLAVOURS}; do
+			file="${CONFIG_P}-${flavour}.config"
+			if [[ "${flavour}" == "cachyos" ]]; then
+				cachy_config_uris+="${flavour}? ( ${base}/linux-cachyos/config -> ${file} ) "
+			else
+				cachy_config_uris+="${flavour}? ( ${base}/linux-cachyos-${flavour}/config -> ${file} ) "
+			fi
+		done
+	fi
+	export SRC_URI="${SRC_URI} ${cachy_config_uris}"
 }
-gen_cachy_config_uris
 
 # build use dependent CACHY_PATCH_URIS
 # repo archive includes a bunch of old stuff we don't need
-gen_cachy_patch_uris() {
+cachy_patch_env_setup() {
 	local base spec cond patch file
+	local cachy_patch_uris=""
 	base="https://raw.githubusercontent.com/CachyOS/kernel-patches"
 	base+="/${PATCH_COMMIT}/$(ver_cut 1-2)"
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
 		IFS=":" read -r cond patch <<<"${spec}"
 		file="${PATCH_P}-${patch##*/}"
 		if [[ "${cond}" == "-" ]]; then
-			CACHY_PATCH_URIS+="${base}/${patch} -> ${file} "
+			cachy_patch_uris+="${base}/${patch} -> ${file} "
 		else
-			CACHY_PATCH_URIS+="${cond}? ( ${base}/${patch} -> ${file} ) "
+			cachy_patch_uris+="${cond}? ( ${base}/${patch} -> ${file} ) "
 		fi
 	done
-	export CACHY_PATCH_URIS
+	export SRC_URI="${SRC_URI} ${cachy_patch_uris}"
 }
-gen_cachy_patch_uris
 
 DESCRIPTION="Linux kernel built with CachyOS and Gentoo patches"
 HOMEPAGE="
@@ -94,17 +144,17 @@ HOMEPAGE="
 	https://github.com/CachyOS/linux-cachyos/
 	https://www.kernel.org/
 "
+
+# env setup helpers
+kernel_base_env_setup
+cachy_config_env_setup
+cachy_patch_env_setup
 SRC_URI+="
-	https://cdn.kernel.org/pub/linux/kernel/v$(ver_cut 1).x/${MY_P}.tar.xz
-	https://dev.gentoo.org/~mpagano/dist/genpatches/${GENPATCHES_P}.base.tar.xz
-	https://dev.gentoo.org/~mpagano/dist/genpatches/${GENPATCHES_P}.extras.tar.xz
 	https://github.com/projg2/gentoo-kernel-config/archive/${GENTOO_CONFIG_VER}.tar.gz
 		-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
-	${CACHY_CONFIG_URIS} ${CACHY_PATCH_URIS}
 "
-S=${WORKDIR}/${MY_P}
 
-KEYWORDS="~amd64"
+[[ ${PV} != *_rc* ]] && KEYWORDS="~amd64"
 IUSE="clang debug lto ${FLAVOURS/cachyos/+cachyos}"
 REQUIRED_USE="
 	^^ ( ${FLAVOURS} )
@@ -480,13 +530,20 @@ pkg_setup() {
 }
 
 src_prepare() {
-	# remove genpatches that conflict with / exist in cachy patches
-	rm "${WORKDIR}/2980_GCC15-gnu23-to-gnu11-fix.patch" || die
+	local PATCHES=( )
 
-	local PATCHES=(
-		# meh, genpatches have no directory
+	# genpatches have no directory
+	[[ ${PV} != *_rc* ]] && PATCHES+=(
 		"${WORKDIR}"/*.patch
-		# CachyOS Patches
+	)
+
+	# RC patches are not compressed and thus in DISTDIR
+	[[ ${PV} == *_rc* ]] && PATCHES+=(
+		"${DISTDIR}"/*_linux-${PV%_rc*}*.patch
+	)
+
+	# CachyOS Patches
+	PATCHES+=(
 		$(cachy_get_patches)
 	)
 	default

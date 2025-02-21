@@ -9,20 +9,20 @@
 		<remote-id type="github">CachyOS/linux-cachyos</remote-id>
 	</upstream>
 	<use>
-		<flag name="bmq">BMQ Scheduler</flag>
-		<flag name="bore">BORE Scheduler</flag>
-		<flag name="cachyos">CachyOS (BORE + SCHED-EXT) Scheduler</flag>
+		<flag name="bmq">Flavour using the BMQ scheduler</flag>
+		<flag name="bore">Flavour using the BORE scheduler</flag>
+		<flag name="cachyos">Default CachyOS flavour</flag>
 		<flag name="clang">Use Clang/LLVM toolchain</flag>
-		<flag name="deckify">CachyOS (BORE + SCHED-EXT) Scheduler + Steam Deck Patches</flag>
-		<flag name="eevdf">EEVDF (Mainline Linux) Scheduler</flag>
+		<flag name="deckify">Default CachyOS flavour with extra tweaks/patches for handhelds</flag>
+		<flag name="eevdf">Flavour using the EEVDF (mainline Linux) scheduler</flag>
 		<flag name="generic-uki">
 			Build and install a generic initramfs and Unified Kernel Image,
 			this is intended for building binpkgs with a pre-generated UKI
 			included (EXPERIMENTAL).
 		</flag>
-		<flag name="hardened">BORE Scheduler + Hardening Patches</flag>
+		<flag name="hardened">Default CachyOS flavour with extra hardening patches</flag>
 		<flag name="initramfs">Build initramfs along with the kernel.</flag>
-		<flag name="rt-bore">BORE Scheduler + RT Patches</flag>
-		<flag name="server">EEVDF Scheduler + Server Tuning</flag>
+		<flag name="rt-bore">Flavour using the BORE scheduler and realtime preemption</flag>
+		<flag name="server">Flavour usind the EEVDF scheduler tuned for servers</flag>
 	</use>
 </pkgmetadata>
