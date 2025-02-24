@@ -5,7 +5,7 @@ EAPI=8
 
 inherit go-module
 
-DESCRIPTION="Open-source tool designed to streamline uploading large photo collections to your self-hosted Immich server"
+DESCRIPTION="Tool to streamline uploading large photo collections to your Immich server"
 HOMEPAGE="https://github.com/simulot/immich-go"
 SRC_URI="
 	https://github.com/simulot/immich-go/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz
