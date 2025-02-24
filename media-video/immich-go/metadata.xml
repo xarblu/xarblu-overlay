@@ -5,4 +5,7 @@
 		<name>Xablu</name>
 		<email>xarblu@protonmail.com</email>
 	</maintainer>
+	<upstream>
+		<remote-id type="github">simulot/immich-go</remote-id>
+	</upstream>
 </pkgmetadata>
