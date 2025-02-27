@@ -17,11 +17,11 @@ inherit llvm-r2 kernel-build
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g15
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="c63514f4afe2c92862eabe5fbfb4d1630adabcfa"
+CONFIG_COMMIT="7564d5bebd3d7f3a0b63423955b75ab48d6adc96"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="6e583233df8923f1667fde4c19c3df12347d53f6"
+PATCH_COMMIT="2b0b1fcd753ac3532f6a7fa5d408144dc0b7d935"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 

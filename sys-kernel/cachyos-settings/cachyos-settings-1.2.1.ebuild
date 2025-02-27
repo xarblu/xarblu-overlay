@@ -1,4 +1,4 @@
-# Copyright 2024 Gentoo Authors
+# Copyright 2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -17,6 +17,7 @@ IUSE="systemd zram"
 REQUIRED_USE="zram? ( systemd )"
 
 RDEPEND="
+	app-shells/bash
 	sys-apps/hdparm
 	sys-apps/pciutils
 	sys-process/procps
@@ -30,6 +31,8 @@ RDEPEND="
 src_install() {
 	# only install script that make sense
 	dobin usr/bin/amdpstate-guided
+	dobin usr/bin/dlss-swapper
+	dobin usr/bin/dlss-swapper-dll
 	dobin usr/bin/game-performance
 	dobin usr/bin/kerver
 	dobin usr/bin/pci-latency
@@ -43,6 +46,9 @@ src_install() {
 
 	insinto /usr/lib/sysctl.d
 	doins usr/lib/sysctl.d/*
+
+	insinto /usr/share/X11/xorg.conf.d
+	doins usr/share/X11/xorg.conf.d/*
 
 	if use systemd; then
 		# can't use systemd_get_utildir directly
