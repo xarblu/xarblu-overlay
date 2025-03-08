@@ -13,15 +13,15 @@ inherit llvm-r2 kernel-build
 
 # https://dev.gentoo.org/~mpagano/genpatches/kernels.html
 # not available for RCs
-[[ ${PV} != *_rc* ]] && GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 1 ))
+[[ ${PV} != *_rc* ]] && GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 2 ))
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g15
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="c63514f4afe2c92862eabe5fbfb4d1630adabcfa"
+CONFIG_COMMIT="8c9578834f2f1a3f1abad2ac3d06d55982727107"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="6e583233df8923f1667fde4c19c3df12347d53f6"
+PATCH_COMMIT="aa2e0b59622de52da59b82eac96fdf39379f6794"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
@@ -40,17 +40,17 @@ CACHY_PATCH_SPECS=(
 	-:all/0001-cachyos-base-all.patch
 	# flavours
 	cachyos:sched/0001-bore-cachy.patch
-	#bmq:sched/0001-prjc-cachy.patch
-	#bore:sched/0001-bore-cachy.patch
-	#deckify:misc/0001-acpi-call.patch
-	#deckify:misc/0001-handheld.patch
-	#deckify:sched/0001-bore-cachy.patch
-	#hardened:sched/0001-bore-cachy.patch
-	#hardened:misc/0001-hardened.patch
-	#rt-bore:sched/0001-bore-cachy.patch
-	#rt-bore:misc/0001-rt-i915.patch
-	# lto
-	lto:misc/dkms-clang.patch
+	bmq:sched/0001-prjc-cachy.patch
+	bore:sched/0001-bore-cachy.patch
+	deckify:misc/0001-acpi-call.patch
+	deckify:misc/0001-handheld.patch
+	deckify:sched/0001-bore-cachy.patch
+	hardened:sched/0001-bore-cachy.patch
+	hardened:misc/0001-hardened.patch
+	rt-bore:sched/0001-bore-cachy.patch
+	rt-bore:misc/0001-rt-i915.patch
+	# clang
+	clang:misc/dkms-clang.patch
 )
 
 # append a list of kernel sources and incremental patches to SRC_URI
@@ -58,6 +58,7 @@ CACHY_PATCH_SPECS=(
 kernel_base_env_setup() {
 	local kernel_base_src_uris=""
 	local kernel_base_version="${PV%.*}"
+	local -a rc_patches
 	if [[ "${PV}" == *_rc* ]]; then
 		# for RCs fetch the last stable as a base
 		kernel_base_version="$(ver_cut 1).$(( $(ver_cut 2) - 1 ))"
@@ -69,6 +70,7 @@ kernel_base_env_setup() {
 			https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc1/v${kernel_base_version}
 				-> 1000_linux-${PV%_rc*}-rc1.patch
 		"
+		rc_patches+=( "1000_linux-${PV%_rc*}-rc1.patch" )
 
 		# then incremental patches between RCs
 		# assumes there never is a RC10 since
@@ -80,6 +82,7 @@ kernel_base_env_setup() {
 				https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc${incr}/v${PV%_rc*}-rc$(( incr - 1 ))
 					-> 100$(( incr - 1 ))_linux-${PV%_rc*}-rc${incr}.patch
 			"
+			rc_patches+=( "100$(( incr - 1 ))_linux-${PV%_rc*}-rc${incr}.patch" )
 			incr=$(( incr + 1 ))
 		done
 	else
@@ -94,10 +97,10 @@ kernel_base_env_setup() {
 
 	export SRC_URI="${SRC_URI} ${kernel_base_src_uris}"
 	export S="${WORKDIR}/linux-${kernel_base_version}"
+	export RC_PATCHES=( "${rc_patches[@]}" )
 }
 
-# build use dependent CACHY_CONFIG_URIS
-# repo archive includes a bunch of old stuff we don't need
+# adds cachyos config sources to SRC_URI
 cachy_config_env_setup() {
 	local base spec cond patch file
 	local cachy_config_uris=""
@@ -119,8 +122,7 @@ cachy_config_env_setup() {
 	export SRC_URI="${SRC_URI} ${cachy_config_uris}"
 }
 
-# build use dependent CACHY_PATCH_URIS
-# repo archive includes a bunch of old stuff we don't need
+# adds cachyos patch sources to SRC_URI
 cachy_patch_env_setup() {
 	local base spec cond patch file
 	local cachy_patch_uris=""
@@ -200,22 +202,42 @@ cachy_get_version() {
 cachy_get_base_config() {
 	local flavour
 	for flavour in ${FLAVOURS}; do
-		if use ${flavour}; then
+		if use "${flavour}"; then
 			echo "${CONFIG_P}-${flavour}.config"
 		fi
 	done
 }
 
-# get the patches based on flavour choice
-cachy_get_patches() {
-	local spec cond patch patches
+# move required patches to ${WORKDIR}/patches
+# and ensure they get applied in correct order
+cachy_stage_patches() {
+	local target="${WORKDIR}/patches"
+	einfo "Staging patches to be applied in ${target} ..."
+	mkdir -p "${target}" || die
+
+	# genpatches have no directory
+	if [[ ${PV} != *_rc* ]]; then
+		cp -t "${target}" "${WORKDIR}"/*.patch || die
+	fi
+
+	# RC patches are not compressed and thus in DISTDIR
+	if [[ ${PV} == *_rc* ]]; then
+		pushd "${DISTDIR}" >/dev/null || die
+		cp -t "${target}" "${RC_PATCHES[@]}" || die
+		popd >/dev/null || die
+	fi
+
+	# cachy patches need to be prefixed starting at 5000
+	local incr=5000
+	local spec cond patch file
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
 		IFS=":" read -r cond patch <<<"${spec}" || die
+		file="${PATCH_P}-${patch##*/}"
 		if [[ "${cond}" == "-" ]] || use "${cond}"; then
-			patches+="${DISTDIR}/${PATCH_P}-${patch##*/} "
+			cp "${DISTDIR}/${file}" "${target}/${incr}_${file}" || die
+			incr=$(( incr + 1 ))
 		fi
 	done
-	echo ${patches} || die
 }
 
 # echo formatted kernel config line
@@ -530,23 +552,13 @@ pkg_setup() {
 }
 
 src_prepare() {
-	local PATCHES=( )
+	# drop clashing genpatches
+	rm "${WORKDIR}/1740_x86-insn-decoder-test-allow-longer-symbol-names.patch" || die
 
-	# genpatches have no directory
-	[[ ${PV} != *_rc* ]] && PATCHES+=(
-		"${WORKDIR}"/*.patch
-	)
-
-	# RC patches are not compressed and thus in DISTDIR
-	[[ ${PV} == *_rc* ]] && PATCHES+=(
-		"${DISTDIR}"/*_linux-${PV%_rc*}*.patch
-	)
-
-	# CachyOS Patches
-	PATCHES+=(
-		$(cachy_get_patches)
-	)
-	default
+	# apply package and user patches
+	cachy_stage_patches
+	eapply "${WORKDIR}/patches"
+	eapply_user
 
 	# Localversion
 	kconf val LOCALVERSION "\"$(cachy_get_version)\"" > "${T}"/version.config || die

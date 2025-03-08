@@ -234,7 +234,7 @@ cachy_stage_patches() {
 		IFS=":" read -r cond patch <<<"${spec}" || die
 		file="${PATCH_P}-${patch##*/}"
 		if [[ "${cond}" == "-" ]] || use "${cond}"; then
-			cp "${DISTDIR}/${file}" "${target}/${incr}-${file}" || die
+			cp "${DISTDIR}/${file}" "${target}/${incr}_${file}" || die
 			incr=$(( incr + 1 ))
 		fi
 	done
