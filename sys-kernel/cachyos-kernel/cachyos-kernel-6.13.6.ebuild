@@ -49,8 +49,8 @@ CACHY_PATCH_SPECS=(
 	hardened:misc/0001-hardened.patch
 	rt-bore:sched/0001-bore-cachy.patch
 	rt-bore:misc/0001-rt-i915.patch
-	# lto
-	lto:misc/dkms-clang.patch
+	# clang
+	clang:misc/dkms-clang.patch
 )
 
 # append a list of kernel sources and incremental patches to SRC_URI
