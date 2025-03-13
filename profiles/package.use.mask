@@ -5,3 +5,4 @@
 =sys-kernel/cachyos-kernel-6.13.4 hardened
 =sys-kernel/cachyos-kernel-6.13.5 hardened
 =sys-kernel/cachyos-kernel-6.13.6 hardened
+=sys-kernel/cachyos-kernel-6.13.7 hardened
