@@ -17,11 +17,11 @@ inherit llvm-r2 kernel-build
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g15
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="fcc0c0128769ec81ac4e7a9b5a9f3570619cac15"
+CONFIG_COMMIT="a40d4f177c4487e99b962ef584667acb209c507a"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="bcd005e8bdd2b38145daa01d44d5ac419302c0a6"
+PATCH_COMMIT="aff044eb4da35a55c1f7d095c0b738be7d275fc7"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
@@ -581,4 +581,13 @@ src_prepare() {
 	use secureboot && merge_configs+=( "${dist_conf_path}/secureboot.config" )
 
 	kernel-build_merge_configs "${merge_configs[@]}"
+}
+
+pkg_postinst() {
+	kernel-build_pkg_postinst
+
+	# print info for included modules
+	if has_version media-video/v4l2loopback; then
+		elog "v4l2loopback is included in ${CATEGORY}/${PN} - no need for media-video/v4l2loopback"
+	fi
 }
