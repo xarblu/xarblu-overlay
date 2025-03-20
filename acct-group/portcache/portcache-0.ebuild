@@ -3,9 +3,6 @@
 
 EAPI=8
 
-inherit acct-user
+inherit acct-group
 
-ACCT_USER_ID=-1
-ACCT_USER_GROUPS=( portcache )
-
-acct-user_add_deps
+ACCT_GROUP_ID=-1
