@@ -17,16 +17,17 @@ inherit llvm-r2 kernel-build
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g15
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="fe60c235f45906f9481e728f9a9797e82baf1573"
+CONFIG_COMMIT="0fda5053aa86ea80022401e359ae6c92d6972253"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="0c8cd29e6fc33fb3c515b13b5fd0bde8f70cfd21"
+PATCH_COMMIT="d9af4e489617340a55454f34aa78d8aa0ede4510"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
-FLAVOURS="cachyos bmq bore deckify eevdf hardened rt-bore server"
+#FLAVOURS="cachyos bmq bore deckify eevdf hardened rt-bore server"
+FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
 
 # RCs only have main flavour
 [[ ${PV} == *_rc* ]] && FLAVOURS="cachyos"
@@ -40,15 +41,15 @@ CACHY_PATCH_SPECS=(
 	-:all/0001-cachyos-base-all.patch
 	# flavours
 	cachyos:sched/0001-bore-cachy.patch
-	#bmq:sched/0001-prjc-cachy.patch
-	#bore:sched/0001-bore-cachy.patch
-	#deckify:misc/0001-acpi-call.patch
-	#deckify:misc/0001-handheld.patch
-	#deckify:sched/0001-bore-cachy.patch
+	bmq:sched/0001-prjc-cachy.patch
+	bore:sched/0001-bore-cachy.patch
+	deckify:misc/0001-acpi-call.patch
+	deckify:misc/0001-handheld.patch
+	deckify:sched/0001-bore-cachy.patch
 	#hardened:sched/0001-bore-cachy.patch
 	#hardened:misc/0001-hardened.patch
-	#rt-bore:sched/0001-bore-cachy.patch
-	#rt-bore:misc/0001-rt-i915.patch
+	rt-bore:sched/0001-bore-cachy.patch
+	rt-bore:misc/0001-rt-i915.patch
 	# clang
 	clang:misc/dkms-clang.patch
 )
@@ -240,12 +241,24 @@ cachy_stage_patches() {
 	done
 }
 
+# wrapper around in_iuse and use
+# to check if we are a specific flavour
+is_flavour() {
+	(( $# != 1 )) && die
+	if in_iuse "${1}"; then
+		use "${1}"
+		return $?
+	else
+		return 1
+	fi
+}
+
 # echo formatted kernel config line
 # $1 can be one of set, unset, mod or val
 # $2 config name as in CONFIG_<name>
 # $3 if $1 is val set val as a config string
 kconf() {
-	if [[ $# -lt 2 ]]; then
+	if (( $# < 2 )); then
 		die "kconf needs at least 2 args"
 	fi
 	case "$1" in
@@ -274,7 +287,7 @@ kconf() {
 cachy_get_use_config() {
 	# relevent config vars
 	local _cachy_config _cpusched _tcp_bbr3 _HZ_ticks _tickrate _preempt _hugepage _use_llvm_lto
-	if use cachyos; then
+	if is_flavour cachyos; then
 		_cachy_config=y
 		_cpusched=cachyos
 		_tcp_bbr3=n
@@ -282,7 +295,7 @@ cachy_get_use_config() {
 		_tickrate=full
 		_preempt=full
 		_hugepage=always
-	elif use bmq; then
+	elif is_flavour bmq; then
 		_cachy_config=y
 		_cpusched=bmq
 		_tcp_bbr3=n
@@ -290,7 +303,7 @@ cachy_get_use_config() {
 		_tickrate=full
 		_preempt=full
 		_hugepage=always
-	elif use bore; then
+	elif is_flavour bore; then
 		_cachy_config=y
 		_cpusched=bore
 		_tcp_bbr3=n
@@ -298,7 +311,7 @@ cachy_get_use_config() {
 		_tickrate=full
 		_preempt=full
 		_hugepage=always
-	elif use deckify; then
+	elif is_flavour deckify; then
 		_cachy_config=y
 		_cpusched=cachyos
 		_tcp_bbr3=n
@@ -306,7 +319,7 @@ cachy_get_use_config() {
 		_tickrate=full
 		_preempt=full
 		_hugepage=always
-	elif use eevdf; then
+	elif is_flavour eevdf; then
 		_cachy_config=y
 		_cpusched=eevdf
 		_tcp_bbr3=n
@@ -314,7 +327,7 @@ cachy_get_use_config() {
 		_tickrate=full
 		_preempt=full
 		_hugepage=always
-	elif use hardened; then
+	elif is_flavour hardened; then
 		_cachy_config=y
 		_cpusched=hardened
 		_tcp_bbr3=n
@@ -322,7 +335,7 @@ cachy_get_use_config() {
 		_tickrate=full
 		_preempt=full
 		_hugepage=madvise
-	elif use rt-bore; then
+	elif is_flavour rt-bore; then
 		_cachy_config=y
 		_cpusched=rt-bore
 		_tcp_bbr3=n
@@ -330,7 +343,7 @@ cachy_get_use_config() {
 		_tickrate=full
 		_preempt=full
 		_hugepage=always
-	elif use server; then
+	elif is_flavour server; then
 		_cachy_config=n
 		_cpusched=eevdf
 		_tcp_bbr3=n
@@ -345,6 +358,17 @@ cachy_get_use_config() {
 	else
 		_use_llvm_lto=none
 	fi
+
+	# print cachy config
+	einfo "Selected cachy-config:"
+	einfo "  _cachy_config=${_cachy_config}"
+	einfo "  _cpusched=${_cpusched}"
+	einfo "  _tcp_bbr3=${_tcp_bbr3}"
+	einfo "  _HZ_ticks=${_HZ_ticks}"
+	einfo "  _tickrate=${_tickrate}"
+	einfo "  _preempt=${_preempt}"
+	einfo "  _hugepage=${_hugepage}"
+	einfo "  _use_llvm_lto=${_use_llvm_lto}"
 
 	# _cachy_config
 	case "${_cachy_config}" in
@@ -552,6 +576,9 @@ pkg_setup() {
 }
 
 src_prepare() {
+	# drop genpatches that clash with cachy patches
+	rm "${WORKDIR}/1740_x86-insn-decoder-test-allow-longer-symbol-names.patch" || die
+
 	# apply package and user patches
 	cachy_stage_patches
 	eapply "${WORKDIR}/patches"
@@ -581,4 +608,13 @@ src_prepare() {
 	use secureboot && merge_configs+=( "${dist_conf_path}/secureboot.config" )
 
 	kernel-build_merge_configs "${merge_configs[@]}"
+}
+
+pkg_postinst() {
+	kernel-build_pkg_postinst
+
+	# print info for included modules
+	if has_version media-video/v4l2loopback; then
+		elog "v4l2loopback is included in ${CATEGORY}/${PN} - no need for media-video/v4l2loopback"
+	fi
 }
