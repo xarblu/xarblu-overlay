@@ -599,6 +599,11 @@ src_prepare() {
 	# prepare and stage patches
 	cachy_stage_patches
 
+	# remove problematic patches
+	# suddenly fails with patch 2.8 and I don't think
+	# anyone using this kernel is on a PA-RISC machine...
+	rm "${WORKDIR}/patches/1730_parisc-Disable-prctl.patch" || die
+
 	# apply package and user patches
 	# eapply silently passes -F0 for some reason so use the
 	# more expensive --merge option
