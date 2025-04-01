@@ -599,17 +599,13 @@ src_prepare() {
 	# prepare and stage patches
 	cachy_stage_patches
 
-	# genpatch clashing with cachy patches
-	rm "${WORKDIR}/patches/1740_x86-insn-decoder-test-allow-longer-symbol-names.patch" || die
-
-	# bad patch ordering causing a reject...
-	sed -i \
-		-e '27377s/CONFIG_HID_AUREAL/CONFIG_HID_ASUS_ALLY/' \
-		-e '27377s/hid-aureal\.o/hid-asus-ally\.o/' \
-		"${WORKDIR}/patches/5000_${PATCH_P}-0001-cachyos-base-all.patch" || die
-
 	# apply package and user patches
-	eapply "${WORKDIR}/patches"
+	# eapply silently passes -F0 for some reason so use the
+	# more expensive --merge option
+	# (see /usr/lib/portage/pypy3.11/phase-helpers.sh)
+	# additionally --merge should automagically handle hunks that
+	# are both in genpatches and cachy patches
+	eapply --merge "${WORKDIR}/patches"
 	eapply_user
 
 	# Localversion
