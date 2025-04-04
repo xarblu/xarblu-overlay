@@ -13,20 +13,21 @@ inherit llvm-r2 kernel-build
 
 # https://dev.gentoo.org/~mpagano/genpatches/kernels.html
 # not available for RCs
-[[ ${PV} != *_rc* ]] && GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 2 ))
+[[ ${PV} != *_rc* ]] && GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 1 ))
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g15
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="9fad6b33949b24b715a31d22c35286b3ec39fc77"
+CONFIG_COMMIT="f94eef2c767cf31c2f25b8eef30068e60f279cc7"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="ba60fcffc6b1a5df65ca84a858d98dff897b8f6e"
+PATCH_COMMIT="776b4648d9244605d66e6b2595158858ca693f0a"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
-FLAVOURS="cachyos bmq bore deckify eevdf hardened rt-bore server"
+#FLAVOURS="cachyos bmq bore deckify eevdf hardened rt-bore server"
+FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
 
 # RCs only have main flavour
 [[ ${PV} == *_rc* ]] && FLAVOURS="cachyos"
@@ -49,8 +50,8 @@ CACHY_PATCH_SPECS=(
 	#hardened:misc/0001-hardened.patch
 	rt-bore:sched/0001-bore-cachy.patch
 	rt-bore:misc/0001-rt-i915.patch
-	# lto
-	lto:misc/dkms-clang.patch
+	# clang
+	clang:misc/dkms-clang.patch
 )
 
 # append a list of kernel sources and incremental patches to SRC_URI
@@ -58,6 +59,7 @@ CACHY_PATCH_SPECS=(
 kernel_base_env_setup() {
 	local kernel_base_src_uris=""
 	local kernel_base_version="${PV%.*}"
+	local -a rc_patches
 	if [[ "${PV}" == *_rc* ]]; then
 		# for RCs fetch the last stable as a base
 		kernel_base_version="$(ver_cut 1).$(( $(ver_cut 2) - 1 ))"
@@ -69,6 +71,7 @@ kernel_base_env_setup() {
 			https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc1/v${kernel_base_version}
 				-> 1000_linux-${PV%_rc*}-rc1.patch
 		"
+		rc_patches+=( "1000_linux-${PV%_rc*}-rc1.patch" )
 
 		# then incremental patches between RCs
 		# assumes there never is a RC10 since
@@ -80,6 +83,7 @@ kernel_base_env_setup() {
 				https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc${incr}/v${PV%_rc*}-rc$(( incr - 1 ))
 					-> 100$(( incr - 1 ))_linux-${PV%_rc*}-rc${incr}.patch
 			"
+			rc_patches+=( "100$(( incr - 1 ))_linux-${PV%_rc*}-rc${incr}.patch" )
 			incr=$(( incr + 1 ))
 		done
 	else
@@ -94,10 +98,10 @@ kernel_base_env_setup() {
 
 	export SRC_URI="${SRC_URI} ${kernel_base_src_uris}"
 	export S="${WORKDIR}/linux-${kernel_base_version}"
+	export RC_PATCHES=( "${rc_patches[@]}" )
 }
 
-# build use dependent CACHY_CONFIG_URIS
-# repo archive includes a bunch of old stuff we don't need
+# adds cachyos config sources to SRC_URI
 cachy_config_env_setup() {
 	local base spec cond patch file
 	local cachy_config_uris=""
@@ -119,8 +123,7 @@ cachy_config_env_setup() {
 	export SRC_URI="${SRC_URI} ${cachy_config_uris}"
 }
 
-# build use dependent CACHY_PATCH_URIS
-# repo archive includes a bunch of old stuff we don't need
+# adds cachyos patch sources to SRC_URI
 cachy_patch_env_setup() {
 	local base spec cond patch file
 	local cachy_patch_uris=""
@@ -180,67 +183,142 @@ QA_FLAGS_IGNORED="
 	usr/src/linux-.*/arch/powerpc/kernel/vdso.*/vdso.*.so.dbg
 "
 
-# get the "cachy name" of the kernel
-# as in CachyOS/linux-cachyos repo
-cachy_get_version() {
+# get the selected flavour from FLAVOURS
+cachy_flavour() {
 	local flavour
 	for flavour in ${FLAVOURS}; do
 		if use "${flavour}"; then
-			if [[ "${flavour}" == "cachyos" ]]; then
-				echo "-cachyos" || die
-			else
-				echo "-cachyos-${flavour}" || die
-			fi
-			return
+			printf -- "%s" "${flavour}" || die
+			return 0
 		fi
 	done
+	die "Could not get selected flavour"
+}
+
+# get the "cachy name" of the kernel
+# as in CachyOS/linux-cachyos repo
+cachy_version() {
+	case "$(cachy_flavour)" in
+		cachyos)
+			printf -- "-cachyos" || die
+			;;
+		*)
+			printf -- "-cachyos-%s" "$(cachy_flavour)" || die
+			;;
+	esac
 }
 
 # get the config file name
-cachy_get_base_config() {
-	local flavour
-	for flavour in ${FLAVOURS}; do
-		if use ${flavour}; then
-			echo "${CONFIG_P}-${flavour}.config"
-		fi
-	done
+cachy_base_config() {
+	printf -- "%s-%s.config" "${CONFIG_P}" "$(cachy_flavour)" || die
 }
 
-# get the patches based on flavour choice
-cachy_get_patches() {
-	local spec cond patch patches
+# move required patches to ${WORKDIR}/patches
+# and ensure they get applied in correct order
+cachy_stage_patches() {
+	local target="${WORKDIR}/patches"
+	einfo "Staging patches to be applied in ${target} ..."
+	mkdir -p "${target}" || die
+
+	# genpatches have no directory
+	if [[ ${PV} != *_rc* ]]; then
+		cp -t "${target}" "${WORKDIR}"/*.patch || die
+	fi
+
+	# RC patches are not compressed and thus in DISTDIR
+	if [[ ${PV} == *_rc* ]]; then
+		pushd "${DISTDIR}" >/dev/null || die
+		cp -t "${target}" "${RC_PATCHES[@]}" || die
+		popd >/dev/null || die
+	fi
+
+	# cachy patches need to be prefixed starting at 5000
+	local incr=5000
+	local spec cond patch file
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
 		IFS=":" read -r cond patch <<<"${spec}" || die
+		file="${PATCH_P}-${patch##*/}"
 		if [[ "${cond}" == "-" ]] || use "${cond}"; then
-			patches+="${DISTDIR}/${PATCH_P}-${patch##*/} "
+			cp "${DISTDIR}/${file}" "${target}/${incr}_${file}" || die
+			incr=$(( incr + 1 ))
 		fi
 	done
-	echo ${patches} || die
 }
 
-# echo formatted kernel config line
+# eapply-like wrapper for patch
+cachy_apply() {
+	local failed patch_cmd=patch
+	local -x LC_COLLATE=POSIX
+
+	# for bsd userland support, use gpatch if available
+	type -P gpatch > /dev/null && patch_cmd=gpatch
+
+	# final argument is directory containing patches
+	# all previous args are passed to patch
+	local -a patch_args
+	local patch_dir
+	while (( ${#} > 1 )); do
+		patch_args+=( "${1}" ); shift
+	done
+	patch_dir="${1}"; shift
+
+	# we always want to apply the full staged directory
+	[[ ! -d "${patch_dir}" ]] && die "${patch_dir} is not a directory"
+
+	# default args from /usr/lib/portage/pypy3.11/phase-helpers.sh
+	# + cachy PKGBUILD --forward + user args
+	local all_patch_args=(
+		-p1 -f -g0 --no-backup-if-mismatch
+		--forward "${patch_args[@]}"
+	)
+
+	local file
+	local -a patches
+	for file in "${patch_dir}"/*; do
+		if [[ "${file}" != *.patch ]]; then
+			eqawarn "Not a patch file: ${file}"
+		else
+			patches+=( "${file}" )
+		fi
+	done
+
+	if (( ${#patches[@]} == 0 )); then
+		die "No patch files in ${patch_dir}"
+	fi
+
+	for file in "${patches[@]}"; do
+		ebegin "Applying ${file##*/}"
+		${patch_cmd} "${all_patch_args[@]}" < "${file}"
+		failed=${?}
+		if ! eend "${failed}"; then
+			die "${patch_cmd} ${all_patch_args[*]} failed with ${file}"
+		fi
+	done
+}
+
+# print formatted kernel config line
 # $1 can be one of set, unset, mod or val
 # $2 config name as in CONFIG_<name>
 # $3 if $1 is val set val as a config string
 kconf() {
-	if [[ $# -lt 2 ]]; then
+	if (( $# < 2 )); then
 		die "kconf needs at least 2 args"
 	fi
 	case "$1" in
 		set)
-			echo "CONFIG_$2=y"
+			printf -- "CONFIG_%s=y\n" "${2}" || die
 			;;
 		unset)
-			echo "# CONFIG_$2 is not set"
+			printf -- "# CONFIG_%s is not set\n" "${2}" || die
 			;;
 		mod)
-			echo "CONFIG_$2=m"
+			printf -- "CONFIG_%s=m\n" "${2}" || die
 			;;
 		val)
 			if [[ -z "${3}" ]]; then
 				die "kconf val requires a value"
 			fi
-			echo "CONFIG_$2=$3"
+			printf -- "CONFIG_%s=%s\n" "${2}" "${3}" || die
 			;;
 		*)
 			die "invalid option $1 for kconf"
@@ -248,91 +326,128 @@ kconf() {
 	esac
 }
 
-# config defaults from Arch PKGBUILD
-cachy_get_use_config() {
-	# relevent config vars
-	local _cachy_config _cpusched _tcp_bbr3 _HZ_ticks _tickrate _preempt _hugepage _use_llvm_lto
-	if use cachyos; then
-		_cachy_config=y
-		_cpusched=cachyos
-		_tcp_bbr3=n
-		_HZ_ticks=1000
-		_tickrate=full
-		_preempt=full
-		_hugepage=always
-	elif use bmq; then
-		_cachy_config=y
-		_cpusched=bmq
-		_tcp_bbr3=n
-		_HZ_ticks=1000
-		_tickrate=full
-		_preempt=full
-		_hugepage=always
-	elif use bore; then
-		_cachy_config=y
-		_cpusched=bore
-		_tcp_bbr3=n
-		_HZ_ticks=1000
-		_tickrate=full
-		_preempt=full
-		_hugepage=always
-	elif use deckify; then
-		_cachy_config=y
-		_cpusched=cachyos
-		_tcp_bbr3=n
-		_HZ_ticks=1000
-		_tickrate=full
-		_preempt=full
-		_hugepage=always
-	elif use eevdf; then
-		_cachy_config=y
-		_cpusched=eevdf
-		_tcp_bbr3=n
-		_HZ_ticks=1000
-		_tickrate=full
-		_preempt=full
-		_hugepage=always
-	elif use hardened; then
-		_cachy_config=y
-		_cpusched=hardened
-		_tcp_bbr3=n
-		_HZ_ticks=1000
-		_tickrate=full
-		_preempt=full
-		_hugepage=madvise
-	elif use rt-bore; then
-		_cachy_config=y
-		_cpusched=rt-bore
-		_tcp_bbr3=n
-		_HZ_ticks=1000
-		_tickrate=full
-		_preempt=full
-		_hugepage=always
-	elif use server; then
-		_cachy_config=n
-		_cpusched=eevdf
-		_tcp_bbr3=n
-		_HZ_ticks=300
-		_tickrate=idle
-		_preempt=none
-		_hugepage=always
-	fi
+# config defaults from CachyOS PKGBUILD
+cachy_use_config() {
+	# cachy config vars (only those that make sense in ebuild)
+	# advanced users can override these with package.env
+	case "$(cachy_flavour)" in
+		cachyos)
+			: "${_cachy_config:=yes}"
+			: "${_cpusched:=cachyos}"
+			: "${_cc_harder:=yes}"
+			: "${_per_gov:=no}"
+			: "${_tcp_bbr3:=no}"
+			: "${_HZ_ticks:=1000}"
+			: "${_tickrate:=full}"
+			: "${_preempt:=full}"
+			: "${_hugepage:=always}"
+			;;
+		bmq)
+			: "${_cachy_config:=yes}"
+			: "${_cpusched:=bmq}"
+			: "${_cc_harder:=yes}"
+			: "${_per_gov:=no}"
+			: "${_tcp_bbr3:=no}"
+			: "${_HZ_ticks:=1000}"
+			: "${_tickrate:=full}"
+			: "${_preempt:=full}"
+			: "${_hugepage:=always}"
+			;;
+		bore)
+			: "${_cachy_config:=yes}"
+			: "${_cpusched:=bore}"
+			: "${_cc_harder:=yes}"
+			: "${_per_gov:=no}"
+			: "${_tcp_bbr3:=no}"
+			: "${_HZ_ticks:=1000}"
+			: "${_tickrate:=full}"
+			: "${_preempt:=full}"
+			: "${_hugepage:=always}"
+			;;
+		deckify)
+			: "${_cachy_config:=yes}"
+			: "${_cpusched:=cachyos}"
+			: "${_cc_harder:=yes}"
+			: "${_per_gov:=no}"
+			: "${_tcp_bbr3:=no}"
+			: "${_HZ_ticks:=1000}"
+			: "${_tickrate:=full}"
+			: "${_preempt:=full}"
+			: "${_hugepage:=always}"
+			;;
+		eevdf)
+			: "${_cachy_config:=yes}"
+			: "${_cpusched:=eevdf}"
+			: "${_cc_harder:=yes}"
+			: "${_per_gov:=no}"
+			: "${_tcp_bbr3:=no}"
+			: "${_HZ_ticks:=1000}"
+			: "${_tickrate:=full}"
+			: "${_preempt:=full}"
+			: "${_hugepage:=always}"
+			;;
+		hardened)
+			: "${_cachy_config:=yes}"
+			: "${_cpusched:=hardened}"
+			: "${_cc_harder:=yes}"
+			: "${_per_gov:=no}"
+			: "${_tcp_bbr3:=no}"
+			: "${_HZ_ticks:=1000}"
+			: "${_tickrate:=full}"
+			: "${_preempt:=full}"
+			: "${_hugepage:=madvise}"
+			;;
+		rt-bore)
+			: "${_cachy_config:=yes}"
+			: "${_cpusched:=rt-bore}"
+			: "${_cc_harder:=yes}"
+			: "${_per_gov:=no}"
+			: "${_tcp_bbr3:=no}"
+			: "${_HZ_ticks:=1000}"
+			: "${_tickrate:=full}"
+			: "${_preempt:=full}"
+			: "${_hugepage:=always}"
+			;;
+		server)
+			: "${_cachy_config:=no}"
+			: "${_cpusched:=eevdf}"
+			: "${_cc_harder:=yes}"
+			: "${_per_gov:=no}"
+			: "${_tcp_bbr3:=no}"
+			: "${_HZ_ticks:=300}"
+			: "${_tickrate:=idle}"
+			: "${_preempt:=none}"
+			: "${_hugepage:=always}"
+			;;
+		*) die "Unknown flavour" ;;
+	esac
 
 	if use lto; then
-		_use_llvm_lto=thin
+		: "${_use_llvm_lto:=thin}"
 	else
-		_use_llvm_lto=none
+		: "${_use_llvm_lto:=none}"
 	fi
+
+	# print cachy config
+	einfo "Selected cachy-config:"
+	einfo "  _cachy_config=${_cachy_config}"
+	einfo "  _cpusched=${_cpusched}"
+	einfo "  _cc_harder=${_cc_harder}"
+	einfo "  _per_gov=${_per_gov}"
+	einfo "  _tcp_bbr3=${_tcp_bbr3}"
+	einfo "  _HZ_ticks=${_HZ_ticks}"
+	einfo "  _tickrate=${_tickrate}"
+	einfo "  _preempt=${_preempt}"
+	einfo "  _hugepage=${_hugepage}"
+	einfo "  _use_llvm_lto=${_use_llvm_lto}"
 
 	# _cachy_config
 	case "${_cachy_config}" in
-		y)
+		yes)
 			kconf set CACHY
 			;;
-		n)	;;
-		*)
-			die "Invalid _cachy_config value: ${_cachy_config}"
-			;;
+		no)	;;
+		*) die "Invalid _cachy_config value: ${_cachy_config}" ;;
 	esac
 
 	# _cpusched
@@ -352,9 +467,7 @@ cachy_get_use_config() {
 			kconf set SCHED_BORE
 			kconf set PREEMPT_RT
 			;;
-		*)
-			die "Invalid _cpusched value: ${_cpusched}"
-			;;
+		*) die "Invalid _cpusched value: ${_cpusched}" ;;
 	esac
 
 	# _use_llvm_lto
@@ -368,9 +481,7 @@ cachy_get_use_config() {
 		none)
 			kconf set LTO_NONE
 			;;
-		*)
-			die "Invalid _use_llvm_lto value: ${_use_llvm_lto}"
-			;;
+		*) die "Invalid _use_llvm_lto value: ${_use_llvm_lto}" ;;
 	esac
 
 	# _HZ_ticks
@@ -384,9 +495,17 @@ cachy_get_use_config() {
 			kconf set HZ_300
 			kconf val HZ 300
 			;;
-		*)
-			die "Invalid _HZ_ticks value: ${_HZ_ticks}"
+		*) die "Invalid _HZ_ticks value: ${_HZ_ticks}" ;;
+	esac
+
+	# _per_gov
+	case "${_per_gov}" in
+		yes)
+			kconf unset CPU_FREQ_DEFAULT_GOV_SCHEDUTIL
+			kconf set CPU_FREQ_DEFAULT_GOV_PERFORMANCE
 			;;
+		no) ;;
+		*) die "Invalid _per_gov value: ${_per_gov}" ;;
 	esac
 
 	# _tickrate
@@ -415,9 +534,7 @@ cachy_get_use_config() {
 			kconf set NO_HZ_COMMON
 			kconf set CONTEXT_TRACKING
 			;;
-		*)
-			die "Invalid _tickrate value: ${_tickrate}"
-			;;
+		*) die "Invalid _tickrate value: ${_tickrate}" ;;
 	esac
 
 	# _preempt
@@ -451,19 +568,23 @@ cachy_get_use_config() {
 				kconf unset PREEMPT_LAZY
 				kconf set PREEMPT_NONE
 				;;
-			*)
-				die "Invalid _preempt value: ${_preempt}"
-				;;
+			*) die "Invalid _preempt value: ${_preempt}" ;;
 		esac
 	fi
 
 	# _cc_harder
-	kconf unset CC_OPTIMIZE_FOR_PERFORMANCE
-	kconf set CC_OPTIMIZE_FOR_PERFORMANCE_O3
+	case "${_cc_harder}" in
+		yes)
+			kconf unset CC_OPTIMIZE_FOR_PERFORMANCE
+			kconf set CC_OPTIMIZE_FOR_PERFORMANCE_O3
+			;;
+		no) ;;
+		*) die "Invalid _cc_harder value: ${_cc_harder}" ;;
+	esac
 
 	# _tcp_bbr3
 	case "${_tcp_bbr3}" in
-		y)
+		yes)
 			kconf mod TCP_CONG_CUBIC
 			kconf unset DEFAULT_CUBIC
 			kconf set TCP_CONG_BBR
@@ -475,10 +596,8 @@ cachy_get_use_config() {
 				kconf set CONFIG_DEFAULT_FQ
 			fi
 			;;
-		n)	;;
-		*)
-			die "Invalid _tcp_bbr3 value: ${_tcp_bbr3}"
-			;;
+		no)	;;
+		*) die "Invalid _tcp_bbr3 value: ${_tcp_bbr3}" ;;
 	esac
 
 	# _hugepage
@@ -491,9 +610,7 @@ cachy_get_use_config() {
 			kconf unset TRANSPARENT_HUGEPAGE_ALWAYS
 			kconf set TRANSPARENT_HUGEPAGE_MADVISE
 			;;
-		*)
-			die "Invalid _hugepage value: ${_hugepage}"
-			;;
+		*) die "Invalid _hugepage value: ${_hugepage}" ;;
 	esac
 
 	# _user_ns
@@ -530,32 +647,28 @@ pkg_setup() {
 }
 
 src_prepare() {
-	local PATCHES=( )
+	# prepare and stage patches
+	cachy_stage_patches
 
-	# genpatches have no directory
-	[[ ${PV} != *_rc* ]] && PATCHES+=(
-		"${WORKDIR}"/*.patch
-	)
+	# remove problematic patches
+	# also included in cachy patchset
+	rm "${WORKDIR}/patches/1740_x86-insn-decoder-test-allow-longer-symbol-names.patch" || die
 
-	# RC patches are not compressed and thus in DISTDIR
-	[[ ${PV} == *_rc* ]] && PATCHES+=(
-		"${DISTDIR}"/*_linux-${PV%_rc*}*.patch
-	)
-
-	# CachyOS Patches
-	PATCHES+=(
-		$(cachy_get_patches)
-	)
-	default
+	# apply package and user patches
+	# eapply silently passes -F0 for some reason so we
+	# have to use our own patch wrapper
+	# (see /usr/lib/portage/pypy3.11/phase-helpers.sh)
+	cachy_apply "${WORKDIR}/patches"
+	eapply_user
 
 	# Localversion
-	kconf val LOCALVERSION "\"$(cachy_get_version)\"" > "${T}"/version.config || die
+	kconf val LOCALVERSION "\"$(cachy_version)\"" > "${T}"/version.config || die
 
 	# CachyOS config as base
-	cp "${DISTDIR}/$(cachy_get_base_config)" .config || die
+	cp "${DISTDIR}/$(cachy_base_config)" .config || die
 
 	# Package defaults
-	cachy_get_use_config > "${T}"/cachy-flavour-defaults.config || die
+	cachy_use_config > "${T}"/cachy-flavour-defaults.config || die
 
 	# Gentoo defaults
 	local dist_conf_path="${WORKDIR}/gentoo-kernel-config-${GENTOO_CONFIG_VER}"
@@ -572,4 +685,13 @@ src_prepare() {
 	use secureboot && merge_configs+=( "${dist_conf_path}/secureboot.config" )
 
 	kernel-build_merge_configs "${merge_configs[@]}"
+}
+
+pkg_postinst() {
+	kernel-build_pkg_postinst
+
+	# print info for included modules
+	if has_version media-video/v4l2loopback; then
+		elog "v4l2loopback is included in ${CATEGORY}/${PN} - no need for media-video/v4l2loopback"
+	fi
 }
