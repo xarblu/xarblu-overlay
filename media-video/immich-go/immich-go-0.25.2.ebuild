@@ -14,12 +14,17 @@ SRC_URI="
 
 LICENSE="AGPL-3"
 SLOT="0"
-KEYWORDS="~amd64 ~x86"
+KEYWORDS="~amd64"
 
 src_compile() {
-	ego build
+	# https://github.com/simulot/immich-go/blob/v0.25.0/.goreleaser.yaml
+	export CGO_ENABLED=0
+	local ldflags
+	ldflags="-s -w"
+	ldflags+=" -X github.com/simulot/immich-go/app.Version=${PV}"
+	ego build "-o=${PN}" --ldflags="${ldflags}"
 }
 
 src_install() {
-	dobin immich-go
+	dobin "${PN}"
 }

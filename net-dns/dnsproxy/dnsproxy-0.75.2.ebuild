@@ -1,4 +1,4 @@
-# Copyright 1999-2024 Gentoo Foundation
+# Copyright 1999-2025 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -17,20 +17,20 @@ LICENSE="Apache-2.0"
 SLOT="0"
 KEYWORDS="~amd64 ~arm ~arm64 ~ppc64 ~x86"
 
+BDEPEND=">=dev-lang/go-1.24.1:="
+
 src_compile() {
 	# from ./scripts/make/go-build.sh
 	local version_pkg='github.com/AdguardTeam/dnsproxy/internal/version'
-	local ldflags o_flags
+	local ldflags
 	ldflags="-s -w"
-	ldflags="${ldflags} -X ${version_pkg}.branch=none"
-	ldflags="${ldflags} -X ${version_pkg}.committime=none"
-	ldflags="${ldflags} -X ${version_pkg}.revision=none"
-	ldflags="${ldflags} -X ${version_pkg}.version=${PV}"
-	o_flags="-o=${PN}"
+	ldflags+=" -X ${version_pkg}.version=${PV}"
+	export CGO_ENABLED=0
 	ego build \
 		--ldflags="${ldflags}" \
+		--race=0 \
 		--trimpath \
-		"${o_flags}"
+		-o="${PN}"
 }
 
 src_install() {
