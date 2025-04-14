@@ -10,5 +10,6 @@
 	</use>
 	<upstream>
 		<remote-id type="github">jdecked/twemoji</remote-id>
+		<remote-id type="github">JoeBlakeB/ttf-twemoji-aur</remote-id>
 	</upstream>
 </pkgmetadata>
