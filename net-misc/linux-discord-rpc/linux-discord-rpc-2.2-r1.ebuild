@@ -1,11 +1,12 @@
-# Copyright 2023 Gentoo Authors
+# Copyright 2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{10,11} )
+DISTUTILS_USE_PEP517=hatchling
+PYTHON_COMPAT=( python3_{11..13} )
 
-inherit python-r1 python-utils-r1 systemd
+inherit systemd distutils-r1
 
 DESCRIPTION="Custom Discord Rich Presence for Linux "
 HOMEPAGE="https://github.com/xarblu/linux-discord-rpc"
@@ -15,14 +16,16 @@ LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 
+REQUIRED_USE="${PYTHON_REQUIRED_USE}"
+
 DEPEND="
-	$(python_gen_cond_dep 'dev-python/pypresence[${PYTHON_USEDEP}]')
+	dev-python/pypresence[${PYTHON_USEDEP}]
+	dev-python/psutil[${PYTHON_USEDEP}]
 "
 RDEPEND="${DEPEND}"
 
 src_install() {
-	python_foreach_impl python_newscript ${PN}.py rpc-cli
-	python_foreach_impl python_newscript ${PN}.py rpc-daemon
-	systemd_douserunit ${PN}.service
+	distutils-r1_src_install
+	systemd_douserunit "extra/${PN}.service"
 	default
 }

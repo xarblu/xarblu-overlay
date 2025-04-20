@@ -20,6 +20,8 @@ SRC_URI="
 			-> ${P}-icons.tar.gz
 	)
 "
+# default requires USE=icons
+S="${WORKDIR}"
 
 LICENSE="Apache-2.0 CC-BY-4.0"
 SLOT="0"
@@ -29,12 +31,12 @@ IUSE="icons"
 src_prepare() {
 	default
 	if use icons; then
-		pushd "assets/72x72" || die
+		pushd "${P}/assets/72x72" || die
 			for png in *.png; do
 				mv "${png}" emoji_u"${png//-/_}" || die
 			done
 		popd || die
-		pushd "assets/svg" || die
+		pushd "${P}/assets/svg" || die
 			for svg in *.svg; do
 				mv "${svg}" emoji_u"${svg//-/_}" || die
 			done
@@ -48,12 +50,12 @@ src_prepare() {
 src_install() {
 	# don't lose fancy emoji icons
 	if use icons; then
-		doicon --size 72 --context emotes --theme "${PN}" assets/72x72
-		doicon --size scalable --context emotes --theme "${PN}" assets/svg
+		doicon --size 72 --context emotes --theme "${PN}" "${P}/assets/72x72"
+		doicon --size scalable --context emotes --theme "${PN}" "${P}/assets/svg"
 	fi
 
 	FONT_S="${S}/fonts-install"
 	FONT_SUFFIX="ttf"
-	FONT_CONF=( "${WORKDIR}/ttf-${PN}-aur-${PV}/AUR/75-${PN}.conf" )
+	FONT_CONF=( "${S}/ttf-${PN}-aur-${PV}/AUR/75-${PN}.conf" )
 	font_src_install
 }
