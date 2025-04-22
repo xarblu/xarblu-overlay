@@ -9,19 +9,19 @@ KERNEL_IUSE_MODULES_SIGN=1
 LLVM_COMPAT=( {17..21} )
 LLVM_OPTIONAL=1
 
-inherit llvm-r2 kernel-build
+inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
 # https://dev.gentoo.org/~mpagano/genpatches/kernels.html
 # not available for RCs
 [[ ${PV} != *_rc* ]] && GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 1 ))
 # https://github.com/projg2/gentoo-kernel-config
-GENTOO_CONFIG_VER=g15
+GENTOO_CONFIG_VER=g16
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="30d37b745ac1879269b87d2599350b9e632bb803"
+CONFIG_COMMIT="aa6c9fbf97dd3971b0e15fcdec0ab90f85a5818c"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="6ba918b0547cb06aef1f6507ad672455c00cd25d"
+PATCH_COMMIT="c9337024cce72aec38511d67d005770e3114f408"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
@@ -41,15 +41,13 @@ CACHY_PATCH_SPECS=(
 	-:all/0001-cachyos-base-all.patch
 	# flavours
 	cachyos:sched/0001-bore-cachy.patch
-	bmq:sched/0001-prjc-cachy.patch
-	bore:sched/0001-bore-cachy.patch
-	deckify:misc/0001-acpi-call.patch
-	deckify:misc/0001-handheld.patch
-	deckify:sched/0001-bore-cachy.patch
-	#hardened:sched/0001-bore-cachy.patch
+	#bmq:sched/0001-prjc-cachy.patch
+	#bore:sched/0001-bore-cachy.patch
+	#deckify:misc/0001-acpi-call.patch
+	#deckify:misc/0001-handheld.patch
+	#deckify:sched/0001-bore-cachy.patch
 	#hardened:misc/0001-hardened.patch
-	rt-bore:sched/0001-bore-cachy.patch
-	rt-bore:misc/0001-rt-i915.patch
+	#rt-bore:sched/0001-bore-cachy.patch
 	# clang
 	clang:misc/dkms-clang.patch
 )
@@ -268,7 +266,7 @@ cachy_apply() {
 	# default args from /usr/lib/portage/pypy3.11/phase-helpers.sh
 	# + cachy PKGBUILD --forward + user args
 	local all_patch_args=(
-		-p1 -f -g0 --no-backup-if-mismatch
+		-p1 -f -g0 --no-backup-if-mismatch -s
 		--forward "${patch_args[@]}"
 	)
 
@@ -294,6 +292,47 @@ cachy_apply() {
 			die "${patch_cmd} ${all_patch_args[*]} failed with ${file}"
 		fi
 	done
+}
+
+# auto-detect closest march value
+cachy_processor_opt() {
+	# not supported but in case someone
+	# builds on non amd64 return default
+	if ! use amd64; then
+		printf "GENERIC"
+		return 0
+	fi
+
+	# apply X86_NATIVE_CPU if we have -march=native
+	if [[ "$(get-flag march)" == native ]]; then
+		printf "NATIVE"
+		return 0
+	fi
+
+	# get closest march for others
+	# mostly shameless rip from qt6-build.eclass
+	local march=$(
+		$(tc-getCC) -E -P ${CFLAGS} ${CPPFLAGS} - <<-EOF | tail -n 1
+			default
+			#if (__CRC32__ + __LAHF_SAHF__ + __POPCNT__ + __SSE3__ + __SSE4_1__ + __SSE4_2__ + __SSSE3__) == 7
+			x86-64-v2
+			#  if (__AVX__ + __AVX2__ + __BMI__ + __BMI2__ + __F16C__ + __FMA__ + __LZCNT__ + __MOVBE__ + __XSAVE__) == 9
+			x86-64-v3
+			#    if (__AVX512BW__ + __AVX512CD__ + __AVX512DQ__ + __AVX512F__ + __AVX512VL__ + __EVEX256__ + __EVEX512__) == 7
+			x86-64-v4
+			#    endif
+			#  endif
+			#endif
+		EOF
+		pipestatus || die
+	)
+	case "${march}" in
+		default) printf "GENERIC_V1";;
+		x86-64-v2) printf "GENERIC_V2";;
+		x86-64-v3) printf "GENERIC_V3";;
+		x86-64-v4) printf "GENERIC_V4";;
+		*) die "Got unknown march: ${march}";;
+	esac
 }
 
 # print formatted kernel config line
@@ -422,6 +461,8 @@ cachy_use_config() {
 		*) die "Unknown flavour" ;;
 	esac
 
+	: "${_processor_opt:="$(cachy_processor_opt)"}"
+
 	if use lto; then
 		: "${_use_llvm_lto:=thin}"
 	else
@@ -439,7 +480,26 @@ cachy_use_config() {
 	einfo "  _tickrate=${_tickrate}"
 	einfo "  _preempt=${_preempt}"
 	einfo "  _hugepage=${_hugepage}"
+	einfo "  _processor_opt=${_processor_opt}"
 	einfo "  _use_llvm_lto=${_use_llvm_lto}"
+
+	# _processor_opt
+	local MARCH="${_processor_opt^^}"
+	case "${MARCH}" in
+		GENERIC) ;;
+		GENERIC_V[1-4])
+			kconf val X84_64_VERSION "${MARCH#GENERIC_V}"
+			;;
+		ZEN4)
+			kconf unset GENERIC_CPU
+			kconf set MZEN4
+			;;
+		NATIVE)
+			kconf unset GENERIC_CPU
+			kconf set X86_NATIVE_CPU
+			;;
+		*) die "Invalid _processor_opt value: ${_processor_opt}" ;;
+	esac
 
 	# _cachy_config
 	case "${_cachy_config}" in
@@ -452,14 +512,14 @@ cachy_use_config() {
 
 	# _cpusched
 	case "${_cpusched}" in
-		cachyos|bore|hardened)
+		cachyos|bore)
 			kconf set SCHED_BORE
 			;;
 		bmq)
 			kconf set SCHED_ALT
 			kconf set SCHED_BMQ
 			;;
-		eevdf) ;;
+		eevdf|hardened) ;;
 		rt)
 			kconf set PREEMPT_RT
 			;;
@@ -651,8 +711,6 @@ src_prepare() {
 	cachy_stage_patches
 
 	# remove problematic patches
-	# also included in cachy patchset
-	rm "${WORKDIR}/patches/1740_x86-insn-decoder-test-allow-longer-symbol-names.patch" || die
 
 	# apply package and user patches
 	# eapply silently passes -F0 for some reason so we
@@ -662,24 +720,25 @@ src_prepare() {
 	eapply_user
 
 	# Localversion
-	kconf val LOCALVERSION "\"$(cachy_version)\"" > "${T}"/version.config || die
+	kconf val LOCALVERSION "\"$(cachy_version)\"" > "${T}/version.config" || die
 
 	# CachyOS config as base
 	cp "${DISTDIR}/$(cachy_base_config)" .config || die
 
 	# Package defaults
-	cachy_use_config > "${T}"/cachy-flavour-defaults.config || die
+	cachy_use_config > "${T}/cachy-flavour-defaults.config" || die
 
 	# Gentoo defaults
 	local dist_conf_path="${WORKDIR}/gentoo-kernel-config-${GENTOO_CONFIG_VER}"
 
 	local merge_configs=(
-		"${T}"/version.config
-		"${dist_conf_path}"/base.config
-		"${T}"/cachy-flavour-defaults.config
+		"${T}/version.config"
+		"${dist_conf_path}/base.config"
+		"${dist_conf_path}/6.12+.config"
+		"${T}/cachy-flavour-defaults.config"
 	)
 	use debug || merge_configs+=(
-		"${dist_conf_path}"/no-debug.config
+		"${dist_conf_path}/no-debug.config"
 	)
 
 	use secureboot && merge_configs+=( "${dist_conf_path}/secureboot.config" )
