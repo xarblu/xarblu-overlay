@@ -8,9 +8,11 @@
 	<use>
 		<flag name="0xproto">Install 0xproto font</flag>
 		<flag name="3270">Install 3270 font</flag>
+		<flag name="adwaitamono">Install AdwaitaMono font</flag>
 		<flag name="agave">Install Agave font</flag>
 		<flag name="anonymouspro">Install AnonymousPro font</flag>
 		<flag name="arimo">Install Arimo font</flag>
+		<flag name="atkinsonhyperlegiblemono">Install AtkinsonHyperlegibleMono font</flag>
 		<flag name="aurulentsansmono">Install AurulentSansMono font</flag>
 		<flag name="bigblueterminal">Install BigBlueTerminal font</flag>
 		<flag name="bitstreamverasansmono">Install BitstreamVeraSansMono font</flag>
