@@ -28,6 +28,9 @@ src_install() {
 	exeinto /etc/portage/postsync.d
 	doexe etc/portage/postsync.d/*
 
+	insinto /etc/profile.d
+	doins etc/profile.d/*
+
 	systemd_dounit usr/lib/systemd/system/*
 
 	insinto /usr/share/sysbits/portage
