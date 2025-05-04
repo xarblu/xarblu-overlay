@@ -1,0 +1,27 @@
+diff --git a/src/meson.build b/src/meson.build
+index e50234a..3b41495 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -19,7 +19,7 @@ cargo_bin = find_program('cargo')
+ cargo_env = get_option('cargo_env')
+ rustflags = []
+ if get_option('flatpak') == false
+-    cargo_env += [ 'CARGO_HOME=' + meson.project_build_root()  / 'cargo-home' ]
++    cargo_env += []
+     cargo_opt  = []
+ else
+     cargo_opt  = [ '--features=skip-codegen' ]
+Submodule subprojects/magpie contains modified content
+diff --git a/subprojects/magpie/meson.build b/subprojects/magpie/meson.build
+index 76b7495..99a24c9 100644
+--- a/subprojects/magpie/meson.build
++++ b/subprojects/magpie/meson.build
+@@ -21,7 +21,7 @@ cargo_opt += ['--manifest-path', meson.project_source_root() / 'Cargo.toml']
+ cargo_opt += ['--target-dir', meson.project_build_root() / 'src']
+ 
+ cargo_env  = []
+-cargo_env += ['CARGO_HOME=' + meson.project_build_root() / 'cargo-home']
++cargo_env += []
+ 
+ rustflags = []
+ cargo_features = []
