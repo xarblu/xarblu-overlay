@@ -28,10 +28,10 @@ CRATES="
 	bumpalo@3.17.0
 	bytemuck@1.22.0
 	bytes@1.10.1
-	cc@1.2.16
+	cc@1.2.21
 	cfg-if@1.0.0
-	clap@4.5.32
-	clap_builder@4.5.32
+	clap@4.5.37
+	clap_builder@4.5.37
 	clap_derive@4.5.32
 	clap_lex@0.7.4
 	colorchoice@1.0.3
@@ -39,7 +39,7 @@ CRATES="
 	core-foundation-sys@0.8.7
 	core-foundation@0.9.4
 	crypto-common@0.1.6
-	deranged@0.3.11
+	deranged@0.4.1
 	devise@0.4.2
 	devise_codegen@0.4.2
 	devise_core@0.4.2
@@ -67,13 +67,13 @@ CRATES="
 	generator@0.7.5
 	generic-array@0.14.7
 	getrandom@0.2.15
-	getrandom@0.3.1
+	getrandom@0.3.2
 	gimli@0.31.1
-	git2@0.20.1
+	git2@0.20.2
 	glob@0.3.2
 	h2@0.3.26
 	h2@0.4.8
-	hashbrown@0.15.2
+	hashbrown@0.15.3
 	heck@0.5.0
 	hermit-abi@0.3.9
 	hermit-abi@0.5.0
@@ -87,43 +87,43 @@ CRATES="
 	httpdate@1.0.3
 	hyper-rustls@0.27.5
 	hyper-tls@0.6.0
-	hyper-util@0.1.10
+	hyper-util@0.1.11
 	hyper@0.14.32
 	hyper@1.6.0
 	icu_collections@1.5.0
 	icu_locid@1.5.0
 	icu_locid_transform@1.5.0
-	icu_locid_transform_data@1.5.0
+	icu_locid_transform_data@1.5.1
 	icu_normalizer@1.5.0
-	icu_normalizer_data@1.5.0
+	icu_normalizer_data@1.5.1
 	icu_properties@1.5.1
-	icu_properties_data@1.5.0
+	icu_properties_data@1.5.1
 	icu_provider@1.5.0
 	icu_provider_macros@1.5.0
 	idna@1.0.3
 	idna_adapter@1.2.0
-	indexmap@2.8.0
+	indexmap@2.9.0
 	inlinable_string@0.1.15
 	ipnet@2.11.0
 	is-terminal@0.4.16
 	is_terminal_polyfill@1.70.1
 	itoa@1.0.15
-	jobserver@0.1.32
+	jobserver@0.1.33
 	js-sys@0.3.77
 	lazy_static@1.5.0
-	libc@0.2.171
+	libc@0.2.172
 	libgit2-sys@0.18.1+1.9.0
 	libssh2-sys@0.3.1
 	libz-sys@1.1.22
 	linux-raw-sys@0.9.3
 	litemap@0.7.5
 	lock_api@0.4.12
-	log@0.4.26
+	log@0.4.27
 	loom@0.5.6
 	matchers@0.1.0
 	memchr@2.7.4
 	mime@0.3.17
-	miniz_oxide@0.8.5
+	miniz_oxide@0.8.8
 	mio@1.0.3
 	multer@3.1.0
 	native-tls@0.2.14
@@ -131,7 +131,7 @@ CRATES="
 	num-conv@0.1.0
 	num_cpus@1.16.0
 	object@0.36.7
-	once_cell@1.21.1
+	once_cell@1.21.3
 	openssl-macros@0.1.1
 	openssl-probe@0.1.6
 	openssl-sys@0.9.106
@@ -148,8 +148,9 @@ CRATES="
 	powerfmt@0.2.0
 	ppv-lite86@0.2.21
 	proc-macro2-diagnostics@0.10.1
-	proc-macro2@1.0.94
+	proc-macro2@1.0.95
 	quote@1.0.40
+	r-efi@5.2.0
 	rand@0.8.5
 	rand_chacha@0.3.1
 	rand_core@0.6.4
@@ -161,16 +162,16 @@ CRATES="
 	regex-syntax@0.6.29
 	regex-syntax@0.8.5
 	regex@1.11.1
-	reqwest@0.12.14
+	reqwest@0.12.15
 	ring@0.17.14
 	rocket@0.5.1
 	rocket_codegen@0.5.1
 	rocket_http@0.5.1
 	rustc-demangle@0.1.24
-	rustix@1.0.2
+	rustix@1.0.5
 	rustls-pemfile@2.2.0
 	rustls-pki-types@1.11.0
-	rustls-webpki@0.103.0
+	rustls-webpki@0.103.1
 	rustls@0.23.25
 	rustversion@1.0.20
 	ryu@1.0.20
@@ -189,34 +190,35 @@ CRATES="
 	shlex@1.3.0
 	signal-hook-registry@1.4.2
 	slab@0.4.9
-	smallvec@1.14.0
-	socket2@0.5.8
+	smallvec@1.15.0
+	socket2@0.5.9
 	spin@0.9.8
 	stable-pattern@0.1.0
 	stable_deref_trait@1.2.0
 	state@0.6.0
 	strsim@0.11.1
 	subtle@2.6.1
-	syn@2.0.100
+	syn@2.0.101
 	sync_wrapper@1.0.2
-	synstructure@0.13.1
+	synstructure@0.13.2
 	system-configuration-sys@0.6.0
 	system-configuration@0.6.1
-	tempfile@3.19.0
+	tempfile@3.19.1
 	thread_local@1.1.8
-	time-core@0.1.3
-	time-macros@0.2.20
-	time@0.3.39
+	time-core@0.1.4
+	time-macros@0.2.22
+	time@0.3.41
 	tinystr@0.7.6
 	tokio-macros@2.5.0
 	tokio-native-tls@0.3.1
 	tokio-rustls@0.26.2
 	tokio-stream@0.1.17
-	tokio-util@0.7.14
-	tokio@1.44.1
-	toml@0.8.20
-	toml_datetime@0.6.8
-	toml_edit@0.22.24
+	tokio-util@0.7.15
+	tokio@1.45.0
+	toml@0.8.22
+	toml_datetime@0.6.9
+	toml_edit@0.22.26
+	toml_write@0.1.1
 	tower-layer@0.3.3
 	tower-service@0.3.3
 	tower@0.5.2
@@ -242,7 +244,7 @@ CRATES="
 	walkdir@2.5.0
 	want@0.3.1
 	wasi@0.11.0+wasi-snapshot-preview1
-	wasi@0.13.3+wasi-0.2.2
+	wasi@0.14.2+wasi-0.2.4
 	wasm-bindgen-backend@0.2.100
 	wasm-bindgen-futures@0.4.50
 	wasm-bindgen-macro-support@0.2.100
@@ -255,9 +257,9 @@ CRATES="
 	winapi-util@0.1.9
 	winapi-x86_64-pc-windows-gnu@0.4.0
 	winapi@0.3.9
-	windows-link@0.1.0
+	windows-link@0.1.1
 	windows-registry@0.4.0
-	windows-result@0.3.1
+	windows-result@0.3.2
 	windows-strings@0.3.1
 	windows-sys@0.52.0
 	windows-sys@0.59.0
@@ -288,15 +290,15 @@ CRATES="
 	windows_x86_64_msvc@0.48.5
 	windows_x86_64_msvc@0.52.6
 	windows_x86_64_msvc@0.53.0
-	winnow@0.7.4
-	wit-bindgen-rt@0.33.0
+	winnow@0.7.10
+	wit-bindgen-rt@0.39.0
 	write16@1.0.0
 	writeable@0.5.5
 	yansi@1.0.1
 	yoke-derive@0.7.5
 	yoke@0.7.5
-	zerocopy-derive@0.8.23
-	zerocopy@0.8.23
+	zerocopy-derive@0.8.24
+	zerocopy@0.8.24
 	zerofrom-derive@0.1.6
 	zerofrom@0.1.6
 	zeroize@1.8.1
@@ -304,12 +306,12 @@ CRATES="
 	zerovec@0.10.4
 "
 
-RUST_MIN_VERSION="1.85.0"
+RUST_MIN_VER="1.85.0"
 PYTHON_COMPAT=( python3_{11..13} pypy3_11 )
 
 inherit python-single-r1 systemd cargo
 
-DESCRIPTION="WIP Portage Distfiles Cache"
+DESCRIPTION="Portage Distfiles Cache"
 HOMEPAGE="https://github.com/xarblu/portcache"
 SRC_URI="
 	https://github.com/xarblu/portcache/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz
