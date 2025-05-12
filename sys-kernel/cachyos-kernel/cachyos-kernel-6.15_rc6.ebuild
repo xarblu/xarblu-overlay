@@ -17,11 +17,11 @@ inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g16
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="343afd07bb807bf467387e8881305969cd84083b"
+CONFIG_COMMIT="fa6317794a8b01c3e8f72d472d98e0fdf30e7a73"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="7d3659083bc227a4f8a86314f3478ef95f03dcae"
+PATCH_COMMIT="d9bfde351d4d4319de6fef723915d6cc65fe5cdb"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
@@ -48,6 +48,7 @@ CACHY_PATCH_SPECS=(
 	#deckify:sched/0001-bore-cachy.patch
 	#hardened:misc/0001-hardened.patch
 	#rt-bore:sched/0001-bore-cachy.patch
+	#rt-bore:misc/0001-rt-i915.patch
 	# clang
 	clang:misc/dkms-clang.patch
 )
