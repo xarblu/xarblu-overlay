@@ -32,10 +32,3 @@
 ## app-misc/some-package
 
 #--- END OF EXAMPLES ---
-
-# Xarblu <xarblu@protonmail.com> (2025-04-06)
-# Masked for removal in 30 days. I personally switched
-# to container deployment for Jellyfin and thus won't
-# be maintaining these anymore.
-media-video/jellyfin-ffmpeg
-www-apps/jellyfin-bin
