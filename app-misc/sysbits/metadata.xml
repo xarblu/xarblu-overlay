@@ -8,4 +8,11 @@
 	<upstream>
 		<remote-id type="github">xarblu/sysbits</remote-id>
 	</upstream>
+	<use>
+		<flag name="betas">Pull in bits for very bleeding edge updates</flag>
+		<flag name="clang">Pull in Clang/LLVM specific bits and fixes</flag>
+		<flag name="desktop">Pull in common desktop bits</flag>
+		<flag name="desktop-extra">Pull in desktop specific bits</flag>
+		<flag name="laptop-extra">Pull in laptop specific bits</flag>
+	</use>
 </pkgmetadata>
