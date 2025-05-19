@@ -3,7 +3,7 @@
 
 EAPI=8
 
-inherit git-r3 optfeature systemd
+inherit git-r3 optfeature
 
 DESCRIPTION="Collection of random system bits"
 HOMEPAGE="https://github.com/xarblu/sysbits"
