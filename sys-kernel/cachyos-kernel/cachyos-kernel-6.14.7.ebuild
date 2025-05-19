@@ -9,7 +9,7 @@ KERNEL_IUSE_MODULES_SIGN=1
 LLVM_COMPAT=( {17..21} )
 LLVM_OPTIONAL=1
 
-inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
+inherit llvm-r2 kernel-build
 
 # https://dev.gentoo.org/~mpagano/genpatches/kernels.html
 # not available for RCs
@@ -17,11 +17,11 @@ inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g16
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="fa6317794a8b01c3e8f72d472d98e0fdf30e7a73"
+CONFIG_COMMIT="136d3f83e7ac6399ea151cab470f518c94af209b"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="d9bfde351d4d4319de6fef723915d6cc65fe5cdb"
+PATCH_COMMIT="d982986cb89d3acbadb011eeb6780105f76646cd"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
@@ -41,14 +41,14 @@ CACHY_PATCH_SPECS=(
 	-:all/0001-cachyos-base-all.patch
 	# flavours
 	cachyos:sched/0001-bore-cachy.patch
-	#bmq:sched/0001-prjc-cachy.patch
-	#bore:sched/0001-bore-cachy.patch
-	#deckify:misc/0001-acpi-call.patch
-	#deckify:misc/0001-handheld.patch
-	#deckify:sched/0001-bore-cachy.patch
+	bmq:sched/0001-prjc-cachy.patch
+	bore:sched/0001-bore-cachy.patch
+	deckify:misc/0001-acpi-call.patch
+	deckify:misc/0001-handheld.patch
+	deckify:sched/0001-bore-cachy.patch
 	#hardened:misc/0001-hardened.patch
-	#rt-bore:sched/0001-bore-cachy.patch
-	#rt-bore:misc/0001-rt-i915.patch
+	rt-bore:sched/0001-bore-cachy.patch
+	rt-bore:misc/0001-rt-i915.patch
 	# clang
 	clang:misc/dkms-clang.patch
 )
@@ -295,47 +295,6 @@ cachy_apply() {
 	done
 }
 
-# auto-detect closest march value
-cachy_processor_opt() {
-	# not supported but in case someone
-	# builds on non amd64 return default
-	if ! use amd64; then
-		printf "GENERIC"
-		return 0
-	fi
-
-	# apply X86_NATIVE_CPU if we have -march=native
-	if [[ "$(get-flag march)" == native ]]; then
-		printf "NATIVE"
-		return 0
-	fi
-
-	# get closest march for others
-	# mostly shameless rip from qt6-build.eclass
-	local march=$(
-		$(tc-getCC) -E -P ${CFLAGS} ${CPPFLAGS} - <<-EOF | tail -n 1
-			default
-			#if (__CRC32__ + __LAHF_SAHF__ + __POPCNT__ + __SSE3__ + __SSE4_1__ + __SSE4_2__ + __SSSE3__) == 7
-			x86-64-v2
-			#  if (__AVX__ + __AVX2__ + __BMI__ + __BMI2__ + __F16C__ + __FMA__ + __LZCNT__ + __MOVBE__ + __XSAVE__) == 9
-			x86-64-v3
-			#    if (__AVX512BW__ + __AVX512CD__ + __AVX512DQ__ + __AVX512F__ + __AVX512VL__ + __EVEX256__ + __EVEX512__) == 7
-			x86-64-v4
-			#    endif
-			#  endif
-			#endif
-		EOF
-		pipestatus || die
-	)
-	case "${march}" in
-		default) printf "GENERIC_V1";;
-		x86-64-v2) printf "GENERIC_V2";;
-		x86-64-v3) printf "GENERIC_V3";;
-		x86-64-v4) printf "GENERIC_V4";;
-		*) die "Got unknown march: ${march}";;
-	esac
-}
-
 # print formatted kernel config line
 # $1 can be one of set, unset, mod or val
 # $2 config name as in CONFIG_<name>
@@ -462,8 +421,6 @@ cachy_use_config() {
 		*) die "Unknown flavour" ;;
 	esac
 
-	: "${_processor_opt:="$(cachy_processor_opt)"}"
-
 	if use lto; then
 		: "${_use_llvm_lto:=thin}"
 	else
@@ -481,26 +438,7 @@ cachy_use_config() {
 	einfo "  _tickrate=${_tickrate}"
 	einfo "  _preempt=${_preempt}"
 	einfo "  _hugepage=${_hugepage}"
-	einfo "  _processor_opt=${_processor_opt}"
 	einfo "  _use_llvm_lto=${_use_llvm_lto}"
-
-	# _processor_opt
-	local MARCH="${_processor_opt^^}"
-	case "${MARCH}" in
-		GENERIC) ;;
-		GENERIC_V[1-4])
-			kconf val X84_64_VERSION "${MARCH#GENERIC_V}"
-			;;
-		ZEN4)
-			kconf unset GENERIC_CPU
-			kconf set MZEN4
-			;;
-		NATIVE)
-			kconf unset GENERIC_CPU
-			kconf set X86_NATIVE_CPU
-			;;
-		*) die "Invalid _processor_opt value: ${_processor_opt}" ;;
-	esac
 
 	# _cachy_config
 	case "${_cachy_config}" in
@@ -712,6 +650,8 @@ src_prepare() {
 	cachy_stage_patches
 
 	# remove problematic patches
+	# also included in cachy patchset
+	rm "${WORKDIR}/patches/1740_x86-insn-decoder-test-allow-longer-symbol-names.patch" || die
 
 	# apply package and user patches
 	# eapply silently passes -F0 for some reason so we

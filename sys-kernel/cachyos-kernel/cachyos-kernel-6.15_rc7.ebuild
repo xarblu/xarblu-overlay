@@ -17,11 +17,11 @@ inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g16
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="7e67be4811bed56efe73a0b4f1d4df7729cbad51"
+CONFIG_COMMIT="f66147f7726a94ae3c6730837e088629e31e15c1"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="2c0ec4a2728b2ebe384f594a54f6c040fb56b3a9"
+PATCH_COMMIT="cdc1148b6102ecad3dafc35b702363be6e0eec8c"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
