@@ -111,7 +111,7 @@ src_install() {
 		fperms 4711 "${dest}/chrome-sandbox"
 	popd >/dev/null || die
 
-	make_wrapper "${PN} --ozone-platform-hint=auto" "${dest}/${PN}"
+	make_wrapper "${PN}" "${dest}/${PN} --ozone-platform-hint=auto"
 	newicon -s scalable meta/icon_color.svg "${PN}.svg"
 	domenu "${FILESDIR}/${PN}.desktop"
 }
