@@ -11,11 +11,12 @@ EGIT_REPO_URI="https://github.com/xarblu/sysbits.git"
 
 LICENSE="MIT"
 SLOT="0"
-IUSE="betas clang desktop desktop-extra laptop-extra"
+IUSE="betas clang desktop desktop-extra laptop-extra server"
 
 REQUIRED_USE="
 	desktop-extra? ( desktop )
 	laptop-extra? ( desktop )
+	?? ( desktop server )
 "
 
 RDEPEND="
@@ -33,6 +34,7 @@ src_install() {
 		DESKTOP="$(usex desktop)" \
 		DESKTOP_EXTRA="$(usex desktop-extra)" \
 		LAPTOP_EXTRA="$(usex laptop-extra)" \
+		SERVER="$(usex server)" \
 		install
 }
 

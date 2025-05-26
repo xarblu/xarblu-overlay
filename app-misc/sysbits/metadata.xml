@@ -14,5 +14,6 @@
 		<flag name="desktop">Pull in common desktop bits</flag>
 		<flag name="desktop-extra">Pull in desktop specific bits</flag>
 		<flag name="laptop-extra">Pull in laptop specific bits</flag>
+		<flag name="server">Pull in server specific bits</flag>
 	</use>
 </pkgmetadata>
