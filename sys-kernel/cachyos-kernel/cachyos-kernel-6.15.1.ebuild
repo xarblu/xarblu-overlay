@@ -11,17 +11,17 @@ LLVM_OPTIONAL=1
 
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
-# https://dev.gentoo.org/~mpagano/genpatches/kernels.html
+# https://gitweb.gentoo.org/proj/linux-patches.git/refs/
 # not available for RCs
-[[ ${PV} != *_rc* ]] && GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 1 ))
+[[ ${PV} != *_rc* ]] && GENPATCHES_P=linux-patches-${PV%.*}-$(( ${PV##*.} + 1 ))
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g16
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="5a85ca5428fdacdc3a08bf493e30e9169f6b74ca"
+CONFIG_COMMIT="768a5ec1b4885b0c3b1e7610bf520b77eeb57e5e"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="192955bd484423680fd71404ca3ca2d05f0e1b50"
+PATCH_COMMIT="06b5d7be085196ba1411b1ef74dabb3ced321f98"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
@@ -41,14 +41,15 @@ CACHY_PATCH_SPECS=(
 	-:all/0001-cachyos-base-all.patch
 	# flavours
 	cachyos:sched/0001-bore-cachy.patch
-	#bmq:sched/0001-prjc-cachy.patch
-	#bore:sched/0001-bore-cachy.patch
-	#deckify:misc/0001-acpi-call.patch
-	#deckify:misc/0001-handheld.patch
-	#deckify:sched/0001-bore-cachy.patch
+	bmq:sched/0001-prjc-cachy.patch
+	bore:sched/0001-bore-cachy.patch
+	deckify:misc/0001-acpi-call.patch
+	deckify:misc/0001-handheld.patch
+	deckify:sched/0001-bore-cachy.patch
+	#hardened:sched/0001-bore-cachy.patch
 	#hardened:misc/0001-hardened.patch
-	#rt-bore:sched/0001-bore-cachy.patch
-	#rt-bore:misc/0001-rt-i915.patch
+	rt-bore:sched/0001-bore-cachy.patch
+	rt-bore:misc/0001-rt-i915.patch
 	# clang
 	clang:misc/dkms-clang.patch
 )
@@ -90,8 +91,7 @@ kernel_base_env_setup() {
 		# incremental patches are supplied by genpatches
 		kernel_base_src_uris+="
 			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/linux-${kernel_base_version}.tar.xz
-			https://dev.gentoo.org/~mpagano/dist/genpatches/${GENPATCHES_P}.base.tar.xz
-			https://dev.gentoo.org/~mpagano/dist/genpatches/${GENPATCHES_P}.extras.tar.xz
+			https://gitweb.gentoo.org/proj/linux-patches.git/snapshot/${GENPATCHES_P}.tar.bz2
 		"
 	fi
 
@@ -219,9 +219,17 @@ cachy_stage_patches() {
 	einfo "Staging patches to be applied in ${target} ..."
 	mkdir -p "${target}" || die
 
-	# genpatches have no directory
+	# genpatches live in ${WORKDIR}/${GENPATCHES_P}
+	# we want everything in the 1000-4999 range (base+extra)
 	if [[ ${PV} != *_rc* ]]; then
-		cp -t "${target}" "${WORKDIR}"/*.patch || die
+		pushd "${WORKDIR}/${GENPATCHES_P}" >/dev/null || die
+		local file
+		for file in *.patch; do
+			if [[ "${file}" =~ [1-4][0-9][0-9][0-9]_.*\.patch ]]; then
+				cp -t "${target}" "${file}" || die
+			fi
+		done
+		popd >/dev/null || die
 	fi
 
 	# RC patches are not compressed and thus in DISTDIR
@@ -231,8 +239,8 @@ cachy_stage_patches() {
 		popd >/dev/null || die
 	fi
 
-	# cachy patches need to be prefixed starting at 5000
-	local incr=5000
+	# cachy patches need to be prefixed starting at 6000
+	local incr=6000
 	local spec cond patch file
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
 		IFS=":" read -r cond patch <<<"${spec}" || die
@@ -513,14 +521,14 @@ cachy_use_config() {
 
 	# _cpusched
 	case "${_cpusched}" in
-		cachyos|bore)
+		cachyos|bore|hardened)
 			kconf set SCHED_BORE
 			;;
 		bmq)
 			kconf set SCHED_ALT
 			kconf set SCHED_BMQ
 			;;
-		eevdf|hardened) ;;
+		eevdf) ;;
 		rt)
 			kconf set PREEMPT_RT
 			;;
