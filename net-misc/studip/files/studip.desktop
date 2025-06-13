@@ -1,5 +1,9 @@
 [Desktop Entry]
 Name=StudIP
+Exec=studip %U
+Terminal=false
 Type=Application
-Exec=studip
 Icon=studip
+StartupWMClass=StudIP
+Comment=A toy StudIP client
+Categories=Education;
