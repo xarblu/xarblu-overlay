@@ -11,7 +11,7 @@ EGIT_REPO_URI="https://github.com/xarblu/sysbits.git"
 
 LICENSE="MIT"
 SLOT="0"
-IUSE="betas clang desktop desktop-extra laptop-extra server"
+IUSE="betas binpkg-client clang desktop desktop-extra laptop-extra server"
 
 REQUIRED_USE="
 	desktop-extra? ( desktop )
@@ -35,6 +35,7 @@ src_install() {
 		DESKTOP_EXTRA="$(usex desktop-extra)" \
 		LAPTOP_EXTRA="$(usex laptop-extra)" \
 		SERVER="$(usex server)" \
+		BINPKG_CLIENT_LLVM="$(usex binpkg-client "$(usex clang)" )" \
 		install
 }
 
