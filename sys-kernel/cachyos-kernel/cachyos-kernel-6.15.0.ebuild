@@ -497,7 +497,7 @@ cachy_use_config() {
 	case "${MARCH}" in
 		GENERIC) ;;
 		GENERIC_V[1-4])
-			kconf val X84_64_VERSION "${MARCH#GENERIC_V}"
+			kconf val X86_64_VERSION "${MARCH#GENERIC_V}"
 			;;
 		ZEN4)
 			kconf unset GENERIC_CPU
