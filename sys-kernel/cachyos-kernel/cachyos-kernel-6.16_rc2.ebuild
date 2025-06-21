@@ -500,7 +500,7 @@ cachy_use_config() {
 			kconf set GENERIC_CPU
 			kconf unset MZEN4
 			kconf unset X86_NATIVE_CPU
-			kconf val X84_64_VERSION "${MARCH#GENERIC_V}"
+			kconf val X86_64_VERSION "${MARCH#GENERIC_V}"
 			;;
 		ZEN4)
 			kconf unset GENERIC_CPU
