@@ -87,7 +87,6 @@ pkg_postinst() {
 	udev_reload
 	tmpfiles_process \
 		coredump.conf \
-		optimize-interruptfreq.conf \
 		thp-shrinker.conf \
 		thp.conf
 }
