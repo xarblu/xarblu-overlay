@@ -10,6 +10,7 @@
 	</upstream>
 	<use>
 		<flag name="betas">Pull in bits for very bleeding edge updates</flag>
+		<flag name="binpkg-build-host">Setup binpkg host bits</flag>
 		<flag name="binpkg-client">Setup binpkg repo</flag>
 		<flag name="clang">Pull in Clang/LLVM specific bits and fixes</flag>
 		<flag name="desktop">Pull in common desktop bits</flag>
