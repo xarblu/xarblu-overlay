@@ -30,7 +30,6 @@ RDEPEND="
 
 src_install() {
 	# only install script that make sense
-	dobin usr/bin/amdpstate-guided
 	dobin usr/bin/dlss-swapper
 	dobin usr/bin/dlss-swapper-dll
 	dobin usr/bin/game-performance
@@ -68,7 +67,7 @@ src_install() {
 
 		# dropins (doins to preserve names)
 		insinto "${systemd_utildir}/system"
-		doins -r  usr/lib/systemd/system/*.service.d
+		doins -r  usr/lib/systemd/system/*.*.d
 
 		insinto "${systemd_utildir}/user.conf.d"
 		doins usr/lib/systemd/user.conf.d/*
@@ -86,8 +85,10 @@ src_install() {
 
 pkg_postinst() {
 	udev_reload
-	tmpfiles_process coredump.conf disable-zswap.conf \
-		optimize-interruptfreq.conf thp-shrinker.conf thp.conf
+	tmpfiles_process \
+		coredump.conf \
+		thp-shrinker.conf \
+		thp.conf
 }
 
 pkg_postrm() {
