@@ -1,0 +1,74 @@
+From be2f20a4522ccea0eae03da5223c201e6c75cc84 Mon Sep 17 00:00:00 2001
+From: Xarblu <xarblu@protonmail.com>
+Date: Thu, 26 Jun 2025 20:33:19 +0200
+Subject: [PATCH] drop bazzite specific stuff
+
+---
+ .../gamescope-session-plus/sessions.d/steam   | 35 -------------------
+ 1 file changed, 35 deletions(-)
+
+diff --git a/usr/share/gamescope-session-plus/sessions.d/steam b/usr/share/gamescope-session-plus/sessions.d/steam
+index ed3f497..af4c26b 100644
+--- a/usr/share/gamescope-session-plus/sessions.d/steam
++++ b/usr/share/gamescope-session-plus/sessions.d/steam
+@@ -1,30 +1,9 @@
+ #!/usr/bin/bash
+ 
+-function setup_custom_videos {
+-    # Install Bazzite's Steam Game Mode Startup & Suspend Videos
+-    mkdir -p $HOME/.local/share/Steam/config/uioverrides/movies
+-    if [ ! -f $HOME/.local/share/Steam/config/uioverrides/movies/deck_startup.webm ]; then
+-        cp /usr/share/ublue-os/bazzite/bazzite.webm $HOME/.local/share/Steam/config/uioverrides/movies/deck_startup.webm
+-    fi
+-
+-    if [ ! -f $HOME/.local/share/Steam/config/uioverrides/movies/deck-suspend-animation.webm ]; then
+-        cp /usr/share/ublue-os/bazzite/bazzite-suspend.webm $HOME/.local/share/Steam/config/uioverrides/movies/deck-suspend-animation.webm
+-    fi
+-
+-    if [ ! -f $HOME/.local/share/Steam/config/uioverrides/movies/deck-suspend-animation-from-throbber.webm ]; then
+-        cp /usr/share/ublue-os/bazzite/bazzite-suspend.webm $HOME/.local/share/Steam/config/uioverrides/movies/deck-suspend-animation-from-throbber.webm
+-    fi
+-}
+-
+ function short_session_recover {
+     mkdir -p ~/.local/share
+     # remove some caches and stateful things known to cause Steam to fail to start if corrupt
+     rm -rf --one-file-system ~/.local/share/Steam/config/widevine
+-    # extract the steam bootstrap to potentially fix the issue the next boot
+-    if [[ -f "/usr/share/gamescope-session-plus/bootstrap_steam.tar.gz" ]]; then
+-        tar xf /usr/share/gamescope-session-plus/bootstrap_steam.tar.gz -C ~/.local/share
+-        setup_custom_videos
+-    fi
+     # change session to desktop as fallback
+     steamos-session-select desktop
+ }
+@@ -48,13 +27,6 @@ export STEAM_USE_MANGOAPP=1
+ 
+ export STEAM_USE_DYNAMIC_VRS=1
+ 
+-# Set up first time bootstrap status
+-export STEAM_BOOTSTRAP_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/gamescope/bootstrap.cfg"
+-
+-# Make path to Steam bootstrap config file.
+-mkdir -p "$(dirname "$STEAM_BOOTSTRAP_CONFIG")"
+-touch "$STEAM_BOOTSTRAP_CONFIG"
+-
+ # Support for gamescope tearing with GAMESCOPE_ALLOW_TEARING atom
+ export STEAM_GAMESCOPE_HAS_TEARING_SUPPORT=1
+ 
+@@ -141,13 +113,6 @@ export CLIENTCMD="steam -gamepadui -steamos3 -steampal -steamdeck"
+ # Workaround for Steam login issue while Steam client change propagates out of Beta
+ touch "${HOME}"/.steam/root/config/SteamAppData.vdf || true
+ 
+-if [[ -f "/usr/share/gamescope-session-plus/bootstrap_steam.tar.gz" ]] && ! grep -q "set_bootstrap=1" "$STEAM_BOOTSTRAP_CONFIG"; then
+-    mkdir -p ~/.local/share
+-    tar xf /usr/share/gamescope-session-plus/bootstrap_steam.tar.gz -C ~/.local/share
+-    setup_custom_videos
+-    echo "set_bootstrap=1" >> "$STEAM_BOOTSTRAP_CONFIG"
+-fi
+-
+ # If we have steam_notif_daemon binary start it
+ if command -v steam_notif_daemon > /dev/null; then
+     steam_notif_daemon &
+-- 
+2.50.0
