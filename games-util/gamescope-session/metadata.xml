@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<name>Xarblu</name>
+		<email>xarblu@protonmail.com</email>
+	</maintainer>
+	<upstream>
+		<remote-id type="github">bazzite-org/gamescope-session</remote-id>
+	</upstream>
+	<use>
+		<flag name="steam">Pull in Steam session via <pkg>games-util/gamescope-session-steam</pkg></flag>
+	</use>
+</pkgmetadata>
