@@ -9,19 +9,19 @@ KERNEL_IUSE_MODULES_SIGN=1
 LLVM_COMPAT=( {17..21} )
 LLVM_OPTIONAL=1
 
-inherit llvm-r2 kernel-build
+inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
-# https://dev.gentoo.org/~mpagano/genpatches/kernels.html
+# https://gitweb.gentoo.org/proj/linux-patches.git/refs/
 # not available for RCs
-[[ ${PV} != *_rc* ]] && GENPATCHES_P=genpatches-${PV%.*}-$(( ${PV##*.} + 1 ))
+[[ ${PV} != *_rc* ]] && GENPATCHES_P=linux-patches-${PV%.*}-$(( ${PV##*.} + 1 ))
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g16
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="d82504e1aaf89b075f140eed1ee1224eec2c2b99"
+CONFIG_COMMIT="a752978a978040c8c1fb1c686454a80048e3d3b7"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="aa3169141003dbb10733442fb147c72b8af9a434"
+PATCH_COMMIT="c4aab791b4c0e3747a62b6cf686dc5941e907938"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
@@ -91,8 +91,7 @@ kernel_base_env_setup() {
 		# incremental patches are supplied by genpatches
 		kernel_base_src_uris+="
 			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/linux-${kernel_base_version}.tar.xz
-			https://dev.gentoo.org/~mpagano/dist/genpatches/${GENPATCHES_P}.base.tar.xz
-			https://dev.gentoo.org/~mpagano/dist/genpatches/${GENPATCHES_P}.extras.tar.xz
+			https://gitweb.gentoo.org/proj/linux-patches.git/snapshot/${GENPATCHES_P}.tar.bz2
 		"
 	fi
 
@@ -220,9 +219,17 @@ cachy_stage_patches() {
 	einfo "Staging patches to be applied in ${target} ..."
 	mkdir -p "${target}" || die
 
-	# genpatches have no directory
+	# genpatches live in ${WORKDIR}/${GENPATCHES_P}
+	# we want everything in the 1000-4999 range (base+extra)
 	if [[ ${PV} != *_rc* ]]; then
-		cp -t "${target}" "${WORKDIR}"/*.patch || die
+		pushd "${WORKDIR}/${GENPATCHES_P}" >/dev/null || die
+		local file
+		for file in *.patch; do
+			if [[ "${file}" =~ [1-4][0-9][0-9][0-9]_.*\.patch ]]; then
+				cp -t "${target}" "${file}" || die
+			fi
+		done
+		popd >/dev/null || die
 	fi
 
 	# RC patches are not compressed and thus in DISTDIR
@@ -232,8 +239,8 @@ cachy_stage_patches() {
 		popd >/dev/null || die
 	fi
 
-	# cachy patches need to be prefixed starting at 5000
-	local incr=5000
+	# cachy patches need to be prefixed starting at 6000
+	local incr=6000
 	local spec cond patch file
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
 		IFS=":" read -r cond patch <<<"${spec}" || die
@@ -294,6 +301,47 @@ cachy_apply() {
 			die "${patch_cmd} ${all_patch_args[*]} failed with ${file}"
 		fi
 	done
+}
+
+# auto-detect closest march value
+cachy_processor_opt() {
+	# not supported but in case someone
+	# builds on non amd64 return default
+	if ! use amd64; then
+		printf "GENERIC"
+		return 0
+	fi
+
+	# apply X86_NATIVE_CPU if we have -march=native
+	if [[ "$(get-flag march)" == native ]]; then
+		printf "NATIVE"
+		return 0
+	fi
+
+	# get closest march for others
+	# mostly shameless rip from qt6-build.eclass
+	local march=$(
+		$(tc-getCC) -E -P ${CFLAGS} ${CPPFLAGS} - <<-EOF | tail -n 1
+			default
+			#if (__CRC32__ + __LAHF_SAHF__ + __POPCNT__ + __SSE3__ + __SSE4_1__ + __SSE4_2__ + __SSSE3__) == 7
+			x86-64-v2
+			#  if (__AVX__ + __AVX2__ + __BMI__ + __BMI2__ + __F16C__ + __FMA__ + __LZCNT__ + __MOVBE__ + __XSAVE__) == 9
+			x86-64-v3
+			#    if (__AVX512BW__ + __AVX512CD__ + __AVX512DQ__ + __AVX512F__ + __AVX512VL__ + __EVEX256__ + __EVEX512__) == 7
+			x86-64-v4
+			#    endif
+			#  endif
+			#endif
+		EOF
+		pipestatus || die
+	)
+	case "${march}" in
+		default) printf "GENERIC_V1";;
+		x86-64-v2) printf "GENERIC_V2";;
+		x86-64-v3) printf "GENERIC_V3";;
+		x86-64-v4) printf "GENERIC_V4";;
+		*) die "Got unknown march: ${march}";;
+	esac
 }
 
 # print formatted kernel config line
@@ -422,6 +470,8 @@ cachy_use_config() {
 		*) die "Unknown flavour" ;;
 	esac
 
+	: "${_processor_opt:="$(cachy_processor_opt)"}"
+
 	if use lto; then
 		: "${_use_llvm_lto:=thin}"
 	else
@@ -439,7 +489,31 @@ cachy_use_config() {
 	einfo "  _tickrate=${_tickrate}"
 	einfo "  _preempt=${_preempt}"
 	einfo "  _hugepage=${_hugepage}"
+	einfo "  _processor_opt=${_processor_opt}"
 	einfo "  _use_llvm_lto=${_use_llvm_lto}"
+
+	# _processor_opt
+	local MARCH="${_processor_opt^^}"
+	case "${MARCH}" in
+		GENERIC) ;;
+		GENERIC_V[1-4])
+			kconf set GENERIC_CPU
+			kconf unset MZEN4
+			kconf unset X86_NATIVE_CPU
+			kconf val X86_64_VERSION "${MARCH#GENERIC_V}"
+			;;
+		ZEN4)
+			kconf unset GENERIC_CPU
+			kconf set MZEN4
+			kconf unset X86_NATIVE_CPU
+			;;
+		NATIVE)
+			kconf unset GENERIC_CPU
+			kconf unset MZEN4
+			kconf set X86_NATIVE_CPU
+			;;
+		*) die "Invalid _processor_opt value: ${_processor_opt}" ;;
+	esac
 
 	# _cachy_config
 	case "${_cachy_config}" in
@@ -651,8 +725,6 @@ src_prepare() {
 	cachy_stage_patches
 
 	# remove problematic patches
-	# also included in cachy patchset
-	rm "${WORKDIR}/patches/1740_x86-insn-decoder-test-allow-longer-symbol-names.patch" || die
 
 	# apply package and user patches
 	# eapply silently passes -F0 for some reason so we
