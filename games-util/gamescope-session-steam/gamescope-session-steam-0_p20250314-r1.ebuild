@@ -25,12 +25,7 @@ RDEPEND="
 
 PATCHES=( "${FILESDIR}/gentoo.patch" )
 
-# for now don't install any of the polkit stuff
-# because it seems to be for update stuff
-# which won't work anyways
 src_install() {
-	# not sure if we want/need these since they're
-	# essentially just stubs
 	dobin \
 		usr/bin/jupiter-biosupdate \
 		usr/bin/steam-http-loader \
@@ -38,11 +33,22 @@ src_install() {
 		usr/bin/steamos-session-select \
 		usr/bin/steamos-update
 
+	# this gives "QA Notice: The ebuild is installing to one or more unexpected directories"
+	# ... but we need them here
+	exeinto /usr/bin/steamos-polkit-helpers
+	doexe \
+		usr/bin/steamos-polkit-helpers/jupiter-biosupdate \
+		usr/bin/steamos-polkit-helpers/steamos-select-branch \
+		usr/bin/steamos-polkit-helpers/steamos-update
+
 	domenu usr/share/applications/gamescope-mimeapps.list
 	domenu usr/share/applications/steam_http_loader.desktop
 
 	insinto /usr/share/gamescope-session-plus/sessions.d
 	doins usr/share/gamescope-session-plus/sessions.d/steam
+
+	insinto /usr/share/polkit-1/actions
+	doins usr/share/polkit-1/actions/org.chimeraos.update.policy
 
 	insinto /usr/share/wayland-sessions
 	doins usr/share/wayland-sessions/gamescope-session-steam.desktop
