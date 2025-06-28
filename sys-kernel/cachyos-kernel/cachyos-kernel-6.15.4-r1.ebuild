@@ -250,6 +250,13 @@ cachy_stage_patches() {
 			incr=$(( incr + 1 ))
 		fi
 	done
+
+	# extra patches
+	if use deckify; then
+		# handheld.patch makes ath11k_pci use QCA206X firmware
+		# this firmware A) is annoying to find and B) simply doesn't work
+		cp -t "${target}" "${FILESDIR}/7000_revert-ath11k-firmware.patch" || die
+	fi
 }
 
 # eapply-like wrapper for patch
