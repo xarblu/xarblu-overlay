@@ -23,11 +23,7 @@ RDEPEND="
 	media-video/wireplumber
 "
 
-QA_PREBUILT="
-	/usr/lib/lv2/valve_binaural.lv2/valve_binaural.so
-	/usr/lib/lv2/valve_deck_microphone.dsp/valve_deck_microphone.so
-	/usr/lib/lv2/valve_deck_speakers.lv2/valve_deck_speakers.so
-"
+QA_PREBUILT="*"
 
 src_unpack() {
 	# apparently default unpack doesn't like *.pkg.tar.zst
