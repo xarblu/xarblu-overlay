@@ -19,7 +19,7 @@ KEYWORDS="~amd64"
 RDEPEND="
 	media-libs/alsa-ucm-conf
 	media-libs/lv2
-	media-video/pipewire
+	media-video/pipewire[lv2]
 	media-video/wireplumber
 "
 
@@ -38,7 +38,7 @@ src_install() {
 	insinto /usr/lib/firmware/
 	doins -r usr/lib/firmware/amd
 
-	insinto /usr/lib/lv2
+	insinto /usr/"$(get_libdir)"/lv2
 	doins -r usr/lib/lv2/*
 
 	insinto /usr/share/alsa/ucm2/conf.d
