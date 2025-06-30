@@ -19,10 +19,11 @@ KEYWORDS="~amd64"
 src_compile() {
 	# https://github.com/simulot/immich-go/blob/v0.25.0/.goreleaser.yaml
 	export CGO_ENABLED=0
-	local ldflags
-	ldflags="-s -w"
-	ldflags+=" -X github.com/simulot/immich-go/app.Version=${PV}"
-	ego build "-o=${PN}" --ldflags="${ldflags}"
+	local flags ldflags
+	flags+="-trimpath"
+	ldflags+="-X github.com/simulot/immich-go/app.Version=${PV}"
+	ldflags+=" -s -w"
+	ego build "-o=${PN}" ${flags} --ldflags="${ldflags}"
 }
 
 src_install() {
