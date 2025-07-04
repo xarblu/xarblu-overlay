@@ -157,9 +157,10 @@ SRC_URI+="
 "
 
 [[ ${PV} != *_rc* ]] && KEYWORDS="~amd64"
-IUSE="clang debug lto ${FLAVOURS/cachyos/+cachyos}"
+IUSE="cfi clang debug lto ${FLAVOURS/cachyos/+cachyos}"
 REQUIRED_USE="
 	^^ ( ${FLAVOURS} )
+	cfi? ( clang )
 	lto? ( clang )
 	clang? ( ${LLVM_REQUIRED_USE} )
 "
@@ -479,6 +480,12 @@ cachy_use_config() {
 
 	: "${_processor_opt:="$(cachy_processor_opt)"}"
 
+	if use cfi; then
+		: "${_use_kcfi:=yes}"
+	else
+		: "${_use_kcfi:=no}"
+	fi
+
 	if use lto; then
 		: "${_use_llvm_lto:=thin}"
 	else
@@ -497,6 +504,7 @@ cachy_use_config() {
 	einfo "  _preempt=${_preempt}"
 	einfo "  _hugepage=${_hugepage}"
 	einfo "  _processor_opt=${_processor_opt}"
+	einfo "  _use_kcfi=${_use_kcfi}"
 	einfo "  _use_llvm_lto=${_use_llvm_lto}"
 
 	# _processor_opt
@@ -549,6 +557,17 @@ cachy_use_config() {
 			kconf set PREEMPT_RT
 			;;
 		*) die "Invalid _cpusched value: ${_cpusched}" ;;
+	esac
+
+	# _use_kcfi
+	case "${_use_kcfi}" in
+		yes)
+			kconf set ARCH_SUPPORTS_CFI_CLANG
+			kconf set CFI_CLANG
+			kconf set CFI_AUTO_DEFAULT
+			;;
+		no) ;;
+		*) die "Invalid _use_kcfi value: ${_use_kcfi}" ;;
 	esac
 
 	# _use_llvm_lto
@@ -699,7 +718,7 @@ cachy_use_config() {
 }
 
 pkg_setup() {
-	if use clang; then
+	if [[ "${MERGE_TYPE}" != binary ]] && use clang; then
 		# tools passed as MAKEARGS in kernel-build.eclass
 		einfo "Forcing LLVM toolchain due to USE=clang"
 		declare -g AS="llvm-as"
