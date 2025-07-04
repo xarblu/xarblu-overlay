@@ -12,6 +12,7 @@
 		<flag name="bmq">Flavour using the BMQ scheduler</flag>
 		<flag name="bore">Flavour using the BORE scheduler</flag>
 		<flag name="cachyos">Default CachyOS flavour</flag>
+		<flag name="cfi">Enables Clang's forward-edge Control Flow Integrity (CFI) checking</flag>
 		<flag name="clang">Use Clang/LLVM toolchain</flag>
 		<flag name="deckify">Default CachyOS flavour with extra tweaks/patches for handhelds</flag>
 		<flag name="eevdf">Flavour using the EEVDF (mainline Linux) scheduler</flag>

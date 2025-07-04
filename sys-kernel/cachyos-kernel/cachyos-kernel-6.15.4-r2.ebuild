@@ -17,11 +17,11 @@ inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g16
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="f4dc76db44a6a246e62b5a306c22bb33aefecdbc"
+CONFIG_COMMIT="fb6f4d4f3ba4ba39a7be7a312d67d4f0b4014c67"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="ef2f2fbc3b570bbf171e2e6574a9ff893ed045ac"
+PATCH_COMMIT="3c9cc0e7b8f33870d106c5987dc61dc1c747dcf0"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
@@ -41,15 +41,15 @@ CACHY_PATCH_SPECS=(
 	-:all/0001-cachyos-base-all.patch
 	# flavours
 	cachyos:sched/0001-bore-cachy.patch
-	#bmq:sched/0001-prjc-cachy.patch
-	#bore:sched/0001-bore-cachy.patch
-	#deckify:misc/0001-acpi-call.patch
-	#deckify:misc/0001-handheld.patch
-	#deckify:sched/0001-bore-cachy.patch
+	bmq:sched/0001-prjc-cachy.patch
+	bore:sched/0001-bore-cachy.patch
+	deckify:misc/0001-acpi-call.patch
+	deckify:misc/0001-handheld.patch
+	deckify:sched/0001-bore-cachy.patch
 	#hardened:sched/0001-bore-cachy.patch
 	#hardened:misc/0001-hardened.patch
-	#rt-bore:sched/0001-bore-cachy.patch
-	#rt-bore:misc/0001-rt-i915.patch
+	rt-bore:sched/0001-bore-cachy.patch
+	rt-bore:misc/0001-rt-i915.patch
 	# clang
 	clang:misc/dkms-clang.patch
 )
@@ -157,10 +157,9 @@ SRC_URI+="
 "
 
 [[ ${PV} != *_rc* ]] && KEYWORDS="~amd64"
-IUSE="cfi clang debug lto ${FLAVOURS/cachyos/+cachyos}"
+IUSE="clang debug lto ${FLAVOURS/cachyos/+cachyos}"
 REQUIRED_USE="
 	^^ ( ${FLAVOURS} )
-	cfi? ( clang )
 	lto? ( clang )
 	clang? ( ${LLVM_REQUIRED_USE} )
 "
@@ -253,7 +252,7 @@ cachy_stage_patches() {
 	done
 
 	# extra patches
-	if [[ "$(cachy_flavour)" == deckify ]]; then
+	if use deckify; then
 		# handheld.patch makes ath11k_pci use QCA206X firmware
 		# this firmware A) is annoying to find and B) simply doesn't work
 		cp -t "${target}" "${FILESDIR}/7000_revert-ath11k-firmware.patch" || die
@@ -480,12 +479,6 @@ cachy_use_config() {
 
 	: "${_processor_opt:="$(cachy_processor_opt)"}"
 
-	if use cfi; then
-		: "${_use_kcfi:=yes}"
-	else
-		: "${_use_kcfi:=no}"
-	fi
-
 	if use lto; then
 		: "${_use_llvm_lto:=thin}"
 	else
@@ -504,7 +497,6 @@ cachy_use_config() {
 	einfo "  _preempt=${_preempt}"
 	einfo "  _hugepage=${_hugepage}"
 	einfo "  _processor_opt=${_processor_opt}"
-	einfo "  _use_kcfi=${_use_kcfi}"
 	einfo "  _use_llvm_lto=${_use_llvm_lto}"
 
 	# _processor_opt
@@ -557,17 +549,6 @@ cachy_use_config() {
 			kconf set PREEMPT_RT
 			;;
 		*) die "Invalid _cpusched value: ${_cpusched}" ;;
-	esac
-
-	# _use_kcfi
-	case "${_use_kcfi}" in
-		yes)
-			kconf set ARCH_SUPPORTS_CFI_CLANG
-			kconf set CFI_CLANG
-			kconf set CFI_AUTO_DEFAULT
-			;;
-		no) ;;
-		*) die "Invalid _use_kcfi value: ${_use_kcfi}" ;;
 	esac
 
 	# _use_llvm_lto
