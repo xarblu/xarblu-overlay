@@ -9,7 +9,7 @@ CHROMIUM_LANGS="
 	sw ta te th tr uk ur vi zh-CN zh-TW
 "
 
-inherit chromium-2 desktop wrapper
+inherit chromium-2 desktop wrapper unpacker
 
 MY_PN="StudIP"
 COMMIT="4020de4b62c3cf8cdfaf11328a491146940ee98b"
@@ -44,9 +44,9 @@ SLOT="0"
 KEYWORDS="-* ~amd64"
 
 BDEPEND="
-	app-arch/p7zip
 	app-arch/unzip
 	net-libs/nodejs
+	$(unpacker_src_uri_depends)
 "
 
 PATCHES=(
@@ -60,14 +60,22 @@ src_unpack() {
 	cp "${DISTDIR}/${P}-electron-v${ELECTRON_V}-linux-x64.zip" \
 		"${HOME}/.cache/electron/electron-v${ELECTRON_V}-linux-x64.zip" || die
 
-	mkdir -p "${HOME}"/.cache/electron-builder/{appimage,fpm,snap} || die
-	7z x "${DISTDIR}/${P}-appimage-${BUILDER_APPIMAGE_V}.7z" \
-		-o"${HOME}/.cache/electron-builder/appimage/appimage-${BUILDER_APPIMAGE_V}" || die
-	7z x "${DISTDIR}/${P}-fpm-${BUILDER_FPM_V}.7z" \
-		-o"${HOME}/.cache/electron-builder/fpm/fpm-${BUILDER_FPM_V}" || die
-	7z x "${DISTDIR}/${P}-snap-template-electron-${BUILDER_FPM_V}-amd64.7z" \
-		-o"${HOME}/.cache/electron-builder/snap/snap-template-electron-${SNAP_TEMPLATE_V}-amd64" || die
+	local -A archives=(
+		["${P}-appimage-${BUILDER_APPIMAGE_V}.7z"]="${HOME}/.cache/electron-builder/appimage/appimage-${BUILDER_APPIMAGE_V}"
+		["${P}-fpm-${BUILDER_FPM_V}.7z"]="${HOME}/.cache/electron-builder/fpm/fpm-${BUILDER_FPM_V}"
+		["${P}-snap-template-electron-${BUILDER_FPM_V}-amd64.7z"]="${HOME}/.cache/electron-builder/snap/snap-template-electron-${SNAP_TEMPLATE_V}-amd64"
+	)
 
+	local file dest
+	for file in "${!archives[@]}"; do
+		dest="${archives["${file}"]}"
+		mkdir -p "${dest}" || die
+		pushd "${dest}" >/dev/null || die
+		unpacker "${file}"
+		popd >/dev/null || die
+	done
+
+	# now the regular unpack
 	unpack "${P}.tar.gz" "${P}-node_modules.tar.xz"
 }
 
