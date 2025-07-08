@@ -17,17 +17,17 @@ inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g16
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="6183dd7a925cae7b25fe210603f6fb696385028d"
+CONFIG_COMMIT="98b6e64c0b792b7839957aa4521dde35f15b9269"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="046d619a50330b5837a512254fe9f281c8323ae3"
+PATCH_COMMIT="a30513c6f1741cf1fd5f8801071f61c34d848dc3"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 #FLAVOURS="cachyos bmq bore deckify eevdf hardened rt-bore server"
-FLAVOURS="cachyos"
+FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
 
 # RCs only have main flavour
 [[ ${PV} == *_rc* ]] && FLAVOURS="cachyos"
@@ -157,9 +157,10 @@ SRC_URI+="
 "
 
 [[ ${PV} != *_rc* ]] && KEYWORDS="~amd64"
-IUSE="clang debug lto ${FLAVOURS/cachyos/+cachyos}"
+IUSE="cfi clang debug lto ${FLAVOURS/cachyos/+cachyos}"
 REQUIRED_USE="
 	^^ ( ${FLAVOURS} )
+	cfi? ( clang )
 	lto? ( clang )
 	clang? ( ${LLVM_REQUIRED_USE} )
 "
@@ -250,6 +251,13 @@ cachy_stage_patches() {
 			incr=$(( incr + 1 ))
 		fi
 	done
+
+	# extra patches
+	if [[ "$(cachy_flavour)" == deckify ]]; then
+		# handheld.patch makes ath11k_pci use QCA206X firmware
+		# this firmware A) is annoying to find and B) simply doesn't work
+		cp -t "${target}" "${FILESDIR}/7000_revert-ath11k-firmware.patch" || die
+	fi
 }
 
 # eapply-like wrapper for patch
@@ -472,6 +480,12 @@ cachy_use_config() {
 
 	: "${_processor_opt:="$(cachy_processor_opt)"}"
 
+	if use cfi; then
+		: "${_use_kcfi:=yes}"
+	else
+		: "${_use_kcfi:=no}"
+	fi
+
 	if use lto; then
 		: "${_use_llvm_lto:=thin}"
 	else
@@ -490,6 +504,7 @@ cachy_use_config() {
 	einfo "  _preempt=${_preempt}"
 	einfo "  _hugepage=${_hugepage}"
 	einfo "  _processor_opt=${_processor_opt}"
+	einfo "  _use_kcfi=${_use_kcfi}"
 	einfo "  _use_llvm_lto=${_use_llvm_lto}"
 
 	# _processor_opt
@@ -542,6 +557,17 @@ cachy_use_config() {
 			kconf set PREEMPT_RT
 			;;
 		*) die "Invalid _cpusched value: ${_cpusched}" ;;
+	esac
+
+	# _use_kcfi
+	case "${_use_kcfi}" in
+		yes)
+			kconf set ARCH_SUPPORTS_CFI_CLANG
+			kconf set CFI_CLANG
+			kconf set CFI_AUTO_DEFAULT
+			;;
+		no) ;;
+		*) die "Invalid _use_kcfi value: ${_use_kcfi}" ;;
 	esac
 
 	# _use_llvm_lto
@@ -692,7 +718,7 @@ cachy_use_config() {
 }
 
 pkg_setup() {
-	if use clang; then
+	if [[ "${MERGE_TYPE}" != binary ]] && use clang; then
 		# tools passed as MAKEARGS in kernel-build.eclass
 		einfo "Forcing LLVM toolchain due to USE=clang"
 		declare -g AS="llvm-as"
