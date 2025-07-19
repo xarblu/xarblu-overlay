@@ -5,4 +5,7 @@
 		<name>Xarblu</name>
 		<email>xarblu@protonmail.com</email>
 	</maintainer>
+	<upstream>
+		<remote-id type="github">Vysp3r/ProtonPlus</remote-id>
+	</upstream>
 </pkgmetadata>
