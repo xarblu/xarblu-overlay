@@ -8,6 +8,7 @@
 	<use>
 		<flag name="otf">Install OTF fonts</flag>
 		<flag name="ttf">Install TTF fonts</flag>
+		<flag name="variable">Install variable width fonts</flag>
 	</use>
 	<upstream>
 		<remote-id type="github">IBM/plex</remote-id>
