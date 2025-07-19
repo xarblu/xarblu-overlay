@@ -47,7 +47,7 @@ setup_variants() {
 		[[ "${font_use}" != "-" ]] && SRC_URI+=" ${font_use}? ( "
 		SRC_URI+="
 			${base}/%40ibm%2F${font_tag//@/%40}/${font_pn}.zip
-				-> ${PN}-${font_pn}-${font_pv}.zip
+				-> ${font_pn}-${font_pv}.zip
 		"
 		[[ "${font_use}" != "-" ]] && SRC_URI+=" ) "
 		[[ "${font_use}" != "-" ]] && IUSE+=" ${font_use} "
