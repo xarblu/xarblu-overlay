@@ -38,7 +38,7 @@ setup_variants() {
 		font_p="${spec#*:}"
 		font_pn="${font_p%%@*}"
 		font_tag="${font_p#*@}"
-		font_pv="${font_tag##*-}"
+		font_pv="${font_tag#*@}"
 
 		# if no version is given default to PV minus patch
 		[[ "${font_pn}" == "${font_tag}" ]] && die "No tag set for spec ${spec}"
