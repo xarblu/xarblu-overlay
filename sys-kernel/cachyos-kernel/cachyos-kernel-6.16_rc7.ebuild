@@ -58,6 +58,8 @@ CACHY_PATCH_SPECS=(
 kernel_base_env_setup() {
 	local kernel_base_src_uris=""
 	local kernel_base_version="${PV%.*}"
+	local incr target_incr
+	local cdn_patch our_incr our_patch
 	local -a rc_patches stable_patches
 	if [[ "${PV}" == *_rc* ]]; then
 		# for RCs fetch the last stable as a base
@@ -68,7 +70,6 @@ kernel_base_env_setup() {
 
 		# then patches from git.kernel.org
 		# patches follow genpatches 1000+ convention
-		local our_patch
 
 		# the big RC1 patch is seperate
 		our_patch="1000_linux-${PV%_rc*}-rc1.patch"
@@ -79,12 +80,12 @@ kernel_base_env_setup() {
 		rc_patches+=( "${our_patch}" )
 
 		# then incremental patches between RCs
-		# assumes there never is a RC10 since
-		# the last RC is usually RC8
-		local incr=2
-		local target_incr="${PV##*_rc}"
+		incr=2
+		target_incr="${PV##*_rc}"
 		while (( incr <= target_incr )); do
-			our_patch="100$(( incr - 1 ))_linux-${PV%_rc*}-rc${incr}.patch"
+			# leftpad incr with 0 which allows 1000-1999
+			our_incr="1$(printf '%0*d' 3 "$(( incr - 1 ))")"
+			our_patch="${our_incr}_linux-${PV%_rc*}-rc${incr}.patch"
 			kernel_base_src_uris+="
 				https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc${incr}/v${PV%_rc*}-rc$(( incr - 1 ))
 					-> ${our_patch}
@@ -105,7 +106,6 @@ kernel_base_env_setup() {
 
 		# then patches from cdn.kernel.org
 		# patches follow genpatches 1000+ convention
-		local cdn_patch our_patch
 
 		# the first x.x.1 patch is seperate
 		cdn_patch="patch-${kernel_base_version}.1.xz"
@@ -117,11 +117,13 @@ kernel_base_env_setup() {
 		stable_patches+=( "${our_patch}" )
 
 		# then incremental patches between minor versions
-		local incr=2
-		local target_incr="$(ver_cut 3)"
+		incr=2
+		target_incr="$(ver_cut 3)"
 		while (( incr <= target_incr )); do
 			cdn_patch="patch-${kernel_base_version}.$(( incr - 1 ))-${incr}.xz"
-			our_patch="100$(( incr - 1 ))_linux-${kernel_base_version}.${incr}.patch.xz"
+			# leftpad incr with 0 which allows 1000-1999
+			our_incr="1$(printf '%0*d' 3 "$(( incr - 1 ))")"
+			our_patch="${our_incr}_linux-${kernel_base_version}.${incr}.patch.xz"
 			kernel_base_src_uris+="
 				https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/incr/${cdn_patch}
 					-> ${our_patch}
