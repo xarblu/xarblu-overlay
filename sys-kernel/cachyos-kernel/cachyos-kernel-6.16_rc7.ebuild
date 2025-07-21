@@ -11,17 +11,16 @@ LLVM_OPTIONAL=1
 
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
-# https://gitweb.gentoo.org/proj/linux-patches.git/refs/
-# not available for RCs
-[[ ${PV} != *_rc* ]] && GENPATCHES_P=linux-patches-${PV%.*}-$(( ${PV##*.} + 1 ))
+# https://dev.gentoo.org/~mgorny/dist/linux/
+GENTOO_PATCHSET=linux-gentoo-patches-6.15.5
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g16
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="f4dc76db44a6a246e62b5a306c22bb33aefecdbc"
+CONFIG_COMMIT="dbe07344cab3d94a3853ae3dad6d3618ed7e13a7"
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="ef2f2fbc3b570bbf171e2e6574a9ff893ed045ac"
+PATCH_COMMIT="6f101ec70a5eccd42aefa4ea1608a0676c343ff7"
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
@@ -59,45 +58,85 @@ CACHY_PATCH_SPECS=(
 kernel_base_env_setup() {
 	local kernel_base_src_uris=""
 	local kernel_base_version="${PV%.*}"
-	local -a rc_patches
+	local incr target_incr
+	local cdn_patch our_incr our_patch
+	local -a rc_patches stable_patches
 	if [[ "${PV}" == *_rc* ]]; then
 		# for RCs fetch the last stable as a base
 		kernel_base_version="$(ver_cut 1).$(( $(ver_cut 2) - 1 ))"
 		kernel_base_src_uris+="
 			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/linux-${kernel_base_version}.tar.xz
 		"
-		# then the big RC1 patch, patches follow genpatches 1000+ convention
+
+		# then patches from git.kernel.org
+		# patches follow genpatches 1000+ convention
+
+		# the big RC1 patch is seperate
+		our_patch="1000_linux-${PV%_rc*}-rc1.patch"
 		kernel_base_src_uris+="
 			https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc1/v${kernel_base_version}
-				-> 1000_linux-${PV%_rc*}-rc1.patch
+				-> ${our_patch}
 		"
-		rc_patches+=( "1000_linux-${PV%_rc*}-rc1.patch" )
+		rc_patches+=( "${our_patch}" )
 
 		# then incremental patches between RCs
-		# assumes there never is a RC10 since
-		# the last RC is usually RC8
-		local incr=2
-		local target_incr="${PV##*_rc}"
+		incr=2
+		target_incr="${PV##*_rc}"
 		while (( incr <= target_incr )); do
+			# leftpad incr with 0 which allows 1000-1999
+			our_incr="1$(printf '%0*d' 3 "$(( incr - 1 ))")"
+			our_patch="${our_incr}_linux-${PV%_rc*}-rc${incr}.patch"
 			kernel_base_src_uris+="
 				https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc${incr}/v${PV%_rc*}-rc$(( incr - 1 ))
-					-> 100$(( incr - 1 ))_linux-${PV%_rc*}-rc${incr}.patch
+					-> ${our_patch}
 			"
-			rc_patches+=( "100$(( incr - 1 ))_linux-${PV%_rc*}-rc${incr}.patch" )
+			rc_patches+=( "${our_patch}" )
 			incr=$(( incr + 1 ))
 		done
-	else
-		# for stable releases we have the base
-		# incremental patches are supplied by genpatches
+	elif [[ $(ver_cut 3) == 0 ]]; then
+		# for initial stable releases we only have the base
 		kernel_base_src_uris+="
 			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/linux-${kernel_base_version}.tar.xz
-			https://gitweb.gentoo.org/proj/linux-patches.git/snapshot/${GENPATCHES_P}.tar.bz2
 		"
+	else
+		# for other stable releases we have the base
+		kernel_base_src_uris+="
+			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/linux-${kernel_base_version}.tar.xz
+		"
+
+		# then patches from cdn.kernel.org
+		# patches follow genpatches 1000+ convention
+
+		# the first x.x.1 patch is seperate
+		cdn_patch="patch-${kernel_base_version}.1.xz"
+		our_patch="1000_linux-${kernel_base_version}.1.patch.xz"
+		kernel_base_src_uris+="
+			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/${cdn_patch}
+				-> ${our_patch}
+		"
+		stable_patches+=( "${our_patch}" )
+
+		# then incremental patches between minor versions
+		incr=2
+		target_incr="$(ver_cut 3)"
+		while (( incr <= target_incr )); do
+			cdn_patch="patch-${kernel_base_version}.$(( incr - 1 ))-${incr}.xz"
+			# leftpad incr with 0 which allows 1000-1999
+			our_incr="1$(printf '%0*d' 3 "$(( incr - 1 ))")"
+			our_patch="${our_incr}_linux-${kernel_base_version}.${incr}.patch.xz"
+			kernel_base_src_uris+="
+				https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/incr/${cdn_patch}
+					-> ${our_patch}
+			"
+			stable_patches+=( "${our_patch}" )
+			incr=$(( incr + 1 ))
+		done
 	fi
 
 	export SRC_URI="${SRC_URI} ${kernel_base_src_uris}"
 	export S="${WORKDIR}/linux-${kernel_base_version}"
 	export RC_PATCHES=( "${rc_patches[@]}" )
+	export STABLE_PATCHES=( "${stable_patches[@]%.xz}" )
 }
 
 # adds cachyos config sources to SRC_URI
@@ -152,6 +191,7 @@ kernel_base_env_setup
 cachy_config_env_setup
 cachy_patch_env_setup
 SRC_URI+="
+	https://dev.gentoo.org/~mgorny/dist/linux/${GENTOO_PATCHSET}.tar.xz
 	https://github.com/projg2/gentoo-kernel-config/archive/${GENTOO_CONFIG_VER}.tar.gz
 		-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
 "
@@ -220,27 +260,42 @@ cachy_stage_patches() {
 	einfo "Staging patches to be applied in ${target} ..."
 	mkdir -p "${target}" || die
 
-	# genpatches live in ${WORKDIR}/${GENPATCHES_P}
-	# we want everything in the 1000-4999 range (base+extra)
-	if [[ ${PV} != *_rc* ]]; then
-		pushd "${WORKDIR}/${GENPATCHES_P}" >/dev/null || die
-		local file
-		for file in *.patch; do
-			if [[ "${file}" =~ [1-4][0-9][0-9][0-9]_.*\.patch ]]; then
-				cp -t "${target}" "${file}" || die
-			fi
-		done
-		popd >/dev/null || die
-	fi
-
 	# RC patches are not compressed and thus in DISTDIR
-	if [[ ${PV} == *_rc* ]]; then
+	if [[ -n "${RC_PATCHES[*]}" ]]; then
+		einfo "Staging RC patches"
 		pushd "${DISTDIR}" >/dev/null || die
 		cp -t "${target}" "${RC_PATCHES[@]}" || die
 		popd >/dev/null || die
 	fi
 
+	# stable patches are compressed and thus in WORKDIR
+	if [[ -n "${STABLE_PATCHES[*]}" ]]; then
+		einfo "Staging stable patches"
+		pushd "${WORKDIR}" >/dev/null || die
+		cp -t "${target}" "${STABLE_PATCHES[@]}" || die
+		popd >/dev/null || die
+	fi
+
+	# Gentoo patches live in ${WORKDIR}/${GENTOO_PATCHSET}
+	einfo "Staging Gentoo patches"
+	pushd "${WORKDIR}/${GENTOO_PATCHSET}" >/dev/null || die
+	local incr=2000
+	local file
+	for file in *.patch; do
+		cp "${file}" "${target}/${incr}_${file#????-}" || die
+		incr=$(( incr + 1 ))
+
+		# we want everything up to the Gentoo KConfig patch
+		# everything after it is considered experimental
+		# according to gentoo-kernel ebuild
+		if [[ "${file}" == *Add-Gentoo-Linux-support-config-settings* ]]; then
+			break
+		fi
+	done
+	popd >/dev/null || die
+
 	# cachy patches need to be prefixed starting at 6000
+	einfo "Staging Cachy patches"
 	local incr=6000
 	local spec cond patch file
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
