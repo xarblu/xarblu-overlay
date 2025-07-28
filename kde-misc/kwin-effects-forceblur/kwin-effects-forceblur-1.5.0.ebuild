@@ -1,8 +1,9 @@
-# Copyright 1999-2024 Gentoo Foundation
+# Copyright 1999-2025 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
+KPMIN="6.4.0"
 KFMIN="6.0.0"
 QTMIN="6.6.0"
 
@@ -32,8 +33,8 @@ DEPEND="
 	>=kde-frameworks/kservice-${KFMIN}:6
 	>=kde-frameworks/kwidgetsaddons-${KFMIN}:6
 	>=kde-frameworks/kwindowsystem-${KFMIN}:6
-	kde-plasma/kdecoration:6
-	kde-plasma/kwin:6
+	>=kde-plasma/kdecoration-${KPMIN}:6
+	>=kde-plasma/kwin-${KPMIN}:6
 	media-libs/libepoxy
 	x11-libs/libX11
 	x11-libs/libxcb
