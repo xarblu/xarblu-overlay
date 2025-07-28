@@ -11,22 +11,20 @@ LLVM_OPTIONAL=1
 
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
-# https://gitweb.gentoo.org/proj/linux-patches.git/refs/
-# not available for RCs
-[[ ${PV} != *_rc* ]] && GENPATCHES_P=linux-patches-${PV%.*}-$(( ${PV##*.} + 1 ))
+# https://dev.gentoo.org/~mgorny/dist/linux/
+GENTOO_PATCHSET=linux-gentoo-patches-6.15.8
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g16
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT="44ba9427f38b61570f08932398acae9e3cea5b9c"
+CONFIG_COMMIT=c076ffb661a426236175eafcd7d0881fe687b9d5
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT="b517194ff02477aac57f68f13f29f535628d3670"
+PATCH_COMMIT=e2ef18d699e76ea1681848cfb23903ebec7b5aaf
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
-#FLAVOURS="cachyos bmq bore deckify eevdf hardened rt-bore server"
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
 
 # RCs only have main flavour
@@ -46,99 +44,13 @@ CACHY_PATCH_SPECS=(
 	deckify:misc/0001-acpi-call.patch
 	deckify:misc/0001-handheld.patch
 	deckify:sched/0001-bore-cachy.patch
-	#hardened:sched/0001-bore-cachy.patch
-	#hardened:misc/0001-hardened.patch
+	hardened:sched/0001-bore-cachy.patch
+	hardened:misc/0001-hardened.patch
 	rt-bore:sched/0001-bore-cachy.patch
 	rt-bore:misc/0001-rt-i915.patch
 	# clang
 	clang:misc/dkms-clang.patch
 )
-
-# append a list of kernel sources and incremental patches to SRC_URI
-# and sets S to the correct directory
-kernel_base_env_setup() {
-	local kernel_base_src_uris=""
-	local kernel_base_version="${PV%.*}"
-	local -a rc_patches
-	if [[ "${PV}" == *_rc* ]]; then
-		# for RCs fetch the last stable as a base
-		kernel_base_version="$(ver_cut 1).$(( $(ver_cut 2) - 1 ))"
-		kernel_base_src_uris+="
-			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/linux-${kernel_base_version}.tar.xz
-		"
-		# then the big RC1 patch, patches follow genpatches 1000+ convention
-		kernel_base_src_uris+="
-			https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc1/v${kernel_base_version}
-				-> 1000_linux-${PV%_rc*}-rc1.patch
-		"
-		rc_patches+=( "1000_linux-${PV%_rc*}-rc1.patch" )
-
-		# then incremental patches between RCs
-		# assumes there never is a RC10 since
-		# the last RC is usually RC8
-		local incr=2
-		local target_incr="${PV##*_rc}"
-		while (( incr <= target_incr )); do
-			kernel_base_src_uris+="
-				https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc${incr}/v${PV%_rc*}-rc$(( incr - 1 ))
-					-> 100$(( incr - 1 ))_linux-${PV%_rc*}-rc${incr}.patch
-			"
-			rc_patches+=( "100$(( incr - 1 ))_linux-${PV%_rc*}-rc${incr}.patch" )
-			incr=$(( incr + 1 ))
-		done
-	else
-		# for stable releases we have the base
-		# incremental patches are supplied by genpatches
-		kernel_base_src_uris+="
-			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/linux-${kernel_base_version}.tar.xz
-			https://gitweb.gentoo.org/proj/linux-patches.git/snapshot/${GENPATCHES_P}.tar.bz2
-		"
-	fi
-
-	export SRC_URI="${SRC_URI} ${kernel_base_src_uris}"
-	export S="${WORKDIR}/linux-${kernel_base_version}"
-	export RC_PATCHES=( "${rc_patches[@]}" )
-}
-
-# adds cachyos config sources to SRC_URI
-cachy_config_env_setup() {
-	local base spec cond patch file
-	local cachy_config_uris=""
-	base="https://raw.githubusercontent.com/CachyOS/linux-cachyos"
-	base+="/${CONFIG_COMMIT}"
-	if [[ ${PV} == *_rc* ]]; then
-		# RC only has cachyos flavour
-		cachy_config_uris+="${base}/linux-cachyos-rc/config -> ${CONFIG_P}-cachyos.config "
-	else
-		for flavour in ${FLAVOURS}; do
-			file="${CONFIG_P}-${flavour}.config"
-			if [[ "${flavour}" == "cachyos" ]]; then
-				cachy_config_uris+="${flavour}? ( ${base}/linux-cachyos/config -> ${file} ) "
-			else
-				cachy_config_uris+="${flavour}? ( ${base}/linux-cachyos-${flavour}/config -> ${file} ) "
-			fi
-		done
-	fi
-	export SRC_URI="${SRC_URI} ${cachy_config_uris}"
-}
-
-# adds cachyos patch sources to SRC_URI
-cachy_patch_env_setup() {
-	local base spec cond patch file
-	local cachy_patch_uris=""
-	base="https://raw.githubusercontent.com/CachyOS/kernel-patches"
-	base+="/${PATCH_COMMIT}/$(ver_cut 1-2)"
-	for spec in "${CACHY_PATCH_SPECS[@]}"; do
-		IFS=":" read -r cond patch <<<"${spec}"
-		file="${PATCH_P}-${patch##*/}"
-		if [[ "${cond}" == "-" ]]; then
-			cachy_patch_uris+="${base}/${patch} -> ${file} "
-		else
-			cachy_patch_uris+="${cond}? ( ${base}/${patch} -> ${file} ) "
-		fi
-	done
-	export SRC_URI="${SRC_URI} ${cachy_patch_uris}"
-}
 
 DESCRIPTION="Linux kernel built with CachyOS and Gentoo patches"
 HOMEPAGE="
@@ -147,16 +59,16 @@ HOMEPAGE="
 	https://www.kernel.org/
 "
 
-# env setup helpers
-kernel_base_env_setup
-cachy_config_env_setup
-cachy_patch_env_setup
-SRC_URI+="
+[[ ${PV} != *_rc* ]] && KEYWORDS="~amd64"
+
+# Gentoo patches and config
+# the rest will be set via helpers below
+SRC_URI="
+	https://dev.gentoo.org/~mgorny/dist/linux/${GENTOO_PATCHSET}.tar.xz
 	https://github.com/projg2/gentoo-kernel-config/archive/${GENTOO_CONFIG_VER}.tar.gz
 		-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
 "
 
-[[ ${PV} != *_rc* ]] && KEYWORDS="~amd64"
 IUSE="cfi clang debug lto ${FLAVOURS/cachyos/+cachyos}"
 REQUIRED_USE="
 	^^ ( ${FLAVOURS} )
@@ -182,6 +94,145 @@ QA_FLAGS_IGNORED="
 	usr/src/linux-.*/vmlinux
 	usr/src/linux-.*/arch/powerpc/kernel/vdso.*/vdso.*.so.dbg
 "
+
+# append a list of kernel sources and incremental patches to SRC_URI
+# and sets S to the correct directory
+kernel_base_env_setup() {
+	local kernel_base_src_uris=""
+	local kernel_base_version="${PV%.*}"
+	local incr target_incr
+	local cdn_patch our_incr our_patch
+	local -a rc_patches stable_patches
+	if [[ "${PV}" == *_rc* ]]; then
+		# for RCs fetch the last stable as a base
+		kernel_base_version="$(ver_cut 1).$(( $(ver_cut 2) - 1 ))"
+		kernel_base_src_uris+="
+			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/linux-${kernel_base_version}.tar.xz
+		"
+
+		# then patches from git.kernel.org
+		# patches follow genpatches 1000+ convention
+
+		# the big RC1 patch is seperate
+		our_patch="1000_linux-${PV%_rc*}-rc1.patch"
+		kernel_base_src_uris+="
+			https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc1/v${kernel_base_version}
+				-> ${our_patch}
+		"
+		rc_patches+=( "${our_patch}" )
+
+		# then incremental patches between RCs
+		incr=2
+		target_incr="${PV##*_rc}"
+		while (( incr <= target_incr )); do
+			# leftpad incr with 0 which allows 1000-1999
+			our_incr="1$(printf '%0*d' 3 "$(( incr - 1 ))")"
+			our_patch="${our_incr}_linux-${PV%_rc*}-rc${incr}.patch"
+			kernel_base_src_uris+="
+				https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc${incr}/v${PV%_rc*}-rc$(( incr - 1 ))
+					-> ${our_patch}
+			"
+			rc_patches+=( "${our_patch}" )
+			incr=$(( incr + 1 ))
+		done
+	elif [[ $(ver_cut 3) == 0 ]]; then
+		# for initial stable releases we only have the base
+		kernel_base_src_uris+="
+			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/linux-${kernel_base_version}.tar.xz
+		"
+	else
+		# for other stable releases we have the base
+		kernel_base_src_uris+="
+			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/linux-${kernel_base_version}.tar.xz
+		"
+
+		# then patches from cdn.kernel.org
+		# patches follow genpatches 1000+ convention
+
+		# the first x.x.1 patch is seperate
+		cdn_patch="patch-${kernel_base_version}.1.xz"
+		our_patch="1000_linux-${kernel_base_version}.1.patch.xz"
+		kernel_base_src_uris+="
+			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/${cdn_patch}
+				-> ${our_patch}
+		"
+		stable_patches+=( "${our_patch}" )
+
+		# then incremental patches between minor versions
+		incr=2
+		target_incr="$(ver_cut 3)"
+		while (( incr <= target_incr )); do
+			cdn_patch="patch-${kernel_base_version}.$(( incr - 1 ))-${incr}.xz"
+			# leftpad incr with 0 which allows 1000-1999
+			our_incr="1$(printf '%0*d' 3 "$(( incr - 1 ))")"
+			our_patch="${our_incr}_linux-${kernel_base_version}.${incr}.patch.xz"
+			kernel_base_src_uris+="
+				https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/incr/${cdn_patch}
+					-> ${our_patch}
+			"
+			stable_patches+=( "${our_patch}" )
+			incr=$(( incr + 1 ))
+		done
+	fi
+
+	declare -g SRC_URI="${SRC_URI} ${kernel_base_src_uris}"
+	declare -g S="${WORKDIR}/linux-${kernel_base_version}"
+	declare -g RC_PATCHES=( "${rc_patches[@]}" )
+	declare -g STABLE_PATCHES=( "${stable_patches[@]%.xz}" )
+}
+
+# adds cachyos config sources to SRC_URI
+cachy_config_env_setup() {
+	local base spec cond patch file flavour
+	local cachy_config_uris=""
+	base="https://raw.githubusercontent.com/CachyOS/linux-cachyos"
+	base+="/${CONFIG_COMMIT}"
+	if [[ ${PV} == *_rc* ]]; then
+		# RC only has cachyos flavour
+		cachy_config_uris+="${base}/linux-cachyos-rc/config -> ${CONFIG_P}-cachyos.config "
+	else
+		for flavour in ${FLAVOURS}; do
+			file="${CONFIG_P}-${flavour}.config"
+			if [[ "${flavour}" == "cachyos" ]]; then
+				cachy_config_uris+="${flavour}? ( ${base}/linux-cachyos/config -> ${file} ) "
+			else
+				cachy_config_uris+="${flavour}? ( ${base}/linux-cachyos-${flavour}/config -> ${file} ) "
+			fi
+		done
+	fi
+	declare -g SRC_URI="${SRC_URI} ${cachy_config_uris}"
+}
+
+# adds cachyos patch sources to SRC_URI
+# and sets up IUSE_PATTERN to check if a flag is in IUSE
+cachy_patch_env_setup() {
+	local -a iuse_arr
+	read -r -a iuse_arr <<<"${IUSE}"
+	iuse_arr=( "${iuse_arr[@]#+}" )
+	local IFS="|"
+	declare -g IUSE_PATTERN="${iuse_arr[*]}"
+	unset IFS
+
+	local base spec cond patch file
+	local cachy_patch_uris=""
+	base="https://raw.githubusercontent.com/CachyOS/kernel-patches"
+	base+="/${PATCH_COMMIT}/$(ver_cut 1-2)"
+	for spec in "${CACHY_PATCH_SPECS[@]}"; do
+		IFS=":" read -r cond patch <<<"${spec}"
+		file="${PATCH_P}-${patch##*/}"
+		if [[ "${cond}" == "-" ]]; then
+			cachy_patch_uris+="${base}/${patch} -> ${file} "
+		elif [[ "${cond}" =~ ${IUSE_PATTERN} ]]; then
+			cachy_patch_uris+="${cond}? ( ${base}/${patch} -> ${file} ) "
+		fi
+	done
+	declare -g SRC_URI="${SRC_URI} ${cachy_patch_uris}"
+}
+
+# env setup helpers
+kernel_base_env_setup
+cachy_config_env_setup
+cachy_patch_env_setup
 
 # get the selected flavour from FLAVOURS
 cachy_flavour() {
@@ -220,36 +271,56 @@ cachy_stage_patches() {
 	einfo "Staging patches to be applied in ${target} ..."
 	mkdir -p "${target}" || die
 
-	# genpatches live in ${WORKDIR}/${GENPATCHES_P}
-	# we want everything in the 1000-4999 range (base+extra)
-	if [[ ${PV} != *_rc* ]]; then
-		pushd "${WORKDIR}/${GENPATCHES_P}" >/dev/null || die
-		local file
-		for file in *.patch; do
-			if [[ "${file}" =~ [1-4][0-9][0-9][0-9]_.*\.patch ]]; then
-				cp -t "${target}" "${file}" || die
-			fi
-		done
-		popd >/dev/null || die
-	fi
-
 	# RC patches are not compressed and thus in DISTDIR
-	if [[ ${PV} == *_rc* ]]; then
+	if [[ -n "${RC_PATCHES[*]}" ]]; then
+		einfo "Staging RC patches"
 		pushd "${DISTDIR}" >/dev/null || die
 		cp -t "${target}" "${RC_PATCHES[@]}" || die
 		popd >/dev/null || die
 	fi
 
+	# stable patches are compressed and thus in WORKDIR
+	if [[ -n "${STABLE_PATCHES[*]}" ]]; then
+		einfo "Staging stable patches"
+		pushd "${WORKDIR}" >/dev/null || die
+		cp -t "${target}" "${STABLE_PATCHES[@]}" || die
+		popd >/dev/null || die
+	fi
+
+	# Gentoo patches live in ${WORKDIR}/${GENTOO_PATCHSET}
+	einfo "Staging Gentoo patches"
+	pushd "${WORKDIR}/${GENTOO_PATCHSET}" >/dev/null || die
+	local incr=2000
+	local file
+	for file in *.patch; do
+		cp "${file}" "${target}/${incr}_${file#????-}" || die
+		incr=$(( incr + 1 ))
+
+		# we want everything up to the Gentoo KConfig patch
+		# everything after it is considered experimental
+		# according to gentoo-kernel ebuild
+		if [[ "${file}" == *Add-Gentoo-Linux-support-config-settings* ]]; then
+			break
+		fi
+	done
+	popd >/dev/null || die
+
 	# cachy patches need to be prefixed starting at 6000
+	einfo "Staging Cachy patches"
 	local incr=6000
 	local spec cond patch file
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
 		IFS=":" read -r cond patch <<<"${spec}" || die
 		file="${PATCH_P}-${patch##*/}"
-		if [[ "${cond}" == "-" ]] || use "${cond}"; then
-			cp "${DISTDIR}/${file}" "${target}/${incr}_${file}" || die
-			incr=$(( incr + 1 ))
+		if [[ "${cond}" == "-" ]]; then
+			true
+		elif [[ "${cond}" =~ ${IUSE_PATTERN} ]] && use "${cond}"; then
+			true
+		else
+			continue
 		fi
+		cp "${DISTDIR}/${file}" "${target}/${incr}_${file}" || die
+		incr=$(( incr + 1 ))
 	done
 
 	# extra patches
