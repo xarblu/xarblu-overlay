@@ -8,4 +8,8 @@
 	<upstream>
 		<remote-id type="github">matinlotfali/KDE-Rounded-Corners</remote-id>
 	</upstream>
+	<use>
+		<flag name="wayland">Build the effect for <pkg>kde-plasma/kwin</pkg> (6.4+)</flag>
+		<flag name="X">Build the effect for <pkg>kde-plasma/kwin-x11</pkg> (6.4+)</flag>
+	</use>
 </pkgmetadata>
