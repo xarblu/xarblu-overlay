@@ -308,11 +308,19 @@ src_prepare() {
 
 src_configure() {
 	local EMESON_BUILDTYPE=$(usex debug debug release)
-	meson_src_configure
+	cargo_env meson_src_configure
+}
+
+src_compile() {
+	cargo_env meson_src_compile
 }
 
 src_test() {
-	meson_src_test
+	cargo_env meson_src_test
+}
+
+src_install() {
+	cargo_env meson_src_install
 }
 
 pkg_postinst() {
