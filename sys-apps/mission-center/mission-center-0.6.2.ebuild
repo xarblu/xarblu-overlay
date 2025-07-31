@@ -236,7 +236,10 @@ PYTHON_COMPAT=( python3_{10..13} )
 # from src/sys_info_v2/gatherer/3rdparty/nvtop/nvtop.json
 NVTOP_COMMIT=20ea55dbd1eeb4342ff0112fae3ee2a0bfe352ea
 
-inherit cargo gnome2-utils meson python-any-r1 xdg
+# cargo + meson for src_* (explicit)
+# gnome2 for pkg_{preinst,postinst,postrm} (implicit)
+# python-any-r1 for build time python dep
+inherit cargo gnome2 meson python-any-r1
 
 DESCRIPTION="Monitor your CPU, Memory, Disk, Network and GPU usage."
 HOMEPAGE="https://missioncenter.io/"
@@ -303,6 +306,7 @@ src_prepare() {
 	local nvtop_dest="${BUILD_DIR}/src/sys_info_v2/gatherer/src/$(usex debug debug release)/build/native"
 	mkdir -p "${nvtop_dest}" || die
 	mv "${WORKDIR}/nvtop-${NVTOP_COMMIT}" "${nvtop_dest}" || die
+
 	default
 }
 
@@ -321,12 +325,4 @@ src_test() {
 
 src_install() {
 	cargo_env meson_src_install
-}
-
-pkg_postinst() {
-	gnome2_schemas_update
-}
-
-pkg_postrm() {
-	gnome2_schemas_update
 }

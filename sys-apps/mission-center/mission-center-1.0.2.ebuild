@@ -395,7 +395,10 @@ MAGPIE_COMMIT="319d95d29cbc3c373ae61cff228e8440fbaadbbb"
 # subprojects/magpie/platform-linux/3rdparty/nvtop/nvtop.json
 NVTOP_COMMIT="73291884d926445e499d6b9b71cb7a9bdbc7c393"
 
-inherit cargo gnome2-utils meson python-any-r1 xdg
+# cargo + meson for src_* (explicit)
+# gnome2 for pkg_{preinst,postinst,postrm} (implicit)
+# python-any-r1 for build time python dep
+inherit cargo gnome2 meson python-any-r1
 
 DESCRIPTION="Monitor your CPU, Memory, Disk, Network and GPU usage."
 HOMEPAGE="https://missioncenter.io/"
@@ -484,14 +487,10 @@ src_compile() {
 	cargo_env meson_src_compile
 }
 
+src_test() {
+	cargo_env meson_src_test
+}
+
 src_install() {
 	cargo_env meson_src_install
-}
-
-pkg_postinst() {
-	gnome2_schemas_update
-}
-
-pkg_postrm() {
-	gnome2_schemas_update
 }

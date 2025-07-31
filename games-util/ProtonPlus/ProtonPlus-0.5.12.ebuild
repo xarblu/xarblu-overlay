@@ -3,7 +3,9 @@
 
 EAPI=8
 
-inherit vala gnome2-utils meson
+# vala + meson for src_*
+# gnome2 for pkg_{preinst,postinst,postrm}
+inherit vala gnome2 meson
 
 DESCRIPTION="A modern compatibility tools manager"
 HOMEPAGE="https://github.com/Vysp3r/ProtonPlus"
@@ -31,12 +33,4 @@ RDEPEND="${DEPEND}"
 src_prepare() {
 	default
 	vala_setup
-}
-
-pkg_postinst() {
-	gnome2_schemas_update
-}
-
-pkg_postrm() {
-	gnome2_schemas_update
 }
