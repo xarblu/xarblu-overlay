@@ -13,11 +13,10 @@ SRC_URI="
 	https://github.com/xarblu/xarblu-overlay/releases/download/distfiles/${P}-deps.tar.xz
 "
 
-IUSE="+autoload"
-
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
+IUSE="+autoload"
 
 RDEPEND=">=media-video/mpv-0.33.0"
 

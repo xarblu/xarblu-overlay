@@ -29,6 +29,9 @@ RDEPEND="
 "
 
 src_install() {
+	insinto /etc/security/limits.d/
+	doins etc/security/limits.d/20-audio.conf
+
 	# only install script that make sense
 	dobin usr/bin/dlss-swapper
 	dobin usr/bin/dlss-swapper-dll
@@ -67,10 +70,7 @@ src_install() {
 
 		# dropins (doins to preserve names)
 		insinto "${systemd_utildir}/system"
-		doins -r  usr/lib/systemd/system/*.service.d
-
-		insinto "${systemd_utildir}/system"
-		doins -r  usr/lib/systemd/system/*.slice.d
+		doins -r  usr/lib/systemd/system/*.*.d
 
 		insinto "${systemd_utildir}/user.conf.d"
 		doins usr/lib/systemd/user.conf.d/*
@@ -90,7 +90,6 @@ pkg_postinst() {
 	udev_reload
 	tmpfiles_process \
 		coredump.conf \
-		optimize-interruptfreq.conf \
 		thp-shrinker.conf \
 		thp.conf
 }
