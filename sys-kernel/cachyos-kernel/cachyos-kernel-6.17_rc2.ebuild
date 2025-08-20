@@ -26,6 +26,9 @@ CONFIG_P="${PN}-${CONFIG_PV}"
 PATCH_COMMIT=90d3125d505dc1ea326b1d4ab326ceb48523186f
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
+# bcachefs backports version
+# https://github.com/xarblu/bcachefs-patches
+BCACHEFS_PATCH_DATE=20250820152127
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -72,7 +75,7 @@ SRC_URI="
 		-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
 "
 
-IUSE="cfi clang debug lto ${FLAVOURS/cachyos/+cachyos}"
+IUSE="bcachefs cfi clang debug lto ${FLAVOURS/cachyos/+cachyos}"
 REQUIRED_USE="
 	^^ ( ${FLAVOURS} )
 	cfi? ( clang )
@@ -233,10 +236,19 @@ cachy_patch_env_setup() {
 	declare -g SRC_URI="${SRC_URI} ${cachy_patch_uris}"
 }
 
+# adds bcachefs backport patch to SRC_URI
+bcachefs_patch_env_setup() {
+	declare -g BCACHEFS_PATCH="bcachefs-${BCACHEFS_PATCH_DATE}-for-${PV//_/-}.patch"
+	declare -g SRC_URI="${SRC_URI} bcachefs? (
+		https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/$(ver_cut 1-2)/${BCACHEFS_PATCH}
+	)"
+}
+
 # env setup helpers
 kernel_base_env_setup
 cachy_config_env_setup
 cachy_patch_env_setup
+bcachefs_patch_env_setup
 
 # get the selected flavour from FLAVOURS
 cachy_flavour() {
@@ -326,6 +338,12 @@ cachy_stage_patches() {
 		cp "${DISTDIR}/${file}" "${target}/${incr}_${file}" || die
 		incr=$(( incr + 1 ))
 	done
+
+	# bcachefs backport patch is 6500
+	if use bcachefs; then
+		cp "${DISTDIR}/${BCACHEFS_PATCH}" \
+			"${target}/6500_${BCACHEFS_PATCH}" || die
+	fi
 
 	# extra patches
 	if [[ "$(cachy_flavour)" == deckify ]]; then

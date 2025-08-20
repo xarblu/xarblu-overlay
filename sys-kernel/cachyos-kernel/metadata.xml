@@ -9,6 +9,9 @@
 		<remote-id type="github">CachyOS/linux-cachyos</remote-id>
 	</upstream>
 	<use>
+		<flag name="bcachefs">
+			Pull in latest bcachefs patches from https://evilpiepirate.org/git/bcachefs.git/ (UNOFFICIAL)
+		</flag>
 		<flag name="bmq">Flavour using the BMQ scheduler</flag>
 		<flag name="bore">Flavour using the BORE scheduler</flag>
 		<flag name="cachyos">Default CachyOS flavour</flag>
