@@ -1,6 +1,9 @@
 # Copyright 2020-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
+# shellcheck shell=bash
+# shellcheck disable=SC2034,SC2155
+
 EAPI=8
 
 KERNEL_IUSE_GENERIC_UKI=1
@@ -12,15 +15,15 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
 # https://dev.gentoo.org/~mgorny/dist/linux/
-GENTOO_PATCHSET=linux-gentoo-patches-6.15.8
+GENTOO_PATCHSET=linux-gentoo-patches-6.16.2
 # https://github.com/projg2/gentoo-kernel-config
-GENTOO_CONFIG_VER=g16
+GENTOO_CONFIG_VER=g17
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=c076ffb661a426236175eafcd7d0881fe687b9d5
+CONFIG_COMMIT=73e81ec0674cbb4cb3fa92954248ec3541dfa821
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=67ccfdfcc745d0ecb257f60c4c3f6787d91c4119
+PATCH_COMMIT=5fa8a55ebcc1f87d22ae2cee888ecf39b377c2b5
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 
@@ -77,6 +80,7 @@ REQUIRED_USE="
 	clang? ( ${LLVM_REQUIRED_USE} )
 "
 
+# shellcheck disable=SC2016 # we don't want LLVM_SLOT to expand
 BDEPEND="
 	clang? ( $(llvm_gen_dep '
 		llvm-core/clang:${LLVM_SLOT}=
@@ -331,57 +335,6 @@ cachy_stage_patches() {
 	fi
 }
 
-# eapply-like wrapper for patch
-cachy_apply() {
-	local failed patch_cmd=patch
-	local -x LC_COLLATE=POSIX
-
-	# for bsd userland support, use gpatch if available
-	type -P gpatch > /dev/null && patch_cmd=gpatch
-
-	# final argument is directory containing patches
-	# all previous args are passed to patch
-	local -a patch_args
-	local patch_dir
-	while (( ${#} > 1 )); do
-		patch_args+=( "${1}" ); shift
-	done
-	patch_dir="${1}"; shift
-
-	# we always want to apply the full staged directory
-	[[ ! -d "${patch_dir}" ]] && die "${patch_dir} is not a directory"
-
-	# default args from /usr/lib/portage/pypy3.11/phase-helpers.sh
-	# + cachy PKGBUILD --forward + user args
-	local all_patch_args=(
-		-p1 -f -g0 --no-backup-if-mismatch -s
-		--forward "${patch_args[@]}"
-	)
-
-	local file
-	local -a patches
-	for file in "${patch_dir}"/*; do
-		if [[ "${file}" != *.patch ]]; then
-			eqawarn "Not a patch file: ${file}"
-		else
-			patches+=( "${file}" )
-		fi
-	done
-
-	if (( ${#patches[@]} == 0 )); then
-		die "No patch files in ${patch_dir}"
-	fi
-
-	for file in "${patches[@]}"; do
-		ebegin "Applying ${file##*/}"
-		${patch_cmd} "${all_patch_args[@]}" < "${file}"
-		failed=${?}
-		if ! eend "${failed}"; then
-			die "${patch_cmd} ${all_patch_args[*]} failed with ${file}"
-		fi
-	done
-}
-
 # auto-detect closest march value
 cachy_processor_opt() {
 	# not supported but in case someone
@@ -399,6 +352,7 @@ cachy_processor_opt() {
 
 	# get closest march for others
 	# mostly shameless rip from qt6-build.eclass
+	# shellcheck disable=SC2086 # *FLAGS should split
 	local march=$(
 		$(tc-getCC) -E -P ${CFLAGS} ${CPPFLAGS} - <<-EOF | tail -n 1
 			default
@@ -824,10 +778,7 @@ src_prepare() {
 	# remove problematic patches
 
 	# apply package and user patches
-	# eapply silently passes -F0 for some reason so we
-	# have to use our own patch wrapper
-	# (see /usr/lib/portage/pypy3.11/phase-helpers.sh)
-	cachy_apply "${WORKDIR}/patches"
+	eapply "${WORKDIR}/patches"
 	eapply_user
 
 	# Localversion
@@ -852,7 +803,10 @@ src_prepare() {
 		"${dist_conf_path}/no-debug.config"
 	)
 
-	use secureboot && merge_configs+=( "${dist_conf_path}/secureboot.config" )
+	use secureboot && merge_configs+=(
+		"${dist_conf_path}/secureboot.config"
+		"${dist_conf_path}/zboot.config"
+	)
 
 	kernel-build_merge_configs "${merge_configs[@]}"
 }
