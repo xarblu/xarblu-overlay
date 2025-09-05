@@ -15,20 +15,17 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
 # https://dev.gentoo.org/~mgorny/dist/linux/
-GENTOO_PATCHSET=linux-gentoo-patches-6.16.1
+GENTOO_PATCHSET=linux-gentoo-patches-6.16.5_p1
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g17
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=1597dfad0b6b2a4b446456d23330083efc9f8fab
+CONFIG_COMMIT=993d05055acf1b4b308b67b0ea79baa0636456d2
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=90d3125d505dc1ea326b1d4ab326ceb48523186f
+PATCH_COMMIT=aa347eb03f9d5309ffe25a5ff7d54213607ec436
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
-# bcachefs backports version
-# https://github.com/xarblu/bcachefs-patches
-BCACHEFS_PATCH_DATE=20250820152127
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -75,7 +72,7 @@ SRC_URI="
 		-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
 "
 
-IUSE="bcachefs cfi clang debug lto ${FLAVOURS/cachyos/+cachyos}"
+IUSE="cfi clang debug lto ${FLAVOURS/cachyos/+cachyos}"
 REQUIRED_USE="
 	^^ ( ${FLAVOURS} )
 	cfi? ( clang )
@@ -236,19 +233,10 @@ cachy_patch_env_setup() {
 	declare -g SRC_URI="${SRC_URI} ${cachy_patch_uris}"
 }
 
-# adds bcachefs backport patch to SRC_URI
-bcachefs_patch_env_setup() {
-	declare -g BCACHEFS_PATCH="bcachefs-${BCACHEFS_PATCH_DATE}-for-${PV//_/-}.patch"
-	declare -g SRC_URI="${SRC_URI} bcachefs? (
-		https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/$(ver_cut 1-2)/${BCACHEFS_PATCH}
-	)"
-}
-
 # env setup helpers
 kernel_base_env_setup
 cachy_config_env_setup
 cachy_patch_env_setup
-bcachefs_patch_env_setup
 
 # get the selected flavour from FLAVOURS
 cachy_flavour() {
@@ -338,12 +326,6 @@ cachy_stage_patches() {
 		cp "${DISTDIR}/${file}" "${target}/${incr}_${file}" || die
 		incr=$(( incr + 1 ))
 	done
-
-	# bcachefs backport patch is 6500
-	if use bcachefs; then
-		cp "${DISTDIR}/${BCACHEFS_PATCH}" \
-			"${target}/6500_${BCACHEFS_PATCH}" || die
-	fi
 
 	# extra patches
 	if [[ "$(cachy_flavour)" == deckify ]]; then
@@ -794,10 +776,10 @@ src_prepare() {
 	cachy_stage_patches
 
 	# remove problematic patches
-	# needs rebasing
-	rm "${WORKDIR}/patches/2008_kheaders-make-it-possible-to-override-TAR.patch" || die
-	# upstreamed
-	rm "${WORKDIR}/patches/2009_btrfs-fix-log-tree-replay-failure-due-to-file-with-0.patch" || die
+	# usually these are genpatches that are also included in the cachyos-base-all patch
+	# or genpatches that are not rebased yet (common for RCs)
+	rm "${WORKDIR}/patches/2009_proc-fix-missing-pde_set_flags-for-net-proc-files.patch" || die
+	rm "${WORKDIR}/patches/2012_proc-fix-type-confusion-in-pde_set_flags.patch" || die
 
 	# apply package and user patches
 	eapply "${WORKDIR}/patches"
