@@ -23,7 +23,7 @@ CONFIG_COMMIT=993d05055acf1b4b308b67b0ea79baa0636456d2
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=aa347eb03f9d5309ffe25a5ff7d54213607ec436
+PATCH_COMMIT=d62cdf178f5b80aac3281bcd93d5632db637446f
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 # bcachefs backports version
