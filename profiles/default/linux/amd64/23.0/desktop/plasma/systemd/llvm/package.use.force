@@ -4,6 +4,7 @@
 # build 32 bit LLVM runtimes so clang -m32 works
 # this really is the bare minimum required
 # (::gentoo includes a couple more packages)
+llvm-runtimes/clang-rtlib-config abi_x86_32
 llvm-runtimes/clang-runtime abi_x86_32
 llvm-runtimes/compiler-rt abi_x86_32
 llvm-runtimes/compiler-rt-sanitizers abi_x86_32
