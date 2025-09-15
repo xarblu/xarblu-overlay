@@ -15,20 +15,20 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
 # https://dev.gentoo.org/~mgorny/dist/linux/
-GENTOO_PATCHSET=linux-gentoo-patches-6.16.4
+GENTOO_PATCHSET=linux-gentoo-patches-6.16.6
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g17
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=22b8d614e8e99418b6c133fa0ac6c350f7440a90
+CONFIG_COMMIT=d7c553d822d9ce8e64c18411add1a57befe5f3ea
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=c5ff86f886c87c3de2382882699003181558c447
+PATCH_COMMIT=9da77ca21d0a3f010e1e028361f0e5e64dd1a975
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 # bcachefs backports version
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_PATCH_DATE=20250901194309
+BCACHEFS_PATCH_DATE=20250915093910
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -797,8 +797,7 @@ src_prepare() {
 	# usually these are genpatches that are also included in the cachyos-base-all patch
 	# or genpatches that are not rebased yet (common for RCs)
 	rm "${WORKDIR}/patches/2008_kheaders-make-it-possible-to-override-TAR.patch" || die
-	rm "${WORKDIR}/patches/2010_net-ipv4-fix-regression-in-local-broadcast-routes.patch" || die
-	rm "${WORKDIR}/patches/2011_selftests-net-add-test-for-destination-in-broadcast-.patch" || die
+	rm "${WORKDIR}/patches/2009_proc-fix-type-confusion-in-pde_set_flags.patch" || die
 
 	# apply package and user patches
 	eapply "${WORKDIR}/patches"
