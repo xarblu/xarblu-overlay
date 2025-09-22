@@ -72,6 +72,11 @@ setup_fonts() {
 			*) die "Unknown font_tier: ${font_tier}" ;;
 		esac
 
+		# guard by USE if specified
+		if [[ "${font_use}" != '-' ]]; then
+			SRC_URI+=" ${font_use}? ( "
+		fi
+
 		# generate final urls
 		local font_type font_variant
 		for font_type in "${font_types[@]}"; do
@@ -93,6 +98,11 @@ setup_fonts() {
 				fi
 			done
 		done
+
+		# guard by USE if specified
+		if [[ "${font_use}" != '-' ]]; then
+			SRC_URI+=" ) "
+		fi
 	done < <(printf '%s\n' "${FONT_SPECS[@]}")
 }
 setup_fonts
@@ -102,7 +112,7 @@ S="${WORKDIR}"
 LICENSE="OFL-1.1"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE+="otf +ttf variable"
+IUSE="cjk otf +ttf variable"
 
 REQUIRED_USE="
 	|| ( otf ttf )
