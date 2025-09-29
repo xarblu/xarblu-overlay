@@ -1,0 +1,26 @@
+From d9ca8915766c06aa2d0a053a69bf8f438fb6e2a2 Mon Sep 17 00:00:00 2001
+From: Xarblu <xarblu@protonmail.com>
+Date: Tue, 30 Sep 2025 00:10:51 +0200
+Subject: [PATCH] Explicitly find component CorePrivate on Qt 6.10+
+
+---
+ CMakeLists.txt | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index aaaa8ff..d0068fe 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -22,6 +22,12 @@ include(cmake/qtversion.cmake)
+ find_package(KF${QT_MAJOR_VERSION} ${KF_MIN_VERSION} REQUIRED COMPONENTS ConfigWidgets I18n)
+ 
+ if(${QT_MAJOR_VERSION} EQUAL 6)
++    find_package(Qt6 REQUIRED COMPONENTS DBus)
++
++    if(${Qt6_VERSION} VERSION_GREATER_EQUAL 6.10)
++        find_package(Qt6 REQUIRED COMPONENTS CorePrivate)
++    endif()
++
+     find_package(KF${QT_MAJOR_VERSION} ${KF_MIN_VERSION} REQUIRED COMPONENTS KCMUtils)
+ 
+     option(KWIN_X11 "Build for KWin X11 instead of Wayland" OFF)

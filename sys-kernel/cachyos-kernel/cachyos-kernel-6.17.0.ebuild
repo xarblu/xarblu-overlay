@@ -15,23 +15,26 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
 # https://dev.gentoo.org/~mgorny/dist/linux/
-GENTOO_PATCHSET=linux-gentoo-patches-6.16.5_p1
+GENTOO_PATCHSET=linux-gentoo-patches-6.16.8
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g17
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=993d05055acf1b4b308b67b0ea79baa0636456d2
+CONFIG_COMMIT=380e2ca2d12a6ff406acc1f32963b4de091de3b5
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=aa347eb03f9d5309ffe25a5ff7d54213607ec436
+PATCH_COMMIT=abc0458b2f054916506cddee1cc3353e63cd7086
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
+# bcachefs backports version
+# https://github.com/xarblu/bcachefs-patches
+BCACHEFS_VER=1.31.6
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
 
 # RCs only have main flavour
-[[ ${PV} == *_rc* ]] && FLAVOURS="cachyos"
+[[ "${PV}" == *_rc* ]] && FLAVOURS="cachyos"
 
 # array of patches in format
 # <use>:<path/to.patch>
@@ -55,6 +58,13 @@ CACHY_PATCH_SPECS=(
 	clang:misc/dkms-clang.patch
 )
 
+# bad patches that don't apply properly
+# usually these are genpatches that are also included in the cachyos-base-all patch
+# or genpatches that are not rebased yet (common for RCs)
+BAD_PATCHES=(
+	2008_kheaders-make-it-possible-to-override-TAR.patch
+)
+
 DESCRIPTION="Linux kernel built with CachyOS and Gentoo patches"
 HOMEPAGE="
 	https://cachyos.org/
@@ -62,7 +72,7 @@ HOMEPAGE="
 	https://www.kernel.org/
 "
 
-[[ ${PV} != *_rc* ]] && KEYWORDS="~amd64"
+[[ "${PV}" != *_rc* ]] && KEYWORDS="~amd64"
 
 # Gentoo patches and config
 # the rest will be set via helpers below
@@ -72,7 +82,7 @@ SRC_URI="
 		-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
 "
 
-IUSE="cfi clang debug lto ${FLAVOURS/cachyos/+cachyos}"
+IUSE="bcachefs cfi clang debug lto ${FLAVOURS/cachyos/+cachyos}"
 REQUIRED_USE="
 	^^ ( ${FLAVOURS} )
 	cfi? ( clang )
@@ -91,6 +101,14 @@ BDEPEND="
 "
 PDEPEND="
 	>=virtual/dist-kernel-${PV}
+"
+# enforce bcachefs-tools version on minor-level
+# to make sure there are no weird kernel/user-space
+# incompatibilities
+RDEPEND="
+	bcachefs? (
+		>=sys-fs/bcachefs-tools-$(ver_cut 1-2 "${BCACHEFS_VER}")
+	)
 "
 
 QA_FLAGS_IGNORED="
@@ -233,10 +251,24 @@ cachy_patch_env_setup() {
 	declare -g SRC_URI="${SRC_URI} ${cachy_patch_uris}"
 }
 
+# adds bcachefs backport patch to SRC_URI
+bcachefs_patch_env_setup() {
+	declare -g BCACHEFS_PATCH
+	if [[ "${PV}" == *_rc* ]]; then
+		BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v${PV//_/-}.patch"
+	else
+		BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v$(ver_cut 1-2).patch"
+	fi
+	declare -g SRC_URI="${SRC_URI} bcachefs? (
+		https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/$(ver_cut 1-2)/${BCACHEFS_PATCH}
+	)"
+}
+
 # env setup helpers
 kernel_base_env_setup
 cachy_config_env_setup
 cachy_patch_env_setup
+bcachefs_patch_env_setup
 
 # get the selected flavour from FLAVOURS
 cachy_flavour() {
@@ -327,12 +359,24 @@ cachy_stage_patches() {
 		incr=$(( incr + 1 ))
 	done
 
+	# bcachefs backport patch is 6500
+	if use bcachefs; then
+		cp "${DISTDIR}/${BCACHEFS_PATCH}" \
+			"${target}/6500_${BCACHEFS_PATCH}" || die
+	fi
+
 	# extra patches
 	if [[ "$(cachy_flavour)" == deckify ]]; then
 		# handheld.patch makes ath11k_pci use QCA206X firmware
 		# this firmware A) is annoying to find and B) simply doesn't work
 		cp -t "${target}" "${FILESDIR}/7000_revert-ath11k-firmware.patch" || die
 	fi
+
+	# remove problematic patches
+	local patch
+	for patch in "${BAD_PATCHES[@]}"; do
+		rm "${target}/${patch}" || die
+	done
 }
 
 # auto-detect closest march value
@@ -774,12 +818,6 @@ pkg_setup() {
 src_prepare() {
 	# prepare and stage patches
 	cachy_stage_patches
-
-	# remove problematic patches
-	# usually these are genpatches that are also included in the cachyos-base-all patch
-	# or genpatches that are not rebased yet (common for RCs)
-	rm "${WORKDIR}/patches/2009_proc-fix-missing-pde_set_flags-for-net-proc-files.patch" || die
-	rm "${WORKDIR}/patches/2012_proc-fix-type-confusion-in-pde_set_flags.patch" || die
 
 	# apply package and user patches
 	eapply "${WORKDIR}/patches"
