@@ -1,6 +1,9 @@
 # Copyright 1999-2025 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
+# shellcheck shell=bash
+# shellcheck disable=SC2034
+
 EAPI=8
 
 inherit go-module systemd
@@ -17,7 +20,9 @@ LICENSE="Apache-2.0"
 SLOT="0"
 KEYWORDS="~amd64 ~arm ~arm64 ~ppc64 ~x86"
 
-BDEPEND=">=dev-lang/go-1.24.1:="
+BDEPEND=">=dev-lang/go-1.25.1:="
+
+QA_PRESTRIPPED="/usr/bin/dnsproxy"
 
 src_compile() {
 	# from ./scripts/make/go-build.sh
