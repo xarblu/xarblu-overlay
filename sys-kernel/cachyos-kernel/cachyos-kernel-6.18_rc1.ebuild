@@ -29,7 +29,7 @@ PATCH_P="${PN}-${PATCH_PV}"
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.31.7
+BCACHEFS_VER=
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -100,14 +100,6 @@ BDEPEND="
 "
 PDEPEND="
 	>=virtual/dist-kernel-${PV}
-"
-# enforce bcachefs-tools version on minor-level
-# to make sure there are no weird kernel/user-space
-# incompatibilities
-RDEPEND="
-	bcachefs? (
-		>=sys-fs/bcachefs-tools-$(ver_cut 1-2 "${BCACHEFS_VER}")
-	)
 "
 
 QA_FLAGS_IGNORED="
@@ -252,6 +244,8 @@ cachy_patch_env_setup() {
 
 # adds bcachefs backport patch to SRC_URI
 bcachefs_patch_env_setup() {
+	[[ -z "${BCACHEFS_VER}" ]] && return
+
 	declare -g BCACHEFS_PATCH
 	if [[ "${PV}" == *_rc* ]]; then
 		BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v${PV//_/-}.patch"
@@ -261,6 +255,15 @@ bcachefs_patch_env_setup() {
 	declare -g SRC_URI="${SRC_URI} bcachefs? (
 		https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/$(ver_cut 1-2)/${BCACHEFS_PATCH}
 	)"
+
+	# enforce bcachefs-tools version on minor-level
+	# to make sure there are no weird kernel/user-space
+	# incompatibilities
+	RDEPEND+="
+		bcachefs? (
+			>=sys-fs/bcachefs-tools-$(ver_cut 1-2 "${BCACHEFS_VER}")
+		)
+	"
 }
 
 # env setup helpers
@@ -359,7 +362,7 @@ cachy_stage_patches() {
 	done
 
 	# bcachefs backport patch is 6500
-	if use bcachefs; then
+	if use bcachefs && [[ -n "${BCACHEFS_VER}" ]]; then
 		cp "${DISTDIR}/${BCACHEFS_PATCH}" \
 			"${target}/6500_${BCACHEFS_PATCH}" || die
 	fi
@@ -785,13 +788,26 @@ cachy_use_config() {
 	kconf set USER_NS
 
 	# bcachefs defaults
-	if use bcachefs; then
+	if use bcachefs && [[ -n "${BCACHEFS_VER}" ]]; then
 		kconf mod BCACHEFS_FS
 		kconf set BCACHEFS_QUOTA
 		kconf set BCACHEFS_POSIX_ACL
 		kconf set BCACHEFS_LOCK_TIME_STATS
 		kconf set BCACHEFS_SIX_OPTIMISTIC_SPIN
 	fi
+}
+
+pkg_pretend() {
+	# die instead of just masking/dropping USE
+	# to make extra sure users don't unknowingly lose
+	# access to their filesystem
+	if use bcachefs && [[ -z "${BCACHEFS_VER}" ]]; then
+		eerror "bcachefs is currently broken on kernel $(ver_cut 1-2)"
+		eerror "Failing early to make sure you know and don't lose access to your fs"
+		die "broken bcachefs"
+	fi
+
+	kernel-install_pkg_pretend
 }
 
 pkg_setup() {
