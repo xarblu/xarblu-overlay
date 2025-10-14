@@ -29,7 +29,7 @@ PATCH_P="${PN}-${PATCH_PV}"
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=
+BCACHEFS_VER=1.31.8
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -362,7 +362,7 @@ cachy_stage_patches() {
 	done
 
 	# bcachefs backport patch is 6500
-	if use bcachefs && [[ -n "${BCACHEFS_VER}" ]]; then
+	if use bcachefs; then
 		cp "${DISTDIR}/${BCACHEFS_PATCH}" \
 			"${target}/6500_${BCACHEFS_PATCH}" || die
 	fi
@@ -788,7 +788,7 @@ cachy_use_config() {
 	kconf set USER_NS
 
 	# bcachefs defaults
-	if use bcachefs && [[ -n "${BCACHEFS_VER}" ]]; then
+	if use bcachefs; then
 		kconf mod BCACHEFS_FS
 		kconf set BCACHEFS_QUOTA
 		kconf set BCACHEFS_POSIX_ACL
@@ -805,6 +805,10 @@ pkg_pretend() {
 		eerror "bcachefs is currently broken on kernel $(ver_cut 1-2)"
 		eerror "Failing early to make sure you know and don't lose access to your fs"
 		die "broken bcachefs"
+	fi
+
+	if use bcachefs; then
+		elog "This kernel will have support for bcachefs ${BCACHEFS_VER} built in"
 	fi
 
 	kernel-install_pkg_pretend
