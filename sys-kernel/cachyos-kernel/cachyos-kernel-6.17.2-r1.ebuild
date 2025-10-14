@@ -45,7 +45,8 @@ CACHY_PATCH_SPECS=(
 	# global
 	-:all/0001-cachyos-base-all.patch
 	# flavours
-	cachyos:sched/0001-bore-cachy.patch
+	# supposedly has regressions
+	#cachyos:sched/0001-bore-cachy.patch
 	bmq:sched/0001-prjc-cachy.patch
 	bore:sched/0001-bore-cachy.patch
 	deckify:misc/0001-acpi-call.patch
