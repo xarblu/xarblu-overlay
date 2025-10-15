@@ -15,21 +15,21 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
 # https://dev.gentoo.org/~mgorny/dist/linux/
-GENTOO_PATCHSET=linux-gentoo-patches-6.16.10
+GENTOO_PATCHSET=linux-gentoo-patches-6.17.2
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g17
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=709f0cf3d9be2d3007d6a0d807d80eb304a203ad
+CONFIG_COMMIT=f779f09f76337eeded7a40c6a531ad8efa9f96d3
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=d99ad9a54bdea6733d18ce041694e350354cb428
+PATCH_COMMIT=4015bbcac0d77539d867f069d777b223dcb21a33
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.31.7
+BCACHEFS_VER=
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -45,8 +45,7 @@ CACHY_PATCH_SPECS=(
 	# global
 	-:all/0001-cachyos-base-all.patch
 	# flavours
-	# supposedly has regressions
-	#cachyos:sched/0001-bore-cachy.patch
+	cachyos:sched/0001-bore-cachy.patch
 	bmq:sched/0001-prjc-cachy.patch
 	bore:sched/0001-bore-cachy.patch
 	deckify:misc/0001-acpi-call.patch
@@ -63,9 +62,7 @@ CACHY_PATCH_SPECS=(
 # bad patches that don't apply properly
 # usually these are genpatches that are also included in the cachyos-base-all patch
 # or genpatches that are not rebased yet (common for RCs)
-BAD_PATCHES=(
-	2008_kheaders-make-it-possible-to-override-TAR.patch
-)
+BAD_PATCHES=()
 
 DESCRIPTION="Linux kernel built with CachyOS and Gentoo patches"
 HOMEPAGE="
@@ -103,14 +100,6 @@ BDEPEND="
 "
 PDEPEND="
 	>=virtual/dist-kernel-${PV}
-"
-# enforce bcachefs-tools version on minor-level
-# to make sure there are no weird kernel/user-space
-# incompatibilities
-RDEPEND="
-	bcachefs? (
-		>=sys-fs/bcachefs-tools-$(ver_cut 1-2 "${BCACHEFS_VER}")
-	)
 "
 
 QA_FLAGS_IGNORED="
@@ -255,6 +244,8 @@ cachy_patch_env_setup() {
 
 # adds bcachefs backport patch to SRC_URI
 bcachefs_patch_env_setup() {
+	[[ -z "${BCACHEFS_VER}" ]] && return
+
 	declare -g BCACHEFS_PATCH
 	if [[ "${PV}" == *_rc* ]]; then
 		BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v${PV//_/-}.patch"
@@ -264,6 +255,15 @@ bcachefs_patch_env_setup() {
 	declare -g SRC_URI="${SRC_URI} bcachefs? (
 		https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/$(ver_cut 1-2)/${BCACHEFS_PATCH}
 	)"
+
+	# enforce bcachefs-tools version on minor-level
+	# to make sure there are no weird kernel/user-space
+	# incompatibilities
+	RDEPEND+="
+		bcachefs? (
+			>=sys-fs/bcachefs-tools-$(ver_cut 1-2 "${BCACHEFS_VER}")
+		)
+	"
 }
 
 # env setup helpers
@@ -795,6 +795,23 @@ cachy_use_config() {
 		kconf set BCACHEFS_LOCK_TIME_STATS
 		kconf set BCACHEFS_SIX_OPTIMISTIC_SPIN
 	fi
+}
+
+pkg_pretend() {
+	# die instead of just masking/dropping USE
+	# to make extra sure users don't unknowingly lose
+	# access to their filesystem
+	if use bcachefs && [[ -z "${BCACHEFS_VER}" ]]; then
+		eerror "bcachefs is currently broken on kernel $(ver_cut 1-2)"
+		eerror "Failing early to make sure you know and don't lose access to your fs"
+		die "broken bcachefs"
+	fi
+
+	if use bcachefs; then
+		elog "This kernel will have support for bcachefs ${BCACHEFS_VER} built in"
+	fi
+
+	kernel-install_pkg_pretend
 }
 
 pkg_setup() {
