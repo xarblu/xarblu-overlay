@@ -29,7 +29,7 @@ PATCH_P="${PN}-${PATCH_PV}"
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.31.9
+BCACHEFS_VER=1.31.11
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -786,6 +786,12 @@ cachy_use_config() {
 
 	# _user_ns
 	kconf set USER_NS
+
+	# handheld only
+	if [[ "$(cachy_flavour)" == deckify ]]; then
+		kconf unset RCU_LAZY_DEFAULT_OFF
+		kconf set AMD_PRIVATE_COLOR
+	fi
 
 	# bcachefs defaults
 	if use bcachefs; then
