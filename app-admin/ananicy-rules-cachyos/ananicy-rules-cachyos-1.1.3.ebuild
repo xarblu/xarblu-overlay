@@ -1,6 +1,9 @@
 # Copyright 1999-2025 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
+# shellchech shell=bash
+# shellcheck disable=SC2034
+
 EAPI=8
 
 MY_PN="${PN%-cachyos}"
