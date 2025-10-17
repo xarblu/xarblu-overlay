@@ -41,10 +41,10 @@ RDEPEND="
 	cachyos-rules? ( app-admin/ananicy-rules-cachyos )
 	systemd? ( sys-apps/systemd )
 "
-DEPEND="
+DEPEND="${RDEPEND}"
+BDEPEND="
 	>=dev-build/cmake-3.17
 	clang? ( >=llvm-core/clang-20 )
-	${RDEPEND}
 "
 
 PATCHES=(
