@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Vesktop
+Exec=vesktop-bin %U
+Terminal=false
+Type=Application
+Icon=vesktop-bin
+StartupWMClass=vesktop
+GenericName=Internet Messenger
+Categories=Network;
+Keywords=discord;vencord;electron;chat;
+MimeType=x-scheme-handler/discord;
+Comment=Vesktop is a custom Discord desktop app
