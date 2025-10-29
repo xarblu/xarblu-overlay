@@ -1,0 +1,39 @@
+From b63d61696ca394178c06ff52f30334ea6479a828 Mon Sep 17 00:00:00 2001
+From: Xarblu <xarblu@protonmail.com>
+Date: Wed, 29 Oct 2025 10:05:27 +0100
+Subject: [PATCH] use bundled imgui and implot
+
+We expect these to be used anyways but users may
+have them installed from other overlays.
+Remove the auto-magic dep detection and always use the bundled
+version.
+
+Closes: https://github.com/xarblu/xarblu-overlay/issues/787
+Signed-off-by: Xarblu <xarblu@protonmail.com>
+---
+ meson.build | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index ebe37c8..a485907 100644
+--- a/meson.build
++++ b/meson.build
+@@ -222,10 +222,13 @@ if get_option('mangoapp')
+     'glfw=enabled',
+   ]
+ endif
+-dearimgui_dep = dependency('imgui', fallback: ['imgui'], required: true, default_options: imgui_options)
++
++dearimgui_sp = subproject('imgui', default_options: imgui_options)
++dearimgui_dep = dearimgui_sp.get_variable('imgui_dep')
+ 
+ if is_unixy
+-implot_dep = dependency('implot', fallback: ['implot'], required: true, default_options: ['default_library=static'])
++implot_sp = subproject('implot', default_options: ['default_library=static'])
++implot_dep = implot_sp.get_variable('implot_dep')
+ else
+ implot_dep = null_dep
+ implot_lib = static_library('nulllib', [])
+-- 
+2.51.2
+
