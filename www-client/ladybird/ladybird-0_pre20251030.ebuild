@@ -40,11 +40,12 @@ DEPEND="
 	dev-libs/libdispatch
 	dev-libs/openssl
 	dev-qt/qtbase:6=[widgets]
+	media-libs/angle
 	media-libs/fontconfig
+	media-libs/libsdl3
 	media-libs/skia
 	net-misc/curl
 	sys-libs/zlib
-	media-libs/libsdl3
 "
 RDEPEND="${DEPEND}"
 
