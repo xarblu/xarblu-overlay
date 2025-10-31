@@ -90,9 +90,10 @@ CRATES="
 	zeroize_derive@1.4.2
 "
 
-LLVM_COMPAT=( {17..20} )
+LLVM_COMPAT=( {17..21} )
 PYTHON_COMPAT=( python3_{11..14} )
 RUST_MIN_VER="1.77.0"
+RUST_NEEDS_LLVM=1
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/kentoverstreet.asc
 
 inherit cargo flag-o-matic llvm-r1 python-any-r1 shell-completion toolchain-funcs unpacker verify-sig
@@ -103,7 +104,8 @@ if [[ ${PV} == "9999" ]]; then
 	inherit git-r3
 	EGIT_REPO_URI="https://evilpiepirate.org/git/bcachefs-tools.git"
 else
-	SRC_URI="https://evilpiepirate.org/bcachefs-tools/bcachefs-tools-${PV}.tar.zst
+	SRC_URI="
+		https://evilpiepirate.org/bcachefs-tools/bcachefs-tools-${PV}.tar.zst
 		${CARGO_CRATE_URIS}
 	"
 	SRC_URI+=" verify-sig? ( https://evilpiepirate.org/bcachefs-tools/bcachefs-tools-${PV}.tar.sign )"
@@ -136,18 +138,19 @@ RDEPEND="${DEPEND}"
 # Clang is required for bindgen
 # shellcheck disable=SC2016 # don't want extension
 BDEPEND="
-	${PYTHON_DEPS}
-	$(python_gen_any_dep '
-		dev-python/docutils[${PYTHON_USEDEP}]
-	')
-	$(unpacker_src_uri_depends)
-	$(llvm_gen_dep '
-		llvm-core/clang:${LLVM_SLOT}
-	')
 	app-misc/jq
 	virtual/pkgconfig
 	elibc_musl? ( >=sys-libs/musl-1.2.5 )
 	verify-sig? ( >=sec-keys/openpgp-keys-kentoverstreet-20241012 )
+	$(python_gen_any_dep '
+		dev-python/docutils[${PYTHON_USEDEP}]
+	')
+	$(llvm_gen_dep '
+		llvm-core/clang:${LLVM_SLOT}
+	')
+	$(unpacker_src_uri_depends)
+	${PYTHON_DEPS}
+	${RUST_DEPEND}
 "
 
 QA_FLAGS_IGNORED="/sbin/bcachefs"
@@ -157,8 +160,8 @@ python_check_deps() {
 }
 
 pkg_setup() {
-	rust_pkg_setup
 	llvm-r1_pkg_setup
+	rust_pkg_setup
 	python-any-r1_pkg_setup
 }
 
