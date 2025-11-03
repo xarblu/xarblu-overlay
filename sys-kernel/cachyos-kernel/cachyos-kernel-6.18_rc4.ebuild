@@ -19,17 +19,17 @@ GENTOO_PATCHSET=linux-gentoo-patches-6.17.2
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g17
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=cc4261b148a00f77362a2c5024abfcd078807200
+CONFIG_COMMIT=b04b19dc41e073b0ab08b6979bde45c5a12e99ef
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=76311e59ed13e88aed33c84e78096c6f2d2467e0
+PATCH_COMMIT=68c97a9b9a905ccde6df984fccb31e7ffa28716f
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.31.11
+BCACHEFS_VER=1.31.12
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -246,12 +246,7 @@ cachy_patch_env_setup() {
 bcachefs_patch_env_setup() {
 	[[ -z "${BCACHEFS_VER}" ]] && return
 
-	declare -g BCACHEFS_PATCH
-	if [[ "${PV}" == *_rc* ]]; then
-		BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v${PV//_/-}.patch"
-	else
-		BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v$(ver_cut 1-2).patch"
-	fi
+	declare -g BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v$(ver_cut 1-2).patch"
 	declare -g SRC_URI="${SRC_URI} bcachefs? (
 		https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/$(ver_cut 1-2)/${BCACHEFS_PATCH}
 	)"
@@ -311,7 +306,6 @@ cachy_stage_patches() {
 
 	# RC patches are not compressed and thus in DISTDIR
 	if [[ -n "${RC_PATCHES[*]}" ]]; then
-		einfo "Staging RC patches"
 		pushd "${DISTDIR}" >/dev/null || die
 		cp -t "${target}" "${RC_PATCHES[@]}" || die
 		popd >/dev/null || die
@@ -319,14 +313,12 @@ cachy_stage_patches() {
 
 	# stable patches are compressed and thus in WORKDIR
 	if [[ -n "${STABLE_PATCHES[*]}" ]]; then
-		einfo "Staging stable patches"
 		pushd "${WORKDIR}" >/dev/null || die
 		cp -t "${target}" "${STABLE_PATCHES[@]}" || die
 		popd >/dev/null || die
 	fi
 
 	# Gentoo patches live in ${WORKDIR}/${GENTOO_PATCHSET}
-	einfo "Staging Gentoo patches"
 	pushd "${WORKDIR}/${GENTOO_PATCHSET}" >/dev/null || die
 	local incr=2000
 	local file
@@ -344,7 +336,6 @@ cachy_stage_patches() {
 	popd >/dev/null || die
 
 	# cachy patches need to be prefixed starting at 6000
-	einfo "Staging Cachy patches"
 	local incr=6000
 	local spec cond patch file
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
@@ -891,6 +882,10 @@ pkg_postinst() {
 	kernel-build_pkg_postinst
 
 	# print info for included modules
+	if use bcachefs && has_version sys-fs/bcachefs-kmod; then
+		elog "bcachefs ${BCACHEFS_VER} is included in ${CATEGORY}/${PN} - no need for sys-fs/bcachefs-kmod"
+	fi
+
 	if has_version media-video/v4l2loopback; then
 		elog "v4l2loopback is included in ${CATEGORY}/${PN} - no need for media-video/v4l2loopback"
 	fi
