@@ -24,7 +24,7 @@ KEYWORDS="~amd64 ~x86"
 DEPEND="
 	>=dev-libs/glib-2.50:=
 	>=dev-libs/libgee-0.20:=
-	>=sys-libs/zlib-1.2:=
+	>=virtual/zlib-1.2:=
 "
 RDEPEND="
 	${DEPEND}
