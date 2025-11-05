@@ -9,7 +9,7 @@ EAPI=8
 KFMIN="6.10.0"
 ECM_NONGUI="true"
 
-inherit ecm
+inherit ecm multibuild
 
 MY_PN="KDE-Rounded-Corners"
 
@@ -46,46 +46,49 @@ RDEPEND="${DEPEND}"
 
 PATCHES=( "${FILESDIR}/qt-6.10.patch" )
 
-foreach_kwin_version() {
-	local version
-	for version in "${KWIN_VERSIONS[@]}"; do
-		einfo "${version}: ${*}"
+# the only test is a post-install check
+# asking kwin if the effect is loaded
+RESTRICT="test"
 
-		BUILD_DIR="${CMAKE_USE_DIR}_build.${version}"
+kwin_src_configure() {
+	local mycmakeargs=()
 
-		local mycmakeargs=()
-		case "${version}" in
-			kwin) mycmakeargs+=( -DKWIN_X11=OFF ) ;;
-			kwin-x11) mycmakeargs+=( -DKWIN_X11=ON ) ;;
-			*) die "Unknown version" ;;
-		esac
+	# shellcheck disable=SC2153
+	case "${MULTIBUILD_VARIANT}" in
+		kwin) mycmakeargs+=( -DKWIN_X11=OFF ) ;;
+		kwin-x11) mycmakeargs+=( -DKWIN_X11=ON ) ;;
+		*) die "Unknown version" ;;
+	esac
 
-		"${@}"
-	done
+	ecm_src_configure
 }
 
 pkg_setup() {
-	declare -ga KWIN_VERSIONS=()
-
 	# shellcheck disable=SC2207 # we don't want these quoted to avoid empty ""
-	KWIN_VERSIONS+=(
+	MULTIBUILD_VARIANTS=(
 		$(usev wayland kwin)
 		$(usev X kwin-x11)
 	)
 }
 
 src_prepare() {
-	foreach_kwin_version ecm_src_prepare
+	# we need to avoid applying patches twice
+	# eapply_user should fine because it has
+	# ${T}/.portage_user_patches_applied
+	eapply -- "${PATCHES[@]}"
+	unset PATCHES
+
+	multibuild_foreach_variant ecm_src_prepare
 }
 
 src_configure() {
-	foreach_kwin_version ecm_src_configure
+	multibuild_foreach_variant kwin_src_configure
 }
 
 src_compile() {
-	foreach_kwin_version ecm_src_compile
+	multibuild_foreach_variant ecm_src_compile
 }
 
 src_install() {
-	foreach_kwin_version ecm_src_install
+	multibuild_foreach_variant ecm_src_install
 }
