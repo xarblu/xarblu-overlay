@@ -1,9 +1,12 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
+
+# shellcheck shell=bash
+# shellcheck disable=SC2034
 
 EAPI=8
 
-inherit font
+inherit font desktop
 
 DESCRIPTION="A color emoji font with a flat visual style"
 HOMEPAGE="https://github.com/jdecked/twemoji"
@@ -13,25 +16,24 @@ HOMEPAGE="https://github.com/jdecked/twemoji"
 # JoeBlakeB/ttf-twemoji-aur/archive -> fontconfig file
 # jdecked/twemoji -> icons
 SRC_URI="
-	https://github.com/JoeBlakeB/ttf-${PN}-aur/releases/download/${PV}/${PN^}-${PV}.ttf
+	https://github.com/JoeBlakeB/ttf-${PN}-aur/releases/download/${PV}/${P^}.ttf
 	https://github.com/JoeBlakeB/ttf-${PN}-aur/archive/${PV}.tar.gz -> ${P}-aur.tar.gz
 	icons? (
 		https://github.com/jdecked/${PN}/archive/v${PV}.tar.gz
 			-> ${P}-icons.tar.gz
 	)
 "
+# default requires USE=icons
+S="${WORKDIR}"
 
 LICENSE="Apache-2.0 CC-BY-4.0"
 SLOT="0"
-KEYWORDS="~amd64"
+KEYWORDS="~amd64 ~arm64"
 IUSE="icons"
-
-RESTRICT="binchecks strip"
-
-S="${WORKDIR}"
 
 src_prepare() {
 	default
+
 	if use icons; then
 		pushd "${P}/assets/72x72" || die
 			for png in *.png; do
@@ -44,18 +46,19 @@ src_prepare() {
 			done
 		popd || die
 	fi
+
+	mkdir fonts-install
+	cp -t fonts-install "${DISTDIR}/${P^}.ttf" || die
 }
 
 src_install() {
 	# don't lose fancy emoji icons
 	if use icons; then
-		insinto "/usr/share/icons/${PN}/72x72/emotes/"
-		doins "${P}"/assets/72x72/*.png
-		insinto "/usr/share/icons/${PN}/scalable/emotes/"
-		doins "${P}"/assets/svg/*.svg
+		doicon --size 72 --context emotes --theme "${PN}" "${P}/assets/72x72"
+		doicon --size scalable --context emotes --theme "${PN}" "${P}/assets/svg"
 	fi
 
-	FONT_S="${DISTDIR}"
+	FONT_S="${S}/fonts-install"
 	FONT_SUFFIX="ttf"
 	FONT_CONF=( "${S}/ttf-${PN}-aur-${PV}/AUR/75-${PN}.conf" )
 	font_src_install
