@@ -19,11 +19,11 @@ GENTOO_PATCHSET=linux-gentoo-patches-6.17.2
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g17
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=b04b19dc41e073b0ab08b6979bde45c5a12e99ef
+CONFIG_COMMIT=3ccdad289bd0f8f05e98648ba7fe74916d9b5c07
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=bf949895d340b38d731a347a79b6eaacd7abd533
+PATCH_COMMIT=b05e58eac15a42b9e32e3d1af408e46f397d872b
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 # bcachefs backports version

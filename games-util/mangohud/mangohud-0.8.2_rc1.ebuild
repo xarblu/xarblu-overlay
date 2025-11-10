@@ -1,9 +1,12 @@
 # Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
+# shellcheck shell=bash
+# shellcheck disable=SC2034
+
 EAPI=8
 
-PYTHON_COMPAT=( python3_{10..13} )
+PYTHON_COMPAT=( python3_{11..14} )
 
 inherit toolchain-funcs flag-o-matic python-r1 desktop meson-multilib
 
@@ -23,19 +26,26 @@ declare -A subprojectv=(
 	[implot_meson]="0.16-1"
 )
 
+WRAP_SRC="https://github.com/mesonbuild/wrapdb/releases/download"
 SRC_URI="
-	https://github.com/flightlessmango/MangoHud/archive/v${MY_PV}${MY_PV_REV}.tar.gz -> ${P}.tar.gz
-	https://github.com/KhronosGroup/Vulkan-Headers/archive/v${subprojectv[vkheaders]}.tar.gz -> vulkan-headers-${subprojectv[vkheaders]}.tar.gz
-	https://wrapdb.mesonbuild.com/v2/vulkan-headers_${subprojectv[vkheaders_meson]}/get_patch/vulkan-headers-${subprojectv[vkheaders_meson]}-wrap.zip
-	https://github.com/ocornut/imgui/archive/v${subprojectv[imgui]}.tar.gz -> imgui-${subprojectv[imgui]}.tar.gz
-	https://wrapdb.mesonbuild.com/v2/imgui_${subprojectv[imgui_meson]}/get_patch/imgui-${subprojectv[imgui_meson]}-wrap.zip
-	https://github.com/epezent/implot/archive/v${subprojectv[implot]}.tar.gz -> imgui-${subprojectv[implot]}.tar.gz
-	https://wrapdb.mesonbuild.com/v2/implot_${subprojectv[implot_meson]}/get_patch/implot-${subprojectv[implot_meson]}-wrap.zip
+	https://github.com/flightlessmango/MangoHud/archive/v${MY_PV}${MY_PV_REV}.tar.gz
+		-> ${P}.tar.gz
+	https://github.com/KhronosGroup/Vulkan-Headers/archive/v${subprojectv[vkheaders]}.tar.gz
+		-> vulkan-headers-${subprojectv[vkheaders]}.tar.gz
+	${WRAP_SRC}/vulkan-headers_${subprojectv[vkheaders_meson]}/vulkan-headers_${subprojectv[vkheaders_meson]}_patch.zip
+	https://github.com/ocornut/imgui/archive/v${subprojectv[imgui]}.tar.gz
+		-> imgui-${subprojectv[imgui]}.tar.gz
+	${WRAP_SRC}/imgui_${subprojectv[imgui_meson]}/imgui_${subprojectv[imgui_meson]}_patch.zip
+	https://github.com/epezent/implot/archive/v${subprojectv[implot]}.tar.gz
+		-> imgui-${subprojectv[implot]}.tar.gz
+	${WRAP_SRC}/implot_${subprojectv[implot_meson]}/implot_${subprojectv[implot_meson]}_patch.zip
 "
 
-KEYWORDS="~amd64"
+S="${WORKDIR}/MangoHud-${PV}"
+
 LICENSE="MIT"
 SLOT="0"
+KEYWORDS="~amd64"
 IUSE="+dbus debug mangoapp mangoplot test wayland video_cards_nvidia +X xnvctrl"
 
 REQUIRED_USE="
@@ -47,15 +57,15 @@ REQUIRED_USE="
 
 RESTRICT="!test? ( test )"
 
+# shellcheck disable=SC2016
 BDEPEND="
 	app-arch/unzip
 	test? ( dev-util/cmocka[${MULTILIB_USEDEP}] )
-	$(python_gen_cond_dep 'dev-python/mako[${PYTHON_USEDEP}]')
+	dev-python/mako[${PYTHON_USEDEP}]
 	${PYTHON_DEPS}
 "
 
 DEPEND="
-	dev-cpp/nlohmann_json
 	dev-libs/spdlog[${MULTILIB_USEDEP}]
 	dev-util/glslang[${MULTILIB_USEDEP}]
 	media-libs/libglvnd[${MULTILIB_USEDEP}]
@@ -63,7 +73,6 @@ DEPEND="
 	x11-libs/libdrm[${MULTILIB_USEDEP}]
 	dbus? ( sys-apps/dbus[${MULTILIB_USEDEP}] )
 	mangoapp? (
-		media-libs/glew[${MULTILIB_USEDEP}]
 		media-libs/glfw[-wayland-only(-),X(+),${MULTILIB_USEDEP}]
 	)
 	video_cards_nvidia? (
@@ -81,17 +90,18 @@ DEPEND="
 	${PYTHON_DEPS}
 "
 
+# shellcheck disable=SC2016
 RDEPEND="
 	mangoplot? (
-		$(python_gen_cond_dep '
-			dev-python/numpy[${PYTHON_USEDEP}]
-			dev-python/matplotlib[${PYTHON_USEDEP}]
-		')
+		dev-python/numpy[${PYTHON_USEDEP}]
+		dev-python/matplotlib[${PYTHON_USEDEP}]
 	)
 	${DEPEND}
 "
 
-S="${WORKDIR}/MangoHud-${PV}"
+PATCHES=(
+	"${FILESDIR}/0.8.1-use-bundled-imgui-and-implot.patch"
+)
 
 python_check_deps() {
 	python_has_version -b "dev-python/mako[${PYTHON_USEDEP}]"
@@ -106,14 +116,15 @@ src_unpack() {
 	[[ -n "${MY_PV_REV}" ]] && ( mv "${WORKDIR}/MangoHud-${MY_PV}${MY_PV_REV}" "${WORKDIR}/MangoHud-${PV}" || die )
 
 	# symlink subprojects
-	local projects=( Vulkan-Headers-${subprojectv[vkheaders]}
-					 imgui-${subprojectv[imgui]}
-					 implot-${subprojectv[implot]}
-					)
+	local projects=(
+		"Vulkan-Headers-${subprojectv[vkheaders]}"
+		"imgui-${subprojectv[imgui]}"
+		"implot-${subprojectv[implot]}"
+	)
 
 	for subproject in "${projects[@]}"; do
-		einfo "Symlinking subproject ${subproject}"
-		ln -sfv "${WORKDIR}/${subproject}" "${S}/subprojects/" || die "Couldn't symlink ${subproject}"
+		einfo "Installing subproject ${subproject}"
+		mv -vt "${S}/subprojects/" "${WORKDIR}/${subproject}" || die "Couldn't install ${subproject}"
 	done
 }
 
@@ -137,6 +148,7 @@ src_prepare() {
 	default
 }
 
+# shellcheck disable=SC2207
 multilib_src_configure() {
 	local emesonargs=(
 		-Duse_system_spdlog=enabled
