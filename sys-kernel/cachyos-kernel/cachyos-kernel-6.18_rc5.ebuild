@@ -19,17 +19,17 @@ GENTOO_PATCHSET=linux-gentoo-patches-6.17.2
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g17
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=3ccdad289bd0f8f05e98648ba7fe74916d9b5c07
+CONFIG_COMMIT=5e063fad3cb721335995a44829cc3f96f4ee1898
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=b05e58eac15a42b9e32e3d1af408e46f397d872b
+PATCH_COMMIT=98d8f106514925031a0be1fedaa78462f2d08ad3
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.32.1
+BCACHEFS_VER=1.33_pre20251113144803
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -254,9 +254,16 @@ bcachefs_patch_env_setup() {
 	# enforce bcachefs-tools version on minor-level
 	# to make sure there are no weird kernel/user-space
 	# incompatibilities
+	local bch_tools_min
+	if [[ "${BCACHEFS_VER}" == *_pre* ]]; then
+		bch_tools_min="$(ver_cut 1-2 "${BCACHEFS_VER}")_pre0"
+	else
+		bch_tools_min="$(ver_cut 1-2 "${BCACHEFS_VER}").0"
+	fi
+
 	RDEPEND+="
 		bcachefs? (
-			>=sys-fs/bcachefs-tools-$(ver_cut 1-2 "${BCACHEFS_VER}")
+			>=sys-fs/bcachefs-tools-${bch_tools_min}
 		)
 	"
 }
