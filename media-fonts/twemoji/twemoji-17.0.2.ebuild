@@ -12,12 +12,13 @@ DESCRIPTION="A color emoji font with a flat visual style"
 HOMEPAGE="https://github.com/jdecked/twemoji"
 # prebuilt font from AUR package
 # https://aur.archlinux.org/packages/ttf-twemoji
-# JoeBlakeB/ttf-twemoji-aur/releases -> ttf file
-# JoeBlakeB/ttf-twemoji-aur/archive -> fontconfig file
+# JoeBlakeB/ttf-twemoji/releases -> ttf file
+# JoeBlakeB/ttf-twemoji/archive -> fontconfig file
 # jdecked/twemoji -> icons
 SRC_URI="
-	https://github.com/JoeBlakeB/ttf-${PN}-aur/releases/download/${PV}/${P^}.ttf
-	https://github.com/JoeBlakeB/ttf-${PN}-aur/archive/${PV}.tar.gz -> ${P}-aur.tar.gz
+	https://github.com/JoeBlakeB/ttf-${PN}/releases/download/${PV}/${P^}.ttf
+	https://github.com/JoeBlakeB/ttf-${PN}/archive/${PV}.tar.gz
+		-> ${P}-configs.tar.gz
 	icons? (
 		https://github.com/jdecked/${PN}/archive/v${PV}.tar.gz
 			-> ${P}-icons.tar.gz
@@ -60,6 +61,6 @@ src_install() {
 
 	FONT_S="${S}/fonts-install"
 	FONT_SUFFIX="ttf"
-	FONT_CONF=( "${S}/ttf-${PN}-aur-${PV}/AUR/75-${PN}.conf" )
+	FONT_CONF=( "${S}/ttf-${P}/AUR/75-${PN}.conf" )
 	font_src_install
 }
