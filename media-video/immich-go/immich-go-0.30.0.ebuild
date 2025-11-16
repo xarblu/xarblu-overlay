@@ -1,6 +1,9 @@
 # Copyright 1999-2025 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
+# shellcheck shell=bash
+# shellcheck disable=SC2034
+
 EAPI=8
 
 inherit go-module
@@ -17,12 +20,12 @@ SLOT="0"
 KEYWORDS="~amd64"
 
 src_compile() {
-	# https://github.com/simulot/immich-go/blob/v0.25.0/.goreleaser.yaml
+	# https://github.com/simulot/immich-go/blob/v0.29.0/.goreleaser.yaml
 	export CGO_ENABLED=0
-	local ldflags
-	ldflags="-s -w"
-	ldflags+=" -X github.com/simulot/immich-go/app.Version=${PV}"
-	ego build "-o=${PN}" --ldflags="${ldflags}"
+	local -a ldflags=(
+		-X "github.com/simulot/immich-go/app.Version=${PV}"
+	)
+	ego build -trimpath -ldflags="${ldflags[*]}" -o="${PN}"
 }
 
 src_install() {
