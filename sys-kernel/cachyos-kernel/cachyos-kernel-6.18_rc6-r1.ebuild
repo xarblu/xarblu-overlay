@@ -29,7 +29,7 @@ PATCH_P="${PN}-${PATCH_PV}"
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.33_pre20251117125936
+BCACHEFS_VER=1.33_pre20251117180445
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -370,6 +370,14 @@ cachy_stage_patches() {
 		# handheld.patch makes ath11k_pci use QCA206X firmware
 		# this firmware A) is annoying to find and B) simply doesn't work
 		cp -t "${target}" "${FILESDIR}/7000_revert-ath11k-firmware.patch" || die
+	fi
+
+	if [[ "${PV}" == "6.18_rc6" ]]; then
+		# Bunch of random crashed due to a mm regression
+		# https://lore.kernel.org/all/20251117082023.90176-1-00107082@163.com/
+		cp -t "${target}" "${FILESDIR}/7001_mm-huge_memory-fix__GFP_ZEROTAGS-on-architectures-without-memory-tags.patch" || die
+	else
+		die "Remove me"
 	fi
 
 	# remove problematic patches
