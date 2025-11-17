@@ -372,6 +372,14 @@ cachy_stage_patches() {
 		cp -t "${target}" "${FILESDIR}/7000_revert-ath11k-firmware.patch" || die
 	fi
 
+	if [[ "${PV}" == "6.18_rc6" ]]; then
+		# Bunch of random crashed due to a mm regression
+		# https://lore.kernel.org/all/20251117082023.90176-1-00107082@163.com/
+		cp -t "${target}" "${FILESDIR}/7001_mm-huge_memory-fix__GFP_ZEROTAGS-on-architectures-without-memory-tags.patch" || die
+	else
+		die "Remove me"
+	fi
+
 	# remove problematic patches
 	local patch
 	for patch in "${BAD_PATCHES[@]}"; do

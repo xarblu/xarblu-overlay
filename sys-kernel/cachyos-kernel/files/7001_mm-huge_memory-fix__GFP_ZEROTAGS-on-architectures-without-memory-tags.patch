@@ -1,0 +1,153 @@
+From 58e62699f77738188730d489accd01ad8e3cdeeb Mon Sep 17 00:00:00 2001
+From: "David Hildenbrand (Red Hat)" <david@kernel.org>
+Date: Mon, 17 Nov 2025 14:49:35 +0100
+Subject: [PATCH] mm/huge_memory: fix __GFP_ZEROTAGS on architectures without
+ memory tags
+
+Unfortunately, __GFP_ZEROTAGS is not properly ignored on architectures
+without memory tags (i.e., on all architectures except arm64), and
+ends up calling an empty stub tag_clear_highpage().
+
+Common code in post_alloc_hook() assumes that when we call
+tag_clear_highpage(), that both the tags and the memory were clear --
+to then skip actual clearing of the memory.
+
+So ever since we started allocating the huge zero folio with __GFP_ZEROTAGS
+that implies that we will not be clearing out the content of the huge
+zero folio.
+
+Fix it by properly ignoring __GFP_ZEROTAGS if there is no architecture
+support, so we compile out the handling in the page allocator code
+completely and just zero these pages ordinarily.
+
+Make the default tag_clear_highpage() BUILD_BUG() and guard it by
+a new Kconfig option.
+
+Thanks to Jan Polensky for debugging the issue and sending an initial fix.
+
+Reported-by: Jan Polensky <japo@linux.ibm.com>
+Closes: https://lore.kernel.org/r/20251109003613.1461433-1-japo@linux.ibm.com
+Reported-by: David Wang <00107082@163.com>
+Closes: https://lore.kernel.org/r/6c09aaea.aa4a.19a91e379ab.Coremail.00107082@163.com
+Debugged-by: Jan Polensky <japo@linux.ibm.com>
+Fixes: 1579227fe0f0 ("mm/huge_memory: initialise the tags of the huge zero folio")
+Signed-off-by: David Hildenbrand (Red Hat) <david@kernel.org>
+---
+ arch/Kconfig                   | 4 ++++
+ arch/arm64/Kconfig             | 1 +
+ arch/arm64/include/asm/page.h  | 1 -
+ include/linux/gfp_types.h      | 6 ++++++
+ include/linux/highmem.h        | 3 ++-
+ include/trace/events/mmflags.h | 9 ++++++++-
+ 6 files changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/arch/Kconfig b/arch/Kconfig
+index 61130b88964b94..37a3d0b72fab1a 100644
+--- a/arch/Kconfig
++++ b/arch/Kconfig
+@@ -348,6 +348,10 @@ config ARCH_HAS_SET_MEMORY
+ config ARCH_HAS_SET_DIRECT_MAP
+ 	bool
+ 
++# Select if memory tags (e.g., GFP_ZEROTAGS) are supported
++config ARCH_HAS_MEMORY_TAGS
++	bool
++
+ #
+ # Select if the architecture provides the arch_dma_set_uncached symbol to
+ # either provide an uncached segment alias for a DMA allocation, or
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 6663ffd23f252e..dea73ff9291d61 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -35,6 +35,7 @@ config ARM64
+ 	select ARCH_HAS_KERNEL_FPU_SUPPORT if KERNEL_MODE_NEON
+ 	select ARCH_HAS_KEEPINITRD
+ 	select ARCH_HAS_MEMBARRIER_SYNC_CORE
++	select ARCH_HAS_MEMORY_TAGS
+ 	select ARCH_HAS_MEM_ENCRYPT
+ 	select ARCH_SUPPORTS_MSEAL_SYSTEM_MAPPINGS
+ 	select ARCH_HAS_NMI_SAFE_THIS_CPU_OPS
+diff --git a/arch/arm64/include/asm/page.h b/arch/arm64/include/asm/page.h
+index 2312e6ee595fda..52ecb524af3448 100644
+--- a/arch/arm64/include/asm/page.h
++++ b/arch/arm64/include/asm/page.h
+@@ -34,7 +34,6 @@ struct folio *vma_alloc_zeroed_movable_folio(struct vm_area_struct *vma,
+ #define vma_alloc_zeroed_movable_folio vma_alloc_zeroed_movable_folio
+ 
+ void tag_clear_highpage(struct page *to);
+-#define __HAVE_ARCH_TAG_CLEAR_HIGHPAGE
+ 
+ #define clear_user_page(page, vaddr, pg)	clear_page(page)
+ #define copy_user_page(to, from, vaddr, pg)	copy_page(to, from)
+diff --git a/include/linux/gfp_types.h b/include/linux/gfp_types.h
+index 65db9349f9053c..9f75c4b5ab2d76 100644
+--- a/include/linux/gfp_types.h
++++ b/include/linux/gfp_types.h
+@@ -47,7 +47,9 @@ enum {
+ 	___GFP_HARDWALL_BIT,
+ 	___GFP_THISNODE_BIT,
+ 	___GFP_ACCOUNT_BIT,
++#ifdef CONFIG_ARCH_HAS_MEMORY_TAGS
+ 	___GFP_ZEROTAGS_BIT,
++#endif
+ #ifdef CONFIG_KASAN_HW_TAGS
+ 	___GFP_SKIP_ZERO_BIT,
+ 	___GFP_SKIP_KASAN_BIT,
+@@ -85,7 +87,11 @@ enum {
+ #define ___GFP_HARDWALL		BIT(___GFP_HARDWALL_BIT)
+ #define ___GFP_THISNODE		BIT(___GFP_THISNODE_BIT)
+ #define ___GFP_ACCOUNT		BIT(___GFP_ACCOUNT_BIT)
++#ifdef CONFIG_ARCH_HAS_MEMORY_TAGS
+ #define ___GFP_ZEROTAGS		BIT(___GFP_ZEROTAGS_BIT)
++#else
++#define ___GFP_ZEROTAGS		0
++#endif
+ #ifdef CONFIG_KASAN_HW_TAGS
+ #define ___GFP_SKIP_ZERO	BIT(___GFP_SKIP_ZERO_BIT)
+ #define ___GFP_SKIP_KASAN	BIT(___GFP_SKIP_KASAN_BIT)
+diff --git a/include/linux/highmem.h b/include/linux/highmem.h
+index 105cc4c00cc34d..f3eaa605d68c1d 100644
+--- a/include/linux/highmem.h
++++ b/include/linux/highmem.h
+@@ -249,10 +249,11 @@ static inline void clear_highpage_kasan_tagged(struct page *page)
+ 	kunmap_local(kaddr);
+ }
+ 
+-#ifndef __HAVE_ARCH_TAG_CLEAR_HIGHPAGE
++#ifndef CONFIG_ARCH_HAS_MEMORY_TAGS
+ 
+ static inline void tag_clear_highpage(struct page *page)
+ {
++	BUILD_BUG();
+ }
+ 
+ #endif
+diff --git a/include/trace/events/mmflags.h b/include/trace/events/mmflags.h
+index aa441f593e9a6b..c8436c2f428d71 100644
+--- a/include/trace/events/mmflags.h
++++ b/include/trace/events/mmflags.h
+@@ -36,8 +36,14 @@
+ 	TRACE_GFP_EM(NOMEMALLOC)		\
+ 	TRACE_GFP_EM(HARDWALL)			\
+ 	TRACE_GFP_EM(THISNODE)			\
+-	TRACE_GFP_EM(ACCOUNT)			\
++	TRACE_GFP_EM(ACCOUNT)
++
++#ifdef CONFIG_ARCH_HAS_MEMORY_TAGS
++# define TRACE_GFP_FLAGS_TAGS			\
+ 	TRACE_GFP_EM(ZEROTAGS)
++#else
++# define TRACE_GFP_FLAGS_TAGS
++#endif
+ 
+ #ifdef CONFIG_KASAN_HW_TAGS
+ # define TRACE_GFP_FLAGS_KASAN			\
+@@ -63,6 +69,7 @@
+ 
+ #define TRACE_GFP_FLAGS				\
+ 	TRACE_GFP_FLAGS_GENERAL			\
++	TRACE_GFP_FLAGS_TAGS			\
+ 	TRACE_GFP_FLAGS_KASAN			\
+ 	TRACE_GFP_FLAGS_LOCKDEP			\
+ 	TRACE_GFP_FLAGS_SLAB
