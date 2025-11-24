@@ -19,17 +19,17 @@ GENTOO_PATCHSET=linux-gentoo-patches-6.17.2
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g17
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=699ff8ea4cfdf382221d78561b0e9cac448fbd41
+CONFIG_COMMIT=40aacb76c4f391fbeede811b7dfee1ea7e778e9f
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=db1a659fa6a338b4c68245607da75900046f9541
+PATCH_COMMIT=b8f46aff318e08b1d088b8d6f8f46c7f463a78cc
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.33_pre20251123171353
+BCACHEFS_VER=1.33_pre20251123193413
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
