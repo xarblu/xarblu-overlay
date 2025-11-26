@@ -43,13 +43,14 @@ CRATES="
 	bumpalo@3.19.0
 	byteorder@1.5.0
 	bytes@1.11.0
-	cc@1.2.46
+	cc@1.2.47
 	cfg-if@1.0.4
 	cfg_aliases@0.2.1
 	chrono@0.4.42
-	clap@4.5.51
-	clap_builder@4.5.51
-	clap_complete@4.5.60
+	clap-cargo@0.15.2
+	clap@4.5.53
+	clap_builder@4.5.53
+	clap_complete@4.5.61
 	clap_derive@4.5.49
 	clap_lex@0.7.6
 	clap_mangen@0.2.31
@@ -122,7 +123,7 @@ CRATES="
 	globwalk@0.8.1
 	h2@0.4.12
 	hashbrown@0.14.5
-	hashbrown@0.16.0
+	hashbrown@0.16.1
 	heck@0.5.0
 	hermit-abi@0.5.2
 	hex@0.4.3
@@ -147,7 +148,7 @@ CRATES="
 	idna_adapter@1.2.1
 	ignore@0.4.23
 	indenter@0.3.4
-	indexmap@2.12.0
+	indexmap@2.12.1
 	indicatif@0.17.11
 	ipnet@2.11.0
 	iri-string@0.7.9
@@ -257,7 +258,7 @@ CRATES="
 	shell-words@1.1.0
 	shellexpand@3.1.1
 	shlex@1.3.0
-	signal-hook-registry@1.4.6
+	signal-hook-registry@1.4.7
 	signature@2.2.0
 	simd-adler32@0.3.7
 	siphasher@1.0.1
@@ -272,7 +273,7 @@ CRATES="
 	strum_macros@0.27.2
 	subtle@2.6.1
 	syn@1.0.109
-	syn@2.0.110
+	syn@2.0.111
 	sync_wrapper@1.0.2
 	synstructure@0.13.2
 	sys-locale@0.3.2
@@ -404,8 +405,8 @@ CRATES="
 	zbus@5.12.0
 	zbus_macros@5.12.0
 	zbus_names@4.2.0
-	zerocopy-derive@0.8.27
-	zerocopy@0.8.27
+	zerocopy-derive@0.8.28
+	zerocopy@0.8.28
 	zerofrom-derive@0.1.6
 	zerofrom@0.1.6
 	zeroize@1.8.2
@@ -446,7 +447,7 @@ LICENSE+="MIT"
 SLOT="0"
 KEYWORDS="~amd64"
 
-QA_FLAGS_IGNORED="/usr/bin/topgrade"
+QA_FLAGS_IGNORED="usr/bin/topgrade"
 
 src_prepare() {
 	default
@@ -454,7 +455,9 @@ src_prepare() {
 	# replace upstream crate substitution with our crate substitution, sigh
 	# stolen from dev-python/uv::gentoo
 	local pkg
+	# shellcheck disable=SC2043
 	for pkg in mac-notification-sys; do
+		# shellcheck disable=SC2155
 		local dep=$(grep "^${pkg}" "${ECARGO_HOME}"/config.toml || die)
 		sed -i -e "/\[patch\.crates-io\]/,\$s;^${pkg}.*$;${dep};" Cargo.toml || die
 	done
@@ -467,17 +470,17 @@ src_compile() {
 		# shellcheck disable=SC2155
 		export PATH="$(cargo_target_dir)"
 		for shell in bash fish zsh; do
-			topgrade --gen-completion "${shell}" > "${shell}.completion" || die
+			topgrade --gen-completion "${shell}" > "${T}/${shell}.completion" || die
 		done
-		topgrade --gen-manpage > manpage.1 || die
+		topgrade --gen-manpage > "${T}/manpage.1" || die
 	)
 }
 
 src_install() {
 	cargo_src_install
 
-	newbashcomp bash.completion "${PN}"
-	newzshcomp zsh.completion "_${PN}"
-	newfishcomp fish.completion "${PN}.fish"
-	newman manpage.1 "${PN}.1"
+	newbashcomp "${T}/bash.completion" "${PN}"
+	newzshcomp "${T}/zsh.completion" "_${PN}"
+	newfishcomp "${T}/fish.completion" "${PN}.fish"
+	newman "${T}/manpage.1" "${PN}.1"
 }
