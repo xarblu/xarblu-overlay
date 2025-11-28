@@ -32,3 +32,9 @@
 ## app-misc/some-package
 
 #--- END OF EXAMPLES ---
+
+# Xarblu <xarblu@protonmail.com> (2025-11-28)
+# LLVM is stable and has properly integrated polly
+# in ::gentoo. These also were not touched since then.
+# Removal in ~1 month
+<llvm-core/polly-20
