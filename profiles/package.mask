@@ -32,7 +32,3 @@
 ## app-misc/some-package
 
 #--- END OF EXAMPLES ---
-
-# Xarblu <xarblu@protonmail.com> (2025-11-10)
-# Release Candidate
->games-util/mangohud-0.8.1-r100
