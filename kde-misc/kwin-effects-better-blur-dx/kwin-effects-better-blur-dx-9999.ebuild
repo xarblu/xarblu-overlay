@@ -13,13 +13,13 @@ QTMIN="6.6.0"
 inherit multibuild ecm
 
 DESCRIPTION="KWin Blur effect for KDE Plasma 6 to blur any window"
-HOMEPAGE="https://github.com/taj-ny/kwin-effects-forceblur"
+HOMEPAGE="https://github.com/xarblu/kwin-effects-better-blur-dx"
 
 if [[ "${PV}" == 9999 ]]; then
 	inherit git-r3
 	EGIT_REPO_URI="https://github.com/xarblu/kwin-effects-better-blur-dx.git"
 else
-	SRC_URI="https://github.com/taj-ny/${PN}/archive/v${PV}.tar.gz -> ${P}.tar.gz"
+	SRC_URI="https://github.com/xarblu/${PN}/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="~amd64 ~x86"
 fi
 
