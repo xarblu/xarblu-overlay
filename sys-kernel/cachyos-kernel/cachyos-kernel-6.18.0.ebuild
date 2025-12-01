@@ -15,21 +15,21 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
 # https://dev.gentoo.org/~mgorny/dist/linux/
-GENTOO_PATCHSET=linux-gentoo-patches-6.17.2
+GENTOO_PATCHSET=linux-gentoo-patches-6.17.10
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g17
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=bd376b62e58fce9273d0b849afd6d28f71b13f99
+CONFIG_COMMIT=acf85ecb3d8a03fb9fd3160ce6d9bdb05ef1c124
 CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
 CONFIG_P="${PN}-${CONFIG_PV}"
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=ff381f57ced011d89e756449def66d9c4f38aa67
+PATCH_COMMIT=0ac7e72d6b9f973a1682806d0166042869aa4144
 PATCH_PV="${PV}-${PATCH_COMMIT::8}"
 PATCH_P="${PN}-${PATCH_PV}"
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.33_pre20251121141109
+BCACHEFS_VER=1.32.1
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -45,14 +45,11 @@ CACHY_PATCH_SPECS=(
 	# global
 	-:all/0001-cachyos-base-all.patch
 	# flavours
-	cachyos:sched/0001-bore-cachy.patch
 	bmq:sched/0001-prjc-cachy.patch
 	bore:sched/0001-bore-cachy.patch
 	deckify:misc/0001-acpi-call.patch
 	deckify:misc/0001-handheld.patch
 	deckify:sched/0001-bore-cachy.patch
-	hardened:sched/0001-bore-cachy.patch
-	hardened:misc/0001-hardened.patch
 	rt-bore:sched/0001-bore-cachy.patch
 	rt-bore:misc/0001-rt-i915.patch
 	# clang
@@ -372,14 +369,6 @@ cachy_stage_patches() {
 		cp -t "${target}" "${FILESDIR}/7000_revert-ath11k-firmware.patch" || die
 	fi
 
-	if [[ "${PV}" == "6.18_rc6" ]]; then
-		# Bunch of random crashed due to a mm regression
-		# https://lore.kernel.org/all/20251117082023.90176-1-00107082@163.com/
-		cp -t "${target}" "${FILESDIR}/7001_mm-huge_memory-fix__GFP_ZEROTAGS-on-architectures-without-memory-tags.patch" || die
-	else
-		die "Remove me"
-	fi
-
 	# remove problematic patches
 	local patch
 	for patch in "${BAD_PATCHES[@]}"; do
@@ -519,17 +508,6 @@ cachy_use_config() {
 			: "${_preempt:=full}"
 			: "${_hugepage:=always}"
 			;;
-		hardened)
-			: "${_cachy_config:=yes}"
-			: "${_cpusched:=hardened}"
-			: "${_cc_harder:=yes}"
-			: "${_per_gov:=no}"
-			: "${_tcp_bbr3:=no}"
-			: "${_HZ_ticks:=1000}"
-			: "${_tickrate:=full}"
-			: "${_preempt:=full}"
-			: "${_hugepage:=madvise}"
-			;;
 		rt-bore)
 			: "${_cachy_config:=yes}"
 			: "${_cpusched:=rt-bore}"
@@ -618,14 +596,14 @@ cachy_use_config() {
 
 	# _cpusched
 	case "${_cpusched}" in
-		cachyos|bore|hardened)
+		bore)
 			kconf set SCHED_BORE
 			;;
 		bmq)
 			kconf set SCHED_ALT
 			kconf set SCHED_BMQ
 			;;
-		eevdf) ;;
+		cachyos|eevdf) ;;
 		rt)
 			kconf set PREEMPT_RT
 			;;

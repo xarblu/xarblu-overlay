@@ -15,21 +15,17 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
 # https://dev.gentoo.org/~mgorny/dist/linux/
-GENTOO_PATCHSET=linux-gentoo-patches-6.17.2
+GENTOO_PATCHSET=linux-gentoo-patches-6.17.10
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g17
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=e3fe7cb2a1f8e9302e7195f3d811acc9d1153059
-CONFIG_PV="${PV}-${CONFIG_COMMIT::8}"
-CONFIG_P="${PN}-${CONFIG_PV}"
+CONFIG_COMMIT=acf85ecb3d8a03fb9fd3160ce6d9bdb05ef1c124
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=e6148bd3cf4e5d58959a6596e2db49fbec5e91e5
-PATCH_PV="${PV}-${PATCH_COMMIT::8}"
-PATCH_P="${PN}-${PATCH_PV}"
+PATCH_COMMIT=0ac7e72d6b9f973a1682806d0166042869aa4144
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.33_pre20251126190129
+BCACHEFS_VER=1.33_pre20251201144716
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -45,14 +41,11 @@ CACHY_PATCH_SPECS=(
 	# global
 	-:all/0001-cachyos-base-all.patch
 	# flavours
-	cachyos:sched/0001-bore-cachy.patch
 	bmq:sched/0001-prjc-cachy.patch
 	bore:sched/0001-bore-cachy.patch
 	deckify:misc/0001-acpi-call.patch
 	deckify:misc/0001-handheld.patch
 	deckify:sched/0001-bore-cachy.patch
-	hardened:sched/0001-bore-cachy.patch
-	hardened:misc/0001-hardened.patch
 	rt-bore:sched/0001-bore-cachy.patch
 	rt-bore:misc/0001-rt-i915.patch
 	# clang
@@ -108,19 +101,38 @@ QA_FLAGS_IGNORED="
 	usr/src/linux-.*/arch/powerpc/kernel/vdso.*/vdso.*.so.dbg
 "
 
+if [[ "${PV}" == *_rc* ]]; then
+	KERNEL_BASE_V="$(ver_cut 1).$(( $(ver_cut 2) - 1 ))"
+else
+	KERNEL_BASE_V="$(ver_cut 1-2)"
+fi
+
+# virtual RC conflicts with its stable equivalent
+# because they have the same base
+if [[ "${PV}" == *_rc0 ]]; then
+	RDEPEND+=" !~${CATEGORY}/${PN}-${KERNEL_BASE_V}.0"
+fi
+
+CONFIG_P="${PN}-${KERNEL_BASE_V}-${CONFIG_COMMIT::8}"
+PATCH_P="${PN}-${KERNEL_BASE_V}-${PATCH_COMMIT::8}"
+
 # append a list of kernel sources and incremental patches to SRC_URI
 # and sets S to the correct directory
 kernel_base_env_setup() {
 	local kernel_base_src_uris=""
-	local kernel_base_version="${PV%.*}"
 	local incr target_incr
 	local cdn_patch our_incr our_patch
 	local -a rc_patches stable_patches
-	if [[ "${PV}" == *_rc* ]]; then
-		# for RCs fetch the last stable as a base
-		kernel_base_version="$(ver_cut 1).$(( $(ver_cut 2) - 1 ))"
+
+	if [[ "${PV}" == *_rc0 ]]; then
+		# "virtual" RC used during the merge window when there is no RC
 		kernel_base_src_uris+="
-			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/linux-${kernel_base_version}.tar.xz
+			https://cdn.kernel.org/pub/linux/kernel/v${KERNEL_BASE_V%%.*}.x/linux-${KERNEL_BASE_V}.tar.xz
+		"
+	elif [[ "${PV}" == *_rc* ]]; then
+		# for RCs fetch the last stable as a base
+		kernel_base_src_uris+="
+			https://cdn.kernel.org/pub/linux/kernel/v${KERNEL_BASE_V%%.*}.x/linux-${KERNEL_BASE_V}.tar.xz
 		"
 
 		# then patches from git.kernel.org
@@ -129,7 +141,7 @@ kernel_base_env_setup() {
 		# the big RC1 patch is seperate
 		our_patch="1000_linux-${PV%_rc*}-rc1.patch"
 		kernel_base_src_uris+="
-			https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc1/v${kernel_base_version}
+			https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc1/v${KERNEL_BASE_V}
 				-> ${our_patch}
 		"
 		rc_patches+=( "${our_patch}" )
@@ -151,22 +163,22 @@ kernel_base_env_setup() {
 	elif [[ $(ver_cut 3) == 0 ]]; then
 		# for initial stable releases we only have the base
 		kernel_base_src_uris+="
-			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/linux-${kernel_base_version}.tar.xz
+			https://cdn.kernel.org/pub/linux/kernel/v${KERNEL_BASE_V%%.*}.x/linux-${KERNEL_BASE_V}.tar.xz
 		"
 	else
 		# for other stable releases we have the base
 		kernel_base_src_uris+="
-			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/linux-${kernel_base_version}.tar.xz
+			https://cdn.kernel.org/pub/linux/kernel/v${KERNEL_BASE_V%%.*}.x/linux-${KERNEL_BASE_V}.tar.xz
 		"
 
 		# then patches from cdn.kernel.org
 		# patches follow genpatches 1000+ convention
 
 		# the first x.x.1 patch is seperate
-		cdn_patch="patch-${kernel_base_version}.1.xz"
-		our_patch="1000_linux-${kernel_base_version}.1.patch.xz"
+		cdn_patch="patch-${KERNEL_BASE_V}.1.xz"
+		our_patch="1000_linux-${KERNEL_BASE_V}.1.patch.xz"
 		kernel_base_src_uris+="
-			https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/${cdn_patch}
+			https://cdn.kernel.org/pub/linux/kernel/v${KERNEL_BASE_V%%.*}.x/${cdn_patch}
 				-> ${our_patch}
 		"
 		stable_patches+=( "${our_patch}" )
@@ -175,12 +187,12 @@ kernel_base_env_setup() {
 		incr=2
 		target_incr="$(ver_cut 3)"
 		while (( incr <= target_incr )); do
-			cdn_patch="patch-${kernel_base_version}.$(( incr - 1 ))-${incr}.xz"
+			cdn_patch="patch-${KERNEL_BASE_V}.$(( incr - 1 ))-${incr}.xz"
 			# leftpad incr with 0 which allows 1000-1999
 			our_incr="1$(printf '%0*d' 3 "$(( incr - 1 ))")"
-			our_patch="${our_incr}_linux-${kernel_base_version}.${incr}.patch.xz"
+			our_patch="${our_incr}_linux-${KERNEL_BASE_V}.${incr}.patch.xz"
 			kernel_base_src_uris+="
-				https://cdn.kernel.org/pub/linux/kernel/v${kernel_base_version%%.*}.x/incr/${cdn_patch}
+				https://cdn.kernel.org/pub/linux/kernel/v${KERNEL_BASE_V%%.*}.x/incr/${cdn_patch}
 					-> ${our_patch}
 			"
 			stable_patches+=( "${our_patch}" )
@@ -189,7 +201,7 @@ kernel_base_env_setup() {
 	fi
 
 	declare -g SRC_URI="${SRC_URI} ${kernel_base_src_uris}"
-	declare -g S="${WORKDIR}/linux-${kernel_base_version}"
+	declare -g S="${WORKDIR}/linux-${KERNEL_BASE_V}"
 	declare -g RC_PATCHES=( "${rc_patches[@]}" )
 	declare -g STABLE_PATCHES=( "${stable_patches[@]%.xz}" )
 }
@@ -229,7 +241,7 @@ cachy_patch_env_setup() {
 	local base spec cond patch file
 	local cachy_patch_uris=""
 	base="https://raw.githubusercontent.com/CachyOS/kernel-patches"
-	base+="/${PATCH_COMMIT}/$(ver_cut 1-2)"
+	base+="/${PATCH_COMMIT}/${KERNEL_BASE_V}"
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
 		IFS=":" read -r cond patch <<<"${spec}"
 		file="${PATCH_P}-${patch##*/}"
@@ -246,9 +258,9 @@ cachy_patch_env_setup() {
 bcachefs_patch_env_setup() {
 	[[ -z "${BCACHEFS_VER}" ]] && return
 
-	declare -g BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v$(ver_cut 1-2).patch"
+	declare -g BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v${KERNEL_BASE_V}.patch"
 	declare -g SRC_URI="${SRC_URI} bcachefs? (
-		https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/$(ver_cut 1-2)/${BCACHEFS_PATCH}
+		https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/${KERNEL_BASE_V}/${BCACHEFS_PATCH}
 	)"
 
 	# enforce bcachefs-tools version on minor-level
@@ -511,17 +523,6 @@ cachy_use_config() {
 			: "${_preempt:=full}"
 			: "${_hugepage:=always}"
 			;;
-		hardened)
-			: "${_cachy_config:=yes}"
-			: "${_cpusched:=hardened}"
-			: "${_cc_harder:=yes}"
-			: "${_per_gov:=no}"
-			: "${_tcp_bbr3:=no}"
-			: "${_HZ_ticks:=1000}"
-			: "${_tickrate:=full}"
-			: "${_preempt:=full}"
-			: "${_hugepage:=madvise}"
-			;;
 		rt-bore)
 			: "${_cachy_config:=yes}"
 			: "${_cpusched:=rt-bore}"
@@ -610,14 +611,14 @@ cachy_use_config() {
 
 	# _cpusched
 	case "${_cpusched}" in
-		cachyos|bore|hardened)
+		bore)
 			kconf set SCHED_BORE
 			;;
 		bmq)
 			kconf set SCHED_ALT
 			kconf set SCHED_BMQ
 			;;
-		eevdf) ;;
+		cachyos|eevdf) ;;
 		rt)
 			kconf set PREEMPT_RT
 			;;
@@ -883,6 +884,15 @@ src_prepare() {
 	)
 
 	kernel-build_merge_configs "${merge_configs[@]}"
+}
+
+src_configure() {
+	# spoof PV for virtual RC to make the
+	# "version mismatch check" happy
+	if [[ "${PV}" == *_rc0 ]]; then
+		local PV="${KERNEL_BASE_V}"
+	fi
+	kernel-build_src_configure
 }
 
 pkg_postinst() {
