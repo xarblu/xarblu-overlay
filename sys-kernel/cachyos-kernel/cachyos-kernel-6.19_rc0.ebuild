@@ -895,6 +895,15 @@ src_configure() {
 	kernel-build_src_configure
 }
 
+pkg_preinst() {
+	# spoof PV for virtual RC to make the
+	# "version mismatch check" happy
+	if [[ "${PV}" == *_rc0 ]]; then
+		local PV="${KERNEL_BASE_V}"
+	fi
+	kernel-install_pkg_preinst
+}
+
 pkg_postinst() {
 	kernel-build_pkg_postinst
 
