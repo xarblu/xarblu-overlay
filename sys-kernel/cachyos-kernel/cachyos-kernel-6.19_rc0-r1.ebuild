@@ -268,7 +268,7 @@ bcachefs_patch_env_setup() {
 	# incompatibilities
 	local bch_tools_min
 	if [[ "${BCACHEFS_VER}" == *_pre* ]]; then
-		bch_tools_min="$(ver_cut 1-2 "${BCACHEFS_VER}")_pre0"
+		bch_tools_min="$(ver_cut 1-2 "${BCACHEFS_VER}").0_pre0"
 	else
 		bch_tools_min="$(ver_cut 1-2 "${BCACHEFS_VER}").0"
 	fi
