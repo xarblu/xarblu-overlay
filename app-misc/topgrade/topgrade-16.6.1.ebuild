@@ -43,7 +43,7 @@ CRATES="
 	bumpalo@3.19.0
 	byteorder@1.5.0
 	bytes@1.11.0
-	cc@1.2.47
+	cc@1.2.48
 	cfg-if@1.0.4
 	cfg_aliases@0.2.1
 	chrono@0.4.42
@@ -86,7 +86,7 @@ CRATES="
 	ed25519@2.2.3
 	either@1.15.0
 	encode_unicode@1.0.0
-	endi@1.1.0
+	endi@1.1.1
 	enumflags2@0.7.12
 	enumflags2_derive@0.7.12
 	env_home@0.1.0
@@ -130,7 +130,7 @@ CRATES="
 	home@0.5.11
 	http-body-util@0.1.3
 	http-body@1.0.1
-	http@1.3.1
+	http@1.4.0
 	httparse@1.10.1
 	hyper-rustls@0.27.7
 	hyper-util@0.1.18
@@ -157,7 +157,7 @@ CRATES="
 	itertools@0.11.0
 	itoa@1.0.15
 	jetbrains-toolbox-updater@5.4.6
-	js-sys@0.3.82
+	js-sys@0.3.83
 	lazy_static@1.5.0
 	libc@0.2.177
 	libredox@0.1.10
@@ -165,6 +165,7 @@ CRATES="
 	litemap@0.8.1
 	log@0.4.28
 	lru-slab@0.1.2
+	mac-notification-sys@0.6.9
 	matchers@0.2.0
 	memchr@2.7.6
 	memoffset@0.9.1
@@ -235,7 +236,7 @@ CRATES="
 	rustc-hash@2.1.1
 	rustc_version@0.4.1
 	rustix@1.1.2
-	rustls-pki-types@1.13.0
+	rustls-pki-types@1.13.1
 	rustls-webpki@0.103.8
 	rustls@0.23.35
 	rustversion@1.0.22
@@ -305,16 +306,16 @@ CRATES="
 	toml_parser@1.0.4
 	toml_write@0.1.2
 	toml_writer@1.0.4
-	tower-http@0.6.6
+	tower-http@0.6.7
 	tower-layer@0.3.3
 	tower-service@0.3.3
 	tower@0.5.2
-	tracing-attributes@0.1.30
-	tracing-core@0.1.34
+	tracing-attributes@0.1.31
+	tracing-core@0.1.35
 	tracing-error@0.2.1
 	tracing-log@0.2.0
-	tracing-subscriber@0.3.20
-	tracing@0.1.41
+	tracing-subscriber@0.3.22
+	tracing@0.1.43
 	triomphe@0.1.15
 	try-lock@0.2.5
 	typenum@1.19.0
@@ -335,12 +336,12 @@ CRATES="
 	want@0.3.1
 	wasi@0.11.1+wasi-snapshot-preview1
 	wasip2@1.0.1+wasi-0.2.4
-	wasm-bindgen-futures@0.4.55
-	wasm-bindgen-macro-support@0.2.105
-	wasm-bindgen-macro@0.2.105
-	wasm-bindgen-shared@0.2.105
-	wasm-bindgen@0.2.105
-	web-sys@0.3.82
+	wasm-bindgen-futures@0.4.56
+	wasm-bindgen-macro-support@0.2.106
+	wasm-bindgen-macro@0.2.106
+	wasm-bindgen-shared@0.2.106
+	wasm-bindgen@0.2.106
+	web-sys@0.3.83
 	web-time@1.1.0
 	webpki-roots@1.0.4
 	which@8.0.0
@@ -394,7 +395,7 @@ CRATES="
 	windows_x86_64_gnullvm@0.53.1
 	windows_x86_64_msvc@0.52.6
 	windows_x86_64_msvc@0.53.1
-	winnow@0.7.13
+	winnow@0.7.14
 	winsafe@0.0.19
 	wit-bindgen@0.46.0
 	writeable@0.6.2
@@ -405,8 +406,8 @@ CRATES="
 	zbus@5.12.0
 	zbus_macros@5.12.0
 	zbus_names@4.2.0
-	zerocopy-derive@0.8.28
-	zerocopy@0.8.28
+	zerocopy-derive@0.8.31
+	zerocopy@0.8.31
 	zerofrom-derive@0.1.6
 	zerofrom@0.1.6
 	zeroize@1.8.2
@@ -420,10 +421,6 @@ CRATES="
 	zvariant_derive@5.8.0
 	zvariant_utils@3.2.1
 "
-
-declare -A GIT_CRATES=(
-	[mac-notification-sys]='https://github.com/h4llow3En/mac-notification-sys;7798ad033f3422b0fc9cdd25c17d3c400f4b7ef0;mac-notification-sys-%commit%'
-)
 
 RUST_MIN_VER="1.84.1"
 
@@ -448,20 +445,6 @@ SLOT="0"
 KEYWORDS="~amd64"
 
 QA_FLAGS_IGNORED="usr/bin/topgrade"
-
-src_prepare() {
-	default
-
-	# replace upstream crate substitution with our crate substitution, sigh
-	# stolen from dev-python/uv::gentoo
-	local pkg
-	# shellcheck disable=SC2043
-	for pkg in mac-notification-sys; do
-		# shellcheck disable=SC2155
-		local dep=$(grep "^${pkg}" "${ECARGO_HOME}"/config.toml || die)
-		sed -i -e "/\[patch\.crates-io\]/,\$s;^${pkg}.*$;${dep};" Cargo.toml || die
-	done
-}
 
 src_compile() {
 	cargo_src_compile
