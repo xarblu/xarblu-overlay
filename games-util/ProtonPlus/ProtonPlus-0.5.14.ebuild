@@ -1,6 +1,9 @@
 # Copyright 1999-2025 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
+# shellcheck shell=bash
+# shellcheck disable=SC2034
+
 EAPI=8
 
 # vala + meson for src_*
@@ -31,6 +34,6 @@ DEPEND="
 RDEPEND="${DEPEND}"
 
 src_prepare() {
-	default
 	vala_setup
+	default
 }
