@@ -15,9 +15,9 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
 # https://dev.gentoo.org/~mgorny/dist/linux/
-GENTOO_PATCHSET=linux-gentoo-patches-6.17.10
+GENTOO_PATCHSET=linux-gentoo-patches-6.18.1
 # https://github.com/projg2/gentoo-kernel-config
-GENTOO_CONFIG_VER=g17
+GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
 CONFIG_COMMIT=5c8cf82f0ea40b72aec3fcbc58b449ca3b7cd372
 # https://github.com/CachyOS/kernel-patches
@@ -25,7 +25,7 @@ PATCH_COMMIT=5f5c847f252b91bc7127af8a3430b1153c28533d
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.33.1
+BCACHEFS_VER=1.33_pre20251212202753
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
