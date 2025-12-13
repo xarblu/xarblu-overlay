@@ -15,17 +15,17 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
 # https://dev.gentoo.org/~mgorny/dist/linux/
-GENTOO_PATCHSET=linux-gentoo-patches-6.17.10
+GENTOO_PATCHSET=linux-gentoo-patches-6.18.1
 # https://github.com/projg2/gentoo-kernel-config
-GENTOO_CONFIG_VER=g17
+GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=acf85ecb3d8a03fb9fd3160ce6d9bdb05ef1c124
+CONFIG_COMMIT=278762fc5eb743b8bf9f819fdf6506306685b101
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=0ac7e72d6b9f973a1682806d0166042869aa4144
+PATCH_COMMIT=8a5e89d346af4221d7426b45da65a677a1ff5582
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.33_pre20251201144716
+BCACHEFS_VER=1.33.1
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -268,7 +268,7 @@ bcachefs_patch_env_setup() {
 	# incompatibilities
 	local bch_tools_min
 	if [[ "${BCACHEFS_VER}" == *_pre* ]]; then
-		bch_tools_min="$(ver_cut 1-2 "${BCACHEFS_VER}")_pre0"
+		bch_tools_min="$(ver_cut 1-2 "${BCACHEFS_VER}").0_pre0"
 	else
 		bch_tools_min="$(ver_cut 1-2 "${BCACHEFS_VER}").0"
 	fi
