@@ -37,13 +37,13 @@ CRATES="
 	bitflags@1.3.2
 	bitflags@2.10.0
 	block-buffer@0.10.4
-	block@0.1.6
+	block2@0.6.2
 	blocking@1.6.2
 	bstr@1.12.1
 	bumpalo@3.19.0
 	byteorder@1.5.0
 	bytes@1.11.0
-	cc@1.2.47
+	cc@1.2.49
 	cfg-if@1.0.4
 	cfg_aliases@0.2.1
 	chrono@0.4.42
@@ -77,17 +77,16 @@ CRATES="
 	deranged@0.5.5
 	derive_arbitrary@1.4.2
 	digest@0.10.7
-	dirs-next@2.0.0
-	dirs-sys-next@0.1.2
 	dirs-sys@0.5.0
 	dirs@6.0.0
+	dispatch2@0.3.0
 	displaydoc@0.2.5
 	dlv-list@0.5.2
 	ed25519-dalek@2.2.0
 	ed25519@2.2.3
 	either@1.15.0
 	encode_unicode@1.0.0
-	endi@1.1.0
+	endi@1.1.1
 	enumflags2@0.7.12
 	enumflags2_derive@0.7.12
 	env_home@0.1.0
@@ -134,7 +133,7 @@ CRATES="
 	http@1.4.0
 	httparse@1.10.1
 	hyper-rustls@0.27.7
-	hyper-util@0.1.18
+	hyper-util@0.1.19
 	hyper@1.8.1
 	iana-time-zone-haiku@0.1.2
 	iana-time-zone@0.1.64
@@ -142,8 +141,8 @@ CRATES="
 	icu_locale_core@2.1.1
 	icu_normalizer@2.1.1
 	icu_normalizer_data@2.1.1
-	icu_properties@2.1.1
-	icu_properties_data@2.1.1
+	icu_properties@2.1.2
+	icu_properties_data@2.1.2
 	icu_provider@2.1.1
 	idna@1.1.0
 	idna_adapter@1.2.1
@@ -156,25 +155,25 @@ CRATES="
 	is_elevated@0.1.2
 	is_terminal_polyfill@1.70.2
 	itertools@0.11.0
+	itertools@0.14.0
 	itoa@1.0.15
 	jetbrains-toolbox-updater@5.4.6
-	js-sys@0.3.82
+	js-sys@0.3.83
 	lazy_static@1.5.0
-	libc@0.2.177
+	libc@0.2.178
 	libredox@0.1.10
 	linux-raw-sys@0.11.0
 	litemap@0.8.1
-	log@0.4.28
+	log@0.4.29
 	lru-slab@0.1.2
-	mac-notification-sys@0.6.2
-	malloc_buf@0.0.6
+	mac-notification-sys@0.6.9
 	matchers@0.2.0
 	memchr@2.7.6
 	memoffset@0.9.1
 	merge@0.1.0
 	merge_derive@0.1.0
 	miniz_oxide@0.8.9
-	mio@1.1.0
+	mio@1.1.1
 	nix@0.30.1
 	normpath@1.5.0
 	notify-rust@4.11.7
@@ -183,11 +182,11 @@ CRATES="
 	num-conv@0.1.0
 	num-traits@0.2.19
 	number_prefix@0.4.0
-	objc-foundation@0.1.1
 	objc2-core-foundation@0.3.2
+	objc2-encode@4.1.0
+	objc2-foundation@0.3.2
 	objc2-io-kit@0.3.2
-	objc@0.2.7
-	objc_id@0.1.1
+	objc2@0.6.3
 	object@0.37.3
 	once_cell@1.21.3
 	once_cell_polyfill@1.70.2
@@ -222,13 +221,12 @@ CRATES="
 	rand_core@0.6.4
 	rand_core@0.9.3
 	redox_syscall@0.5.18
-	redox_users@0.4.6
 	redox_users@0.5.2
 	regex-automata@0.4.13
 	regex-split@0.1.0
 	regex-syntax@0.8.8
 	regex@1.12.2
-	reqwest@0.12.24
+	reqwest@0.12.25
 	ring@0.17.14
 	roff@0.2.2
 	rust-i18n-macro@3.1.5
@@ -239,7 +237,7 @@ CRATES="
 	rustc-hash@2.1.1
 	rustc_version@0.4.1
 	rustix@1.1.2
-	rustls-pki-types@1.13.0
+	rustls-pki-types@1.13.1
 	rustls-webpki@0.103.8
 	rustls@0.23.35
 	rustversion@1.0.22
@@ -259,12 +257,12 @@ CRATES="
 	serde_yaml@0.9.34+deprecated
 	sha2@0.10.9
 	sharded-slab@0.1.7
-	shell-words@1.1.0
+	shell-words@1.1.1
 	shellexpand@3.1.1
 	shlex@1.3.0
 	signal-hook-registry@1.4.7
 	signature@2.2.0
-	simd-adler32@0.3.7
+	simd-adler32@0.3.8
 	siphasher@1.0.1
 	slab@0.4.11
 	smallvec@1.15.1
@@ -305,11 +303,11 @@ CRATES="
 	toml_datetime@0.6.11
 	toml_datetime@0.7.3
 	toml_edit@0.22.27
-	toml_edit@0.23.7
+	toml_edit@0.23.9
 	toml_parser@1.0.4
 	toml_write@0.1.2
 	toml_writer@1.0.4
-	tower-http@0.6.7
+	tower-http@0.6.8
 	tower-layer@0.3.3
 	tower-service@0.3.3
 	tower@0.5.2
@@ -317,8 +315,8 @@ CRATES="
 	tracing-core@0.1.35
 	tracing-error@0.2.1
 	tracing-log@0.2.0
-	tracing-subscriber@0.3.21
-	tracing@0.1.42
+	tracing-subscriber@0.3.22
+	tracing@0.1.43
 	triomphe@0.1.15
 	try-lock@0.2.5
 	typenum@1.19.0
@@ -332,19 +330,19 @@ CRATES="
 	urlencoding@2.1.3
 	utf8_iter@1.0.4
 	utf8parse@0.2.2
-	uuid@1.18.1
+	uuid@1.19.0
 	valuable@0.1.1
 	version_check@0.9.5
 	walkdir@2.5.0
 	want@0.3.1
 	wasi@0.11.1+wasi-snapshot-preview1
 	wasip2@1.0.1+wasi-0.2.4
-	wasm-bindgen-futures@0.4.55
-	wasm-bindgen-macro-support@0.2.105
-	wasm-bindgen-macro@0.2.105
-	wasm-bindgen-shared@0.2.105
-	wasm-bindgen@0.2.105
-	web-sys@0.3.82
+	wasm-bindgen-futures@0.4.56
+	wasm-bindgen-macro-support@0.2.106
+	wasm-bindgen-macro@0.2.106
+	wasm-bindgen-shared@0.2.106
+	wasm-bindgen@0.2.106
+	web-sys@0.3.83
 	web-time@1.1.0
 	webpki-roots@1.0.4
 	which@8.0.0
@@ -398,7 +396,7 @@ CRATES="
 	windows_x86_64_gnullvm@0.53.1
 	windows_x86_64_msvc@0.52.6
 	windows_x86_64_msvc@0.53.1
-	winnow@0.7.13
+	winnow@0.7.14
 	winsafe@0.0.19
 	wit-bindgen@0.46.0
 	writeable@0.6.2
@@ -409,8 +407,8 @@ CRATES="
 	zbus@5.12.0
 	zbus_macros@5.12.0
 	zbus_names@4.2.0
-	zerocopy-derive@0.8.30
-	zerocopy@0.8.30
+	zerocopy-derive@0.8.31
+	zerocopy@0.8.31
 	zerofrom-derive@0.1.6
 	zerofrom@0.1.6
 	zeroize@1.8.2
@@ -439,11 +437,9 @@ SRC_URI="
 LICENSE="GPL-3"
 # Dependent crate licenses
 LICENSE+="
-	Apache-2.0 Apache-2.0-with-LLVM-exceptions BSD CC0-1.0 GPL-3 ISC MIT
-	MPL-2.0 Unicode-3.0
+	Apache-2.0 BSD CC0-1.0 CDLA-Permissive-2.0 GPL-3 ISC MIT MPL-2.0
+	Unicode-3.0
 "
-# owo-colors license file
-LICENSE+="MIT"
 SLOT="0"
 KEYWORDS="~amd64"
 
