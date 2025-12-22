@@ -15,17 +15,17 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
 # https://dev.gentoo.org/~mgorny/dist/linux/
-GENTOO_PATCHSET=linux-gentoo-patches-6.18.1
+GENTOO_PATCHSET=linux-gentoo-patches-6.18.2
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=5c8cf82f0ea40b72aec3fcbc58b449ca3b7cd372
+CONFIG_COMMIT=b68aded713a580df028543faea77c4ca5ec1226b
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=5f5c847f252b91bc7127af8a3430b1153c28533d
+PATCH_COMMIT=a0f67557573aa13c028aea2a84a7a68e0d5477e8
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.33_pre20251212202753
+BCACHEFS_VER=1.33_pre20251222012500
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -41,6 +41,7 @@ CACHY_PATCH_SPECS=(
 	# global
 	-:all/0001-cachyos-base-all.patch
 	# flavours
+	cachyos:sched/0001-bore-cachy.patch
 	bmq:sched/0001-prjc-cachy.patch
 	bore:sched/0001-bore-cachy.patch
 	deckify:misc/0001-acpi-call.patch
@@ -101,10 +102,18 @@ QA_FLAGS_IGNORED="
 	usr/src/linux-.*/arch/powerpc/kernel/vdso.*/vdso.*.so.dbg
 "
 
+# kernel base i.e. which linux tarball we use as a base
 if [[ "${PV}" == *_rc* ]]; then
 	KERNEL_BASE_V="$(ver_cut 1).$(( $(ver_cut 2) - 1 ))"
 else
 	KERNEL_BASE_V="$(ver_cut 1-2)"
+fi
+
+# release after patching
+if [[ "${PV}" == *_rc0 ]]; then
+	PATCHED_V="$(ver_cut 1).$(( $(ver_cut 2) - 1 ))"
+else
+	PATCHED_V="$(ver_cut 1-2)"
 fi
 
 # virtual RC conflicts with its stable equivalent
@@ -113,8 +122,8 @@ if [[ "${PV}" == *_rc0 ]]; then
 	RDEPEND+=" !~${CATEGORY}/${PN}-${KERNEL_BASE_V}.0"
 fi
 
-CONFIG_P="${PN}-${KERNEL_BASE_V}-${CONFIG_COMMIT::8}"
-PATCH_P="${PN}-${KERNEL_BASE_V}-${PATCH_COMMIT::8}"
+CONFIG_P="${PN}-${PATCHED_V}-${CONFIG_COMMIT::8}"
+PATCH_P="${PN}-${PATCHED_V}-${PATCH_COMMIT::8}"
 
 # append a list of kernel sources and incremental patches to SRC_URI
 # and sets S to the correct directory
@@ -241,7 +250,7 @@ cachy_patch_env_setup() {
 	local base spec cond patch file
 	local cachy_patch_uris=""
 	base="https://raw.githubusercontent.com/CachyOS/kernel-patches"
-	base+="/${PATCH_COMMIT}/${KERNEL_BASE_V}"
+	base+="/${PATCH_COMMIT}/${PATCHED_V}"
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
 		IFS=":" read -r cond patch <<<"${spec}"
 		file="${PATCH_P}-${patch##*/}"
@@ -258,9 +267,9 @@ cachy_patch_env_setup() {
 bcachefs_patch_env_setup() {
 	[[ -z "${BCACHEFS_VER}" ]] && return
 
-	declare -g BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v${KERNEL_BASE_V}.patch"
+	declare -g BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v${PATCHED_V}.patch"
 	declare -g SRC_URI="${SRC_URI} bcachefs? (
-		https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/${KERNEL_BASE_V}/${BCACHEFS_PATCH}
+		https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/${PATCHED_V}/${BCACHEFS_PATCH}
 	)"
 
 	# enforce bcachefs-tools version on minor-level
@@ -611,14 +620,14 @@ cachy_use_config() {
 
 	# _cpusched
 	case "${_cpusched}" in
-		bore)
+		cachyos|bore)
 			kconf set SCHED_BORE
 			;;
 		bmq)
 			kconf set SCHED_ALT
 			kconf set SCHED_BMQ
 			;;
-		cachyos|eevdf) ;;
+		eevdf) ;;
 		rt)
 			kconf set PREEMPT_RT
 			;;

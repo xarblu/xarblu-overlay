@@ -42,10 +42,10 @@ src_install() {
 	doins usr/lib/modprobe.d/{amdgpu,blacklist,nvidia}.conf
 
 	insinto /usr/lib/modules-load.d
-	doins usr/lib/modules-load.d/{10-uinput,ntsync}.conf
+	doins usr/lib/modules-load.d/ntsync.conf
 
 	insinto /usr/lib/sysctl.d
-	doins usr/lib/sysctl.d/{99-bore-scheduler,99-cachyos-settings}.conf
+	doins usr/lib/sysctl.d/70-cachyos-settings.conf
 
 	if use systemd; then
 		# can't use systemd_get_utildir directly
