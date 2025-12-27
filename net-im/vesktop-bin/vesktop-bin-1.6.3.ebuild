@@ -8,6 +8,8 @@ EAPI=8
 
 MY_PN="vesktop"
 
+XDG_PN="dev.vencord.Vesktop"
+
 CHROMIUM_LANGS="
 	af am ar bg bn ca cs da de el en-GB en-US es es-419 et fa fi fil fr gu he hi
 	hr hu id it ja kn ko lt lv ml mr ms nb nl pl pt-BR pt-PT ro ru sk sl sr sv
@@ -22,13 +24,14 @@ SRC_URI="
 	amd64? ( https://github.com/Vencord/Vesktop/releases/download/v${PV}/${MY_PN}-${PV}.tar.gz )
 	arm64? ( https://github.com/Vencord/Vesktop/releases/download/v${PV}/${MY_PN}-${PV}-arm64.tar.gz )
 	https://raw.githubusercontent.com/Vencord/Vesktop/refs/tags/v${PV}/build/icon.svg -> ${P}.svg
+	https://github.com/Vencord/Vesktop/releases/download/v${PV}/${XDG_PN}.metainfo.xml -> ${P}.metainfo.xml
 "
 S="${WORKDIR}/${MY_PN}-${PV}"
 
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="-* ~amd64 ~arm64"
-IUSE="appindicator wayland"
+IUSE="appindicator"
 # not as strict as net-im/discord
 # because Vesktop is GPL-3 so distributing
 # should be fine
@@ -85,9 +88,6 @@ src_prepare() {
 	pushd locales >/dev/null || die
 		chromium_remove_language_paks
 	popd >/dev/null || die
-
-	sed -e "s/%WL_DEF%/$(usex wayland 1 0)/" \
-		"${FILESDIR}/launcher.sh" > launcher.sh || die
 }
 
 src_install() {
@@ -123,23 +123,15 @@ src_install() {
 	fowners root "${dest}/chrome-sandbox"
 	fperms 4711 "${dest}/chrome-sandbox"
 
-	newbin launcher.sh "${PN}"
+	dosym "../../${dest}/${MY_PN}" "/usr/bin/${PN}"
+
 	newicon -s scalable "${DISTDIR}/${P}.svg" "${PN}.svg"
 	domenu "${FILESDIR}/${PN}.desktop"
+	insinto /usr/share/metainfo
+	newins "${DISTDIR}/${P}.metainfo.xml" "${XDG_PN}.metainfo.xml"
 
 	# https://bugs.gentoo.org/898912
 	if use appindicator; then
 		dosym ../../usr/lib64/libayatana-appindicator3.so "/opt/${PN}/libappindicator3.so"
-	fi
-}
-
-pkg_postinst() {
-	xdg_pkg_postinst
-
-	if has_version 'kde-plasma/kwin[-screencast]' && use wayland; then
-		einfo " "
-		einfo "When using KWin on Wayland, the kde-plasma/kwin[screencast] USE flag"
-		einfo "must be enabled for screensharing."
-		einfo " "
 	fi
 }
