@@ -33,6 +33,10 @@
 
 #--- END OF EXAMPLES ---
 
+# Xarblu <xarblu@protonmail.com> (2026-01-02)
+# Release candidate
+=games-util/mangohud-0.8.3*
+
 # Xarblu <xarblu@protonmail.com> (2025-11-28)
 # LLVM is stable and has properly integrated polly
 # in ::gentoo. These also were not touched since then.
