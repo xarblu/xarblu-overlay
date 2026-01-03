@@ -15,20 +15,21 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r2 kernel-build
 
 # https://dev.gentoo.org/~mgorny/dist/linux/
-GENTOO_PATCHSET=linux-gentoo-patches-6.18.2
+GENTOO_PATCHSET=linux-gentoo-patches-6.18.3
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=f29baa3a13d3756dbd8836ed646622af803f79a3
+CONFIG_COMMIT=f280ea9c30ca7a39cf8f6995efb553ff9b8cb384
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=dd86f5f1e1c87b8bc3d8cabf2c655fe2b2c5e144
+PATCH_COMMIT=15a034b093aee9b935f7c6c08ea5312e187c9ac7
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.35_pre20260102164101
+BCACHEFS_VER=1.34.0
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
-FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
+#FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
+FLAVOURS="cachyos bore deckify eevdf rt-bore server"
 
 # RCs only have main flavour
 [[ "${PV}" == *_rc* ]] && FLAVOURS="cachyos"
@@ -41,7 +42,6 @@ CACHY_PATCH_SPECS=(
 	# global
 	-:all/0001-cachyos-base-all.patch
 	# flavours
-	cachyos:sched/0001-bore-cachy.patch
 	bmq:sched/0001-prjc-cachy.patch
 	bore:sched/0001-bore-cachy.patch
 	deckify:misc/0001-acpi-call.patch
@@ -620,14 +620,14 @@ cachy_use_config() {
 
 	# _cpusched
 	case "${_cpusched}" in
-		cachyos|bore)
+		bore)
 			kconf set SCHED_BORE
 			;;
 		bmq)
 			kconf set SCHED_ALT
 			kconf set SCHED_BMQ
 			;;
-		eevdf) ;;
+		cachyos|eevdf) ;;
 		rt)
 			kconf set PREEMPT_RT
 			;;
