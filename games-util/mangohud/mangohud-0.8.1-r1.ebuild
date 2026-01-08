@@ -60,7 +60,7 @@ BDEPEND="
 
 DEPEND="
 	dev-cpp/nlohmann_json
-	dev-libs/spdlog[${MULTILIB_USEDEP}]
+	dev-libs/spdlog:=[${MULTILIB_USEDEP}]
 	dev-util/glslang[${MULTILIB_USEDEP}]
 	media-libs/libglvnd[${MULTILIB_USEDEP}]
 	media-libs/vulkan-loader[${MULTILIB_USEDEP}]
