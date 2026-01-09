@@ -39,7 +39,7 @@ KEYWORDS="-* ~amd64"
 
 BDEPEND="
 	app-arch/unzip
-	net-libs/nodejs
+	net-libs/nodejs[npm]
 	$(unpacker_src_uri_depends)
 "
 
