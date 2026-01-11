@@ -25,7 +25,7 @@ PATCH_COMMIT=bd836f10a363f04ec755a7e39ffdc78b8043e336
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.35.0_pre20260108214947
+BCACHEFS_VER=1.35.0_pre20260110073627
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -866,6 +866,12 @@ src_prepare() {
 	# apply package and user patches
 	eapply "${WORKDIR}/patches"
 	eapply_user
+
+	# add _pX extraversion
+	local extraversion="${PV#*_p}"
+	if [[ "${extraversion}" != "${PV}" ]]; then
+		sed -i -e "s:^\(EXTRAVERSION =\).*:\1 -p${extraversion}:" Makefile || die
+	fi
 
 	# Localversion
 	kconf val LOCALVERSION "\"$(cachy_version)\"" > "${T}/version.config" || die
