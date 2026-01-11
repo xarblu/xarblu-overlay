@@ -21,15 +21,14 @@ GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
 CONFIG_COMMIT=ded3bb302378c46be3a2be8d71f82146fc06bbc2
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=c954fa780ab641df2b6d37e5c4b8361086e4a6e3
+PATCH_COMMIT=1378678080cdff989e935f374e4f9e92af720043
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
 BCACHEFS_VER=1.34.0
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
-#FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
-FLAVOURS="cachyos bore deckify eevdf rt-bore server"
+FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
 
 # RCs only have main flavour
 [[ "${PV}" == *_rc* ]] && FLAVOURS="cachyos"
