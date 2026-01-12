@@ -1,4 +1,4 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 # shellcheck shell=bash
@@ -97,7 +97,7 @@ RUST_NEEDS_LLVM=1
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/kentoverstreet.asc
 
 # for _pre* snapshots
-COMMIT=b761320a12f3a80e5558f7fbb9968e57b8570f3a
+#COMMIT=
 
 inherit cargo flag-o-matic llvm-r1 python-any-r1 shell-completion toolchain-funcs unpacker verify-sig udev
 
