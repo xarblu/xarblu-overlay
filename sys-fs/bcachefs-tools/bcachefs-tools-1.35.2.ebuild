@@ -101,7 +101,7 @@ RUST_NEEDS_LLVM=1
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/kentoverstreet.asc
 
 # for _pre* snapshots
-COMMIT=9e893f9a212d5904c696275ee82b622dc61be933
+#COMMIT=
 
 inherit cargo flag-o-matic llvm-r1 python-any-r1 shell-completion toolchain-funcs unpacker verify-sig udev
 
@@ -176,6 +176,12 @@ python_check_deps() {
 }
 
 pkg_setup() {
+	# early llvm_prepend_path
+	# to keep C and Rust synced
+	if [[ ${MERGE_TYPE} != binary ]]; then
+		llvm_prepend_path "${LLVM_SLOT}"
+	fi
+
 	llvm-r1_pkg_setup
 	rust_pkg_setup
 	python-any-r1_pkg_setup
