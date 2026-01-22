@@ -1,4 +1,4 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 # shellcheck shell=bash
@@ -14,6 +14,7 @@ CRATES="
 	anstyle-wincon@3.0.4
 	anstyle@1.0.8
 	anyhow@1.0.89
+	ascii@1.1.0
 	bindgen@0.69.5
 	bitfield@0.14.0
 	bitflags@1.3.2
@@ -21,6 +22,7 @@ CRATES="
 	cc@1.1.28
 	cexpr@0.6.0
 	cfg-if@1.0.0
+	chunked_transfer@1.5.0
 	clang-sys@1.8.1
 	clap@4.5.20
 	clap_builder@4.5.20
@@ -36,6 +38,7 @@ CRATES="
 	glob@0.3.1
 	heck@0.5.0
 	home@0.5.9
+	httpdate@1.0.3
 	is_terminal_polyfill@1.70.1
 	itertools@0.12.1
 	lazy_static@1.5.0
@@ -67,6 +70,7 @@ CRATES="
 	strum_macros@0.26.4
 	syn@2.0.79
 	terminal_size@0.4.0
+	tiny_http@0.12.0
 	udev@0.7.0
 	unicode-ident@1.0.13
 	utf8parse@0.2.2
@@ -97,7 +101,7 @@ RUST_NEEDS_LLVM=1
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/kentoverstreet.asc
 
 # for _pre* snapshots
-#COMMIT=
+COMMIT=b3f33a1827dea29efac91b95ecbc5a9014619572
 
 inherit cargo flag-o-matic llvm-r1 python-any-r1 shell-completion toolchain-funcs unpacker verify-sig udev
 
@@ -172,6 +176,12 @@ python_check_deps() {
 }
 
 pkg_setup() {
+	# early llvm_prepend_path
+	# to keep C and Rust synced
+	if [[ ${MERGE_TYPE} != binary ]]; then
+		llvm_prepend_path "${LLVM_SLOT}"
+	fi
+
 	llvm-r1_pkg_setup
 	rust_pkg_setup
 	python-any-r1_pkg_setup
@@ -210,6 +220,9 @@ src_prepare() {
 		-e '/^CFLAGS/s:-g::' \
 		-i Makefile || die
 	append-lfs-flags
+
+	# generate version.h
+	emake generate_version
 }
 
 src_compile() {
