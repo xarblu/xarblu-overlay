@@ -19,13 +19,13 @@ GENTOO_PATCHSET=linux-gentoo-patches-6.18.4
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=e8675eeb9b48a23167b3e43f84e3be76e321935e
+CONFIG_COMMIT=1acd46cdeb2598f0300b6d7141d47edbf63772cc
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=d2f1d070c0303b3b2bcb71df73c623a274258e22
+PATCH_COMMIT=70ef8b481e4454f4823edc5aca11297eb8c45756
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.36.1_pre20260131154108
+BCACHEFS_VER=1.36.0
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -41,7 +41,6 @@ CACHY_PATCH_SPECS=(
 	# global
 	-:all/0001-cachyos-base-all.patch
 	# flavours
-	cachyos:sched/0001-bore-cachy.patch
 	bmq:sched/0001-prjc-cachy.patch
 	bore:sched/0001-bore-cachy.patch
 	deckify:misc/0001-acpi-call.patch
@@ -620,14 +619,14 @@ cachy_use_config() {
 
 	# _cpusched
 	case "${_cpusched}" in
-		cachyos|bore)
+		bore)
 			kconf set SCHED_BORE
 			;;
 		bmq)
 			kconf set SCHED_ALT
 			kconf set SCHED_BMQ
 			;;
-		eevdf) ;;
+		cachyos|eevdf) ;;
 		rt)
 			kconf set PREEMPT_RT
 			;;
