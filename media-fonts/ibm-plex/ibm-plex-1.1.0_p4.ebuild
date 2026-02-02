@@ -1,4 +1,4 @@
-# Copyright 2019-2025 Gentoo Authors
+# Copyright 2019-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 # shellcheck shell=bash
@@ -11,12 +11,10 @@ inherit font
 DESCRIPTION="The package of IBM's typeface"
 HOMEPAGE="https://github.com/IBM/plex"
 
-COMMIT='89cba80dad75561262e758f4b6ddd474c5119796'
-
 # spec for each relevant font file in the repo within the packages/ dir
 # we will download them individually because archives of the entire repo
 # are over 1GB even when compressed
-# format: <use>:<dir>:<family>:<types>:<hinted>:<tier>
+# format: <use>:<dir>:<family>:<types>:<hinted>:<tier>:<ref>
 # use: use flag guardig the font e.g. cjk
 # dir: font root dir e.g. ibm-mono
 # name: font name e.g. IBMPlexMono
@@ -26,31 +24,31 @@ COMMIT='89cba80dad75561262e758f4b6ddd474c5119796'
 #       1 -> only Regular
 #       8 -> 8 variants
 #       16 -> 16 variants
+# ref: GIT commit of the last update for a family (to avoid large re-fetch)
 # shellcheck disable=SC2054
 FONT_SPECS=(
-	-:plex-math:IBMPlexMath:otf,ttf::1
-	-:plex-mono:IBMPlexMono:otf,ttf::16
-	-:plex-sans-arabic:IBMPlexSansArabic:otf,ttf::8
-	-:plex-sans-condensed:IBMPlexSansCondensed:otf,ttf::16
-	-:plex-sans-devanagari:IBMPlexSansDevanagari:otf,ttf::8
-	-:plex-sans-hebrew:IBMPlexSansHebrew:otf,ttf::8
-	cjk:plex-sans-jp:IBMPlexSansJP:otf,ttf:otf,ttf:8
-	cjk:plex-sans-kr:IBMPlexSansKR:otf,ttf:ttf:8
-	cjk:plex-sans-sc:IBMPlexSansSC:otf,ttf:otf,ttf:8
-	cjk:plex-sans-tc:IBMPlexSansTC:otf,ttf:otf,ttf:8
-	-:plex-sans-thai-looped:IBMPlexSansThaiLooped:otf,ttf::8
-	-:plex-sans-thai:IBMPlexSansThai:otf,ttf::8
-	'variable:plex-sans-variable:IBM Plex Sans Var:ttf::variable'
-	-:plex-sans:IBMPlexSans:otf,ttf::16
-	-:plex-serif:IBMPlexSerif:otf,ttf::16
+	-:plex-math:IBMPlexMath:otf,ttf::1:bb3ab6404e1881ea286f8742dc839e09057db6dd
+	-:plex-mono:IBMPlexMono:otf,ttf::16:bb3ab6404e1881ea286f8742dc839e09057db6dd
+	-:plex-sans-arabic:IBMPlexSansArabic:otf,ttf::8:bb3ab6404e1881ea286f8742dc839e09057db6dd
+	-:plex-sans-condensed:IBMPlexSansCondensed:otf,ttf::16:bb3ab6404e1881ea286f8742dc839e09057db6dd
+	-:plex-sans-devanagari:IBMPlexSansDevanagari:otf,ttf::8:bb3ab6404e1881ea286f8742dc839e09057db6dd
+	-:plex-sans-hebrew:IBMPlexSansHebrew:otf,ttf::8:bb3ab6404e1881ea286f8742dc839e09057db6dd
+	cjk:plex-sans-jp:IBMPlexSansJP:otf,ttf:otf,ttf:8:bb3ab6404e1881ea286f8742dc839e09057db6dd
+	cjk:plex-sans-kr:IBMPlexSansKR:otf,ttf:ttf:8:bb3ab6404e1881ea286f8742dc839e09057db6dd
+	cjk:plex-sans-sc:IBMPlexSansSC:otf,ttf:otf,ttf:8:bb3ab6404e1881ea286f8742dc839e09057db6dd
+	cjk:plex-sans-tc:IBMPlexSansTC:otf,ttf:otf,ttf:8:bb3ab6404e1881ea286f8742dc839e09057db6dd
+	-:plex-sans-thai-looped:IBMPlexSansThaiLooped:otf,ttf::8:bb3ab6404e1881ea286f8742dc839e09057db6dd
+	-:plex-sans-thai:IBMPlexSansThai:otf,ttf::8:bb3ab6404e1881ea286f8742dc839e09057db6dd
+	variable:plex-sans-variable:'IBM Plex Sans Var':ttf::variable:bb3ab6404e1881ea286f8742dc839e09057db6dd
+	-:plex-sans:IBMPlexSans:otf,ttf::16:bb3ab6404e1881ea286f8742dc839e09057db6dd
+	-:plex-serif:IBMPlexSerif:otf,ttf::16:434af578549afcfdabd281f386e0ff7314fd20b0
 )
 
 setup_fonts() {
-	local base="https://github.com/IBM/plex/raw/${COMMIT}/packages"
-	local font_use font_dir font_family font_types font_hinted font_tier
+	local font_use font_dir font_family font_types font_hinted font_tier commit
 	local url
-	while IFS=':' read -r font_use font_dir font_family font_types font_hinted font_tier; do
-		url="${base}/${font_dir}/fonts/complete"
+	while IFS=':' read -r font_use font_dir font_family font_types font_hinted font_tier commit; do
+		url="https://github.com/IBM/plex/raw/${commit}/packages/${font_dir}/fonts/complete"
 
 		IFS=',' read -r -a font_types <<<"${font_types}"
 
@@ -84,16 +82,16 @@ setup_fonts() {
 				if [[ "${font_hinted}" == *"${font_type}"* ]]; then
 					SRC_URI+=" ${font_type}? (
 						${url}/${font_type}/hinted/${font_family// /%20}-${font_variant}.${font_type}
-							-> ${font_family// /_}-${font_variant}-Hinted-${COMMIT::8}.${font_type}
+							-> ${font_family// /_}-${font_variant}-Hinted-${commit::8}.${font_type}
 					) "
 					SRC_URI+=" ${font_type}? (
 						${url}/${font_type}/unhinted/${font_family// /%20}-${font_variant}.${font_type}
-							-> ${font_family// /_}-${font_variant}-Unhinted-${COMMIT::8}.${font_type}
+							-> ${font_family// /_}-${font_variant}-Unhinted-${commit::8}.${font_type}
 					) "
 				else
 					SRC_URI+=" ${font_type}? (
 						${url}/${font_type}/${font_family// /%20}-${font_variant}.${font_type}
-							-> ${font_family// /_}-${font_variant}-${COMMIT::8}.${font_type}
+							-> ${font_family// /_}-${font_variant}-${commit::8}.${font_type}
 					) "
 				fi
 			done
@@ -119,18 +117,19 @@ REQUIRED_USE="
 	variable? ( ttf )
 "
 
-BDEPEND="app-arch/unzip"
-
 src_prepare() {
 	default
 
 	# move into S and remove changing commit
-	local src dest
+	local src dest file ext
 	while IFS=$'\0' read -r -d $'\0' src; do
-		dest="${S}/${src##*/}"
-		dest="${dest//"-${COMMIT::8}"/}"
-		cp --verbose --no-clobber --dereference \
-			"${src}" "${dest}" || die
+		# <font>-<commit[8]>.<ext> -> <font>.<ext>
+		file="${src##*/}"
+		ext="${file##*.}"
+		file="${file%.*}"
+		file="${file%-????????}.${ext}"
+		dest="${S}/${file}"
+		cp --verbose --no-clobber --dereference "${src}" "${dest}" || die
 	done < <(find "${DISTDIR}" '(' -name '*.otf' -or -name '*.ttf' ')' -print0)
 }
 
