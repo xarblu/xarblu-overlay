@@ -19,13 +19,13 @@ GENTOO_PATCHSET=linux-gentoo-patches-6.18.4
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=1f8a79ffeac6f319a8c0fc3abad27a3ec7762abf
+CONFIG_COMMIT=94b35b638d970d70a354432d863e5fdf39238e44
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=bfa4ff5231408610ffcc92898cd1e4c9bd55e452
+PATCH_COMMIT=c031bd5a91990f7eab3d8fb364836cf4e1960f31
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.36.2_pre20260207012702
+BCACHEFS_VER=1.36.1
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -41,7 +41,6 @@ CACHY_PATCH_SPECS=(
 	# global
 	-:all/0001-cachyos-base-all.patch
 	# flavours
-	cachyos:sched/0001-bore-cachy.patch
 	bmq:sched/0001-prjc-cachy.patch
 	bore:sched/0001-bore-cachy.patch
 	deckify:misc/0001-acpi-call.patch
@@ -387,11 +386,6 @@ cachy_stage_patches() {
 	fi
 
 	# extra patches
-	if [[ "$(cachy_flavour)" == deckify ]]; then
-		# handheld.patch makes ath11k_pci use QCA206X firmware
-		# this firmware A) is annoying to find and B) simply doesn't work
-		cp -t "${target}" "${FILESDIR}/7000_revert-ath11k-firmware.patch" || die
-	fi
 
 	# remove problematic patches
 	local patch
@@ -620,14 +614,14 @@ cachy_use_config() {
 
 	# _cpusched
 	case "${_cpusched}" in
-		cachyos|bore)
+		bore)
 			kconf set SCHED_BORE
 			;;
 		bmq)
 			kconf set SCHED_ALT
 			kconf set SCHED_BMQ
 			;;
-		eevdf) ;;
+		cachyos|eevdf) ;;
 		rt)
 			kconf set PREEMPT_RT
 			;;
