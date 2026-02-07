@@ -19,7 +19,6 @@ CRATES="
 	bitfield@0.14.0
 	bitflags@1.3.2
 	bitflags@2.6.0
-	cc@1.1.28
 	cexpr@0.6.0
 	cfg-if@1.0.0
 	chunked_transfer@1.5.0
@@ -30,10 +29,9 @@ CRATES="
 	clap_derive@4.5.18
 	clap_lex@0.7.2
 	colorchoice@1.0.2
+	crossterm@0.28.1
 	either@1.13.0
 	env_logger@0.10.2
-	errno-dragonfly@0.1.2
-	errno@0.2.8
 	errno@0.3.9
 	glob@0.3.1
 	heck@0.5.0
@@ -41,30 +39,45 @@ CRATES="
 	httpdate@1.0.3
 	is_terminal_polyfill@1.70.1
 	itertools@0.12.1
+	itoa@1.0.17
 	lazy_static@1.5.0
 	lazycell@1.3.0
-	libc@0.2.159
+	libc@0.2.180
 	libloading@0.8.5
 	libudev-sys@0.1.4
 	linux-raw-sys@0.4.14
+	lock_api@0.4.14
 	log@0.4.22
 	memchr@2.7.4
 	minimal-lexical@0.2.1
+	mio@1.1.1
 	nom@7.1.3
 	once_cell@1.20.2
 	owo-colors@4.1.0
+	parking_lot@0.12.5
+	parking_lot_core@0.9.12
 	paste@1.0.15
 	pkg-config@0.3.31
 	prettyplease@0.2.22
 	proc-macro2@1.0.87
 	quote@1.0.37
+	redox_syscall@0.5.18
 	regex-automata@0.4.8
 	regex-syntax@0.8.5
 	regex@1.11.0
 	rustc-hash@1.1.0
 	rustix@0.38.37
 	rustversion@1.0.17
+	ryu@1.0.22
+	scopeguard@1.2.0
+	serde@1.0.210
+	serde_derive@1.0.210
+	serde_json@1.0.143
 	shlex@1.3.0
+	signal-hook-mio@0.2.5
+	signal-hook-registry@1.4.8
+	signal-hook@0.3.18
+	smallvec@1.15.1
 	strsim@0.11.1
 	strum@0.26.3
 	strum_macros@0.26.4
@@ -75,12 +88,12 @@ CRATES="
 	unicode-ident@1.0.13
 	utf8parse@0.2.2
 	uuid@1.10.0
+	wasi@0.11.1+wasi-snapshot-preview1
 	which@4.4.2
-	winapi-i686-pc-windows-gnu@0.4.0
-	winapi-x86_64-pc-windows-gnu@0.4.0
-	winapi@0.3.9
+	windows-link@0.2.1
 	windows-sys@0.52.0
 	windows-sys@0.59.0
+	windows-sys@0.61.2
 	windows-targets@0.52.6
 	windows_aarch64_gnullvm@0.52.6
 	windows_aarch64_msvc@0.52.6
@@ -101,7 +114,7 @@ RUST_NEEDS_LLVM=1
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/kentoverstreet.asc
 
 # for _pre* snapshots
-COMMIT=da28aae1a4e225af077136f13e2a45036067e0d9
+#COMMIT=
 
 inherit cargo flag-o-matic llvm-r1 python-any-r1 shell-completion toolchain-funcs unpacker verify-sig udev
 
