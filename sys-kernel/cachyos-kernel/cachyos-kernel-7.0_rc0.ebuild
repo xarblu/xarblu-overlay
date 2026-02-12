@@ -25,7 +25,7 @@ PATCH_COMMIT=7f735c612ef2930a7b0d17e333604bea1f503723
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.36.2_pre20260209140017
+BCACHEFS_VER=1.36.2_pre20260211220944
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"

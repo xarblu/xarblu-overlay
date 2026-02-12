@@ -1,4 +1,4 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 # shellcheck shell=bash
@@ -71,7 +71,7 @@ DEPEND="
 	appindicator? ( dev-libs/libayatana-appindicator )
 "
 
-QA_PREBUILT="/opt/${PN}/*"
+QA_PREBUILT="opt/${PN}/*"
 
 pkg_setup() {
 	chromium_suid_sandbox_check_kernel_config
