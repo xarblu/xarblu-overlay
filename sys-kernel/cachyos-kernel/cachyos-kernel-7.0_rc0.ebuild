@@ -388,13 +388,6 @@ cachy_stage_patches() {
 			"${target}/6500_${BCACHEFS_PATCH}" || die
 	fi
 
-	# extra patches
-	if [[ "$(cachy_flavour)" == deckify ]]; then
-		# handheld.patch makes ath11k_pci use QCA206X firmware
-		# this firmware A) is annoying to find and B) simply doesn't work
-		cp -t "${target}" "${FILESDIR}/7000_revert-ath11k-firmware.patch" || die
-	fi
-
 	# remove problematic patches
 	local patch
 	for patch in "${BAD_PATCHES[@]}"; do
