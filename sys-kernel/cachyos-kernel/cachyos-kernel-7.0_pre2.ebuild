@@ -99,7 +99,6 @@ fi
 CONFIG_P="${PN}-${PATCHED_V}-${CONFIG_COMMIT::8}"
 PATCH_P="${PN}-${PATCHED_V}-${PATCH_COMMIT::8}"
 
-
 DESCRIPTION="Linux kernel built with CachyOS and Gentoo patches"
 HOMEPAGE="
 	https://cachyos.org/
