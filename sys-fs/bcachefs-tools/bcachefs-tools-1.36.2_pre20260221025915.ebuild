@@ -20,11 +20,12 @@ CRATES="
 	bindgen@0.69.5
 	bitfield@0.14.0
 	bitflags@1.3.2
-	bitflags@2.6.0
+	bitflags@2.11.0
 	bumpalo@3.19.1
 	cc@1.2.55
 	cexpr@0.6.0
 	cfg-if@1.0.0
+	cfg_aliases@0.2.1
 	chrono@0.4.43
 	chunked_transfer@1.5.0
 	clang-sys@1.8.1
@@ -38,15 +39,19 @@ CRATES="
 	crossterm@0.28.1
 	either@1.13.0
 	env_logger@0.10.2
+	equivalent@1.0.2
 	errno@0.3.9
 	find-msvc-tools@0.1.9
+	fuser@0.17.0
 	getrandom@0.2.17
 	glob@0.3.1
+	hashbrown@0.16.1
 	heck@0.5.0
 	home@0.5.9
 	httpdate@1.0.3
 	iana-time-zone-haiku@0.1.2
 	iana-time-zone@0.1.65
+	indexmap@2.13.0
 	is_terminal_polyfill@1.70.1
 	itertools@0.12.1
 	itoa@1.0.17
@@ -60,20 +65,28 @@ CRATES="
 	lock_api@0.4.14
 	log@0.4.22
 	memchr@2.7.4
+	memoffset@0.9.1
 	minimal-lexical@0.2.1
 	mio@1.1.1
+	nix@0.30.1
 	nom@7.1.3
 	num-traits@0.2.19
+	num_enum@0.7.5
+	num_enum_derive@0.7.5
 	once_cell@1.20.2
 	owo-colors@4.1.0
+	page_size@0.6.0
 	parking_lot@0.12.5
 	parking_lot_core@0.9.12
 	paste@1.0.15
 	pkg-config@0.3.31
 	prettyplease@0.2.22
+	proc-macro-crate@3.4.0
 	proc-macro2@1.0.87
 	quote@1.0.37
 	redox_syscall@0.5.18
+	ref-cast-impl@1.0.25
+	ref-cast@1.0.25
 	regex-automata@0.4.8
 	regex-syntax@0.8.5
 	regex@1.11.0
@@ -82,8 +95,9 @@ CRATES="
 	rustversion@1.0.17
 	ryu@1.0.22
 	scopeguard@1.2.0
-	serde@1.0.210
-	serde_derive@1.0.210
+	serde@1.0.228
+	serde_core@1.0.228
+	serde_derive@1.0.228
 	serde_json@1.0.143
 	shlex@1.3.0
 	signal-hook-mio@0.2.5
@@ -93,9 +107,12 @@ CRATES="
 	strsim@0.11.1
 	strum@0.26.3
 	strum_macros@0.26.4
-	syn@2.0.79
+	syn@2.0.87
 	terminal_size@0.4.0
 	tiny_http@0.12.0
+	toml_datetime@0.7.5+spec-1.1.0
+	toml_edit@0.23.10+spec-1.0.0
+	toml_parser@1.0.9+spec-1.1.0
 	udev@0.7.0
 	unicode-ident@1.0.13
 	utf8parse@0.2.2
@@ -106,6 +123,9 @@ CRATES="
 	wasm-bindgen-shared@0.2.108
 	wasm-bindgen@0.2.108
 	which@4.4.2
+	winapi-i686-pc-windows-gnu@0.4.0
+	winapi-x86_64-pc-windows-gnu@0.4.0
+	winapi@0.3.9
 	windows-core@0.62.2
 	windows-implement@0.60.2
 	windows-interface@0.59.3
@@ -124,6 +144,9 @@ CRATES="
 	windows_x86_64_gnu@0.52.6
 	windows_x86_64_gnullvm@0.52.6
 	windows_x86_64_msvc@0.52.6
+	winnow@0.7.14
+	zerocopy-derive@0.8.27
+	zerocopy@0.8.27
 	zeroize@1.8.1
 	zeroize_derive@1.4.2
 "
@@ -135,7 +158,7 @@ RUST_NEEDS_LLVM=1
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/kentoverstreet.asc
 
 # for _pre* snapshots
-COMMIT=b2ed0c3548685ff8eb79bfe5f5bb8880822c84b7
+COMMIT=1b67a08d940a51149a929fbb64415cc45cde6ad0
 
 inherit cargo flag-o-matic llvm-r1 python-any-r1 shell-completion toolchain-funcs unpacker verify-sig udev
 
@@ -167,7 +190,7 @@ LICENSE="GPL-2"
 # Dependent crate licenses
 LICENSE+=" Apache-2.0 BSD ISC MIT Unicode-DFS-2016"
 SLOT="0"
-IUSE="fuse verify-sig"
+IUSE="verify-sig"
 RESTRICT="test"
 
 DEPEND="
@@ -180,7 +203,6 @@ DEPEND="
 	sys-apps/util-linux
 	virtual/zlib:=
 	virtual/udev
-	fuse? ( >=sys-fs/fuse-3.7.0 )
 "
 
 RDEPEND="${DEPEND}"
@@ -203,7 +225,7 @@ BDEPEND="
 	${RUST_DEPEND}
 "
 
-QA_FLAGS_IGNORED="/sbin/bcachefs"
+QA_FLAGS_IGNORED="sbin/bcachefs"
 
 python_check_deps() {
 	python_has_version "dev-python/docutils[${PYTHON_USEDEP}]"
@@ -262,8 +284,6 @@ src_prepare() {
 src_compile() {
 	local makeopts=( V=1 )
 
-	use fuse && makeopts+=( BCACHEFS_FUSE=1 )
-
 	emake "${makeopts[@]}"
 
 	(
@@ -283,11 +303,9 @@ src_install() {
 	dosym bcachefs /sbin/mkfs.bcachefs
 	dosym bcachefs /sbin/mount.bcachefs
 
-	if use fuse; then
-		dosym bcachefs /sbin/fsck.fuse.bcachefs
-		dosym bcachefs /sbin/mkfs.fuse.bcachefs
-		dosym bcachefs /sbin/mount.fuse.bcachefs
-	fi
+	dosym bcachefs /sbin/fsck.fuse.bcachefs
+	dosym bcachefs /sbin/mkfs.fuse.bcachefs
+	dosym bcachefs /sbin/mount.fuse.bcachefs
 
 	newbashcomp bash.completion bcachefs
 	newfishcomp fish.completion bcachefs.fish
@@ -299,12 +317,6 @@ src_install() {
 }
 
 pkg_postinst() {
-	if use fuse; then
-		ewarn "FUSE support is experimental."
-		ewarn "Please only use it for development purposes at the risk of losing your data."
-		ewarn "You have been warned."
-	fi
-
 	udev_reload
 }
 
