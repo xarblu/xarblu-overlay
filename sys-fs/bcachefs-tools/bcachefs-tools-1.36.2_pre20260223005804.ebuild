@@ -158,7 +158,7 @@ RUST_NEEDS_LLVM=1
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/kentoverstreet.asc
 
 # for _pre* snapshots
-COMMIT=1b67a08d940a51149a929fbb64415cc45cde6ad0
+COMMIT=8542892b0e5e5331d392217d6aebc1ab153cb9e0
 
 inherit cargo flag-o-matic llvm-r1 python-any-r1 shell-completion toolchain-funcs unpacker verify-sig udev
 
