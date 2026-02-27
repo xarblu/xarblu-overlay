@@ -29,7 +29,7 @@ PATCH_COMMIT=ece737ff7f90f8b8e5823ceb45298d08d3fce83a
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.36.2_pre20260227130348
+BCACHEFS_VER=1.36.1
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -56,10 +56,7 @@ CACHY_PATCH_SPECS=(
 # bad patches that don't apply properly
 # usually these are genpatches that are also included in the cachyos-base-all patch
 # or genpatches that are not rebased yet (common for RCs)
-BAD_PATCHES=(
-	2004_sign-file-full-functionality-with-modern-LibreSSL.patch
-	2008_bpf-verifier-improvement-in-32bit-shift-sign-extensi.patch
-)
+BAD_PATCHES=()
 
 # Kernel version vars
 # KERNEL_BASE  - base linux tarball version
