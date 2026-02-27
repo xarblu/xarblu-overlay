@@ -13,7 +13,6 @@ RUST_MIN_VER="1.83.0"
 RUST_NEEDS_LLVM=1
 RUST_OPTIONAL=1
 RUST_REQ_USE="rust-src"
-# USE=rust somewhat restricts this later
 LLVM_COMPAT=( {19..22} )
 LLVM_OPTIONAL=1
 
@@ -24,13 +23,13 @@ GENTOO_PATCHSET=linux-gentoo-patches-6.18.4
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=a66bf7797191c614066a517921246ced3b263434
+CONFIG_COMMIT=2ec81c9098229de0b8d8e346f665d4a2ec0b807e
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=6184689fad8d8933f646025245295d4d50e20eb9
+PATCH_COMMIT=ece737ff7f90f8b8e5823ceb45298d08d3fce83a
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.36.2_pre20260223005804
+BCACHEFS_VER=1.36.2_pre20260227130348
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -43,7 +42,6 @@ CACHY_PATCH_SPECS=(
 	# global
 	-:all/0001-cachyos-base-all.patch
 	# flavours
-	cachyos:sched/0001-bore-cachy.patch
 	bmq:sched/0001-prjc-cachy.patch
 	bore:sched/0001-bore-cachy.patch
 	deckify:misc/0001-acpi-call.patch
@@ -130,7 +128,6 @@ REQUIRED_USE="
 	clang? ( ${LLVM_REQUIRED_USE} )
 	lto? ( clang )
 	rust? ( ${LLVM_REQUIRED_USE} )
-	rust? ( !llvm_slot_22 )
 "
 
 # shellcheck disable=SC2016 # we don't want LLVM_SLOT to expand
@@ -626,14 +623,14 @@ cachy_use_config() {
 
 	# _cpusched
 	case "${_cpusched}" in
-		cachyos|bore)
+		bore)
 			kconf set SCHED_BORE
 			;;
 		bmq)
 			kconf set SCHED_ALT
 			kconf set SCHED_BMQ
 			;;
-		eevdf) ;;
+		cachyos|eevdf) ;;
 		rt)
 			kconf set PREEMPT_RT
 			;;
@@ -819,6 +816,8 @@ cachy_use_config() {
 	# rust
 	if use rust; then
 		kconf set RUST
+	else
+		kconf unset RUST
 	fi
 }
 
