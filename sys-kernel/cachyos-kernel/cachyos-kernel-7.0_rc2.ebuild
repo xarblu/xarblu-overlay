@@ -102,7 +102,6 @@ fi
 # (Gentoo "" -> cachy "-1"; Gentoo "_p2" -> cachy "-2")
 [[ "${PV}" == "${KERNEL_REL}" ]] && KERNEL_REL="1"
 
-
 # cachy stuff versions
 CONFIG_P="${PN}-${KERNEL_BASE}-${CONFIG_COMMIT::8}"
 PATCH_P="${PN}-${KERNEL_BASE}-${PATCH_COMMIT::8}"
