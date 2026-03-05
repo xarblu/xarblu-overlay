@@ -41,6 +41,7 @@ CRATES="
 	env_logger@0.10.2
 	equivalent@1.0.2
 	errno@0.3.9
+	fiemap@0.2.0
 	find-msvc-tools@0.1.9
 	fuser@0.17.0
 	getrandom@0.2.17
@@ -158,7 +159,7 @@ RUST_NEEDS_LLVM=1
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/kentoverstreet.asc
 
 # for _pre* snapshots
-COMMIT=ade53e17504c34ab98e467a4473bd55b0a79954d
+COMMIT=2719852c77359248f64a11a814099ae497c2a63c
 
 inherit cargo flag-o-matic llvm-r1 python-any-r1 shell-completion toolchain-funcs unpacker verify-sig udev
 
