@@ -19,7 +19,7 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r1 rust kernel-build
 
 # https://dev.gentoo.org/~mgorny/dist/linux/
-GENTOO_PATCHSET=linux-gentoo-patches-6.18.4
+GENTOO_PATCHSET=linux-gentoo-patches-6.19.6
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
@@ -29,7 +29,7 @@ PATCH_COMMIT=b9acdb9e71a99562b64780477c8ea0aee76e81cc
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.36.2_pre20260302142944
+BCACHEFS_VER=1.36.2_pre20260304203510
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -56,7 +56,6 @@ CACHY_PATCH_SPECS=(
 # or genpatches that are not rebased yet (common for RCs)
 BAD_PATCHES=(
 	2004_sign-file-full-functionality-with-modern-LibreSSL.patch
-	2008_bpf-verifier-improvement-in-32bit-shift-sign-extensi.patch
 )
 
 # Parse Kernel version vars from PV (e.g. 6.19.5_p2 | 7.0_rc2)
