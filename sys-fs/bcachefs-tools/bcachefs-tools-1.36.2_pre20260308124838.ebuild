@@ -159,7 +159,9 @@ RUST_NEEDS_LLVM=1
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/kentoverstreet.asc
 
 # for _pre* snapshots
-COMMIT=2719852c77359248f64a11a814099ae497c2a63c
+COMMIT=9bc643ee2790845fb621fc620ef77912cb87287d
+# git -c safe.directory=$PWD -c core.abbrev=12 describe
+BCH_VERSION='v1.36.1-421-g9bc643ee2790'
 
 inherit cargo flag-o-matic llvm-r1 python-any-r1 shell-completion toolchain-funcs unpacker verify-sig udev
 
@@ -265,7 +267,6 @@ src_unpack() {
 		fi
 		cargo_src_unpack
 	fi
-
 }
 
 src_prepare() {
@@ -279,6 +280,7 @@ src_prepare() {
 	append-lfs-flags
 
 	# generate version.h
+	echo "${BCH_VERSION:-"${PV}"}" > .version || die
 	emake generate_version
 }
 
