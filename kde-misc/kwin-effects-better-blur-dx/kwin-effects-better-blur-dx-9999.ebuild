@@ -1,4 +1,4 @@
-# Copyright 1999-2025 Gentoo Foundation
+# Copyright 1999-2026 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 # shellcheck shell=bash
@@ -31,12 +31,8 @@ IUSE="wayland X"
 REQUIRED_USE="|| ( wayland X )"
 
 KWIN_DEP="
-	wayland? (
-		kde-plasma/kwin:${SLOT}
-	)
-	X? (
-		kde-plasma/kwin-x11:${SLOT}
-	)
+	wayland? ( kde-plasma/kwin:${SLOT} )
+	X? ( kde-plasma/kwin-x11:${SLOT} )
 "
 DEPEND="
 	>=dev-qt/qtbase-${QTMIN}:6=[dbus,gui,network,opengl,widgets]
