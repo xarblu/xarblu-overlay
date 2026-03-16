@@ -17,7 +17,7 @@ CRATES="
 	anyhow@1.0.89
 	ascii@1.1.0
 	autocfg@1.5.0
-	bindgen@0.69.5
+	bindgen@0.72.1
 	bitfield@0.14.0
 	bitflags@1.3.2
 	bitflags@2.11.0
@@ -48,7 +48,6 @@ CRATES="
 	glob@0.3.1
 	hashbrown@0.16.1
 	heck@0.5.0
-	home@0.5.9
 	httpdate@1.0.3
 	iana-time-zone-haiku@0.1.2
 	iana-time-zone@0.1.65
@@ -57,8 +56,6 @@ CRATES="
 	itertools@0.12.1
 	itoa@1.0.17
 	js-sys@0.3.85
-	lazy_static@1.5.0
-	lazycell@1.3.0
 	libc@0.2.180
 	libloading@0.8.5
 	libudev-sys@0.1.4
@@ -91,7 +88,7 @@ CRATES="
 	regex-automata@0.4.8
 	regex-syntax@0.8.5
 	regex@1.11.0
-	rustc-hash@1.1.0
+	rustc-hash@2.1.1
 	rustix@0.38.37
 	rustversion@1.0.17
 	ryu@1.0.22
@@ -123,7 +120,6 @@ CRATES="
 	wasm-bindgen-macro@0.2.108
 	wasm-bindgen-shared@0.2.108
 	wasm-bindgen@0.2.108
-	which@4.4.2
 	winapi-i686-pc-windows-gnu@0.4.0
 	winapi-x86_64-pc-windows-gnu@0.4.0
 	winapi@0.3.9
@@ -154,14 +150,16 @@ CRATES="
 
 LLVM_COMPAT=( {19..21} )
 PYTHON_COMPAT=( python3_{11..14} )
-RUST_MIN_VER="1.82"
+RUST_MIN_VER="1.85.0"
 RUST_NEEDS_LLVM=1
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/kentoverstreet.asc
 
 # for _pre* snapshots
-COMMIT=9bc643ee2790845fb621fc620ef77912cb87287d
 # git -c safe.directory=$PWD -c core.abbrev=12 describe
-BCH_VERSION='v1.36.1-421-g9bc643ee2790'
+# ("v${PV}" if unset)
+#BCH_VERSION=
+# matching commit for S
+#COMMIT=
 
 inherit cargo flag-o-matic llvm-r1 python-any-r1 shell-completion toolchain-funcs unpacker verify-sig udev
 
@@ -172,9 +170,10 @@ if [[ ${PV} == "9999" ]]; then
 	EGIT_REPO_URI="https://evilpiepirate.org/git/bcachefs-tools.git"
 else
 	if [[ ${PV} == *_pre* ]]; then
+		# fetch via BCH_VERSION as a rough QA check (should always match COMMIT)
 		SRC_URI="
-			https://github.com/koverstreet/bcachefs-tools/archive/${COMMIT}.tar.gz
-				-> ${P}.tar.gz
+			https://github.com/koverstreet/bcachefs-tools/archive/${BCH_VERSION}.tar.gz
+				-> ${PN}-${BCH_VERSION}.tar.gz
 			${CARGO_CRATE_URIS}
 		"
 		S="${WORKDIR}/${PN}-${COMMIT}"
@@ -261,7 +260,7 @@ src_unpack() {
 		S="${S}/rust-src" cargo_live_src_unpack
 	else
 		if [[ ${PV} == *_pre* ]]; then
-			unpacker "${P}.tar.gz"
+			unpacker "${PN}-${BCH_VERSION}.tar.gz"
 		else
 			unpacker "${P}.tar.zst"
 		fi
@@ -280,7 +279,7 @@ src_prepare() {
 	append-lfs-flags
 
 	# generate version.h
-	echo "${BCH_VERSION:-"${PV}"}" > .version || die
+	echo "${BCH_VERSION:-"v${PV}"}" > .version || die
 	emake generate_version
 }
 
