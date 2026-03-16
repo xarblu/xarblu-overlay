@@ -31,12 +31,8 @@ IUSE="wayland X"
 REQUIRED_USE="|| ( wayland X )"
 
 KWIN_DEP="
-	wayland? (
-		kde-plasma/kwin:${SLOT}
-	)
-	X? (
-		kde-plasma/kwin-x11:${SLOT}
-	)
+	wayland? ( kde-plasma/kwin:${SLOT} )
+	X? ( kde-plasma/kwin-x11:${SLOT} )
 "
 DEPEND="
 	>=dev-qt/qtbase-${QTMIN}:6=[dbus,gui,network,opengl,widgets]
