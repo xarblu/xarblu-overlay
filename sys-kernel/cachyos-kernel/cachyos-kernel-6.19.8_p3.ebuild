@@ -23,13 +23,16 @@ GENTOO_PATCHSET=linux-gentoo-patches-6.19.6
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=ff5ccc4fa26d5272d929fb9c1838593a6347ca10
+CONFIG_COMMIT=3b9ae1ae5d4ee95e1509d350b65c0777dde97628
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=088c9b4ef9fa9ea661c261c4ec77cabb49dd6c02
+PATCH_COMMIT=ac70453c25200f0a30ad38b3caa63020869f0f8a
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.36.1
+BCACHEFS_VER=1.37.2
+# cachyos tarball release (usually 1)
+# https://github.com/CachyOS/linux
+CACHY_REL=1
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -56,18 +59,18 @@ CACHY_PATCH_SPECS=(
 # or genpatches that are not rebased yet (common for RCs)
 BAD_PATCHES=()
 
-# Parse Kernel version vars from PV (e.g. 6.19.5_p2 | 7.0_rc2)
-# KERNEL_BASE  - base linux version (e.g. 6.19 | 7.0)
-# KERNEL_RC    - release candidate patch target (e.g. 0 | 2)
-# KERNEL_PATCH - stable patch target (e.g. 5 | 0)
-# KERNEL_REL   - cachy release version/revision (1 if unset) (e.g. 2 | 1)
+# Parse Kernel version vars from PV
+# KERNEL_BASE  - base linux version
+# KERNEL_RC    - release candidate patch target
+# KERNEL_PATCH - stable patch target
+# KERNEL_REL   - _p* version bumped on changes to config/patch vars (0 if unset)
 if [[ "${PV}" == *_rc* ]]; then
 	# release candidate
 	KERNEL_BASE="$(ver_cut 1-2)"
 	KERNEL_RC="${PV##*_rc}"
-	KERNEL_RC="${KERNEL_RC%.*}"
+	KERNEL_RC="${KERNEL_RC%_p*}"
 	KERNEL_PATCH="0"
-	KERNEL_REL="${PV##*_rc*.}"
+	KERNEL_REL="${PV##*_p}"
 
 	FLAVOURS="cachyos"
 elif [[ "${PV}" == *_pre* ]]; then
@@ -80,24 +83,22 @@ elif [[ "${PV}" == *_pre* ]]; then
 	fi
 	KERNEL_RC="0"
 	KERNEL_PATCH="${PV##*_pre}"
-	KERNEL_PATCH="${KERNEL_PATCH%.*}"
-	KERNEL_REL="${PV##*_pre*.}"
+	KERNEL_PATCH="${KERNEL_RC%_p*}"
+	KERNEL_REL="${PV##*_p}"
 
 	FLAVOURS="cachyos"
 else
 	# stable
 	KERNEL_BASE="$(ver_cut 1-2)"
 	KERNEL_RC="0"
-	KERNEL_PATCH="${PV##*.}"
-	KERNEL_PATCH="${KERNEL_PATCH%_p*}"
+	KERNEL_PATCH="$(ver_cut 3)"
 	KERNEL_REL="${PV##*_p}"
 
 	KEYWORDS="~amd64"
 fi
 
-# default 1 if unset, else whatever is final component of _(rc|pre|p)
-# (Gentoo "" -> cachy "-1"; Gentoo "_p2" -> cachy "-2")
-[[ "${PV}" == "${KERNEL_REL}" ]] && KERNEL_REL="1"
+# default 0 if unset, else whatever is in _p*
+[[ "${PV}" == "${KERNEL_REL}" ]] && KERNEL_REL="0"
 
 # cachy stuff versions
 CONFIG_P="${PN}-${KERNEL_BASE}-${CONFIG_COMMIT::8}"
@@ -158,11 +159,11 @@ kernel_base_env_setup() {
 	local base_uri="https://github.com/CachyOS/linux/releases/download"
 
 	if (( KERNEL_RC > 0 )); then
-		SRC_URI+=" ${base_uri}/cachyos-${KERNEL_BASE}-rc${KERNEL_RC}-${KERNEL_REL}/cachyos-${KERNEL_BASE}-rc${KERNEL_RC}-${KERNEL_REL}.tar.gz"
-		S="${WORKDIR}/cachyos-${KERNEL_BASE}-rc${KERNEL_RC}-${KERNEL_REL}"
+		SRC_URI+=" ${base_uri}/cachyos-${KERNEL_BASE}-rc${KERNEL_RC}-${CACHY_REL}/cachyos-${KERNEL_BASE}-rc${KERNEL_RC}-${CACHY_REL}.tar.gz"
+		S="${WORKDIR}/cachyos-${KERNEL_BASE}-rc${KERNEL_RC}-${CACHY_REL}"
 	else
-		SRC_URI+=" ${base_uri}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${KERNEL_REL}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${KERNEL_REL}.tar.gz"
-		S="${WORKDIR}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${KERNEL_REL}"
+		SRC_URI+=" ${base_uri}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${CACHY_REL}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${CACHY_REL}.tar.gz"
+		S="${WORKDIR}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${CACHY_REL}"
 	fi
 }
 
@@ -831,9 +832,16 @@ src_prepare() {
 		extraversion+="-pre${KERNEL_PATCH}"
 	fi
 
-	# KERNEL_REL 1 doesn't need extraversion
-	if (( KERNEL_REL > 1 )); then
-		extraversion+="-p${KERNEL_REL}"
+	# KERNEL_REL 0 doesn't need extraversion
+	if (( KERNEL_REL > 0 )); then
+		# dist-kernel_PV_to_KV only converts the first "_" to "-"
+		# instead of fighting that we'll just use the
+		# slightly uglier -(rc|pre)*_p*
+		if [[ -z "${extraversion}" ]]; then
+			extraversion+="-p${KERNEL_REL}"
+		else
+			extraversion+="_p${KERNEL_REL}"
+		fi
 	fi
 
 	# add extraversion

@@ -19,17 +19,20 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r1 rust kernel-build
 
 # https://dev.gentoo.org/~mgorny/dist/linux/
-GENTOO_PATCHSET=linux-gentoo-patches-6.18.4
+GENTOO_PATCHSET=linux-gentoo-patches-6.19.6
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=2ec81c9098229de0b8d8e346f665d4a2ec0b807e
+CONFIG_COMMIT=fa09a5bc69d3e7feeed9b1402c7df06c8170402a
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=ece737ff7f90f8b8e5823ceb45298d08d3fce83a
+PATCH_COMMIT=5544a0679fd6f6fb714e275514449c4ab9db2a53
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.36.1
+BCACHEFS_VER=1.37.3_pre20260317142947
+# cachyos tarball release (usually 1)
+# https://github.com/CachyOS/linux
+CACHY_REL=1
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -39,8 +42,6 @@ FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
 # special use - always applies patch
 # applied in this order
 CACHY_PATCH_SPECS=(
-	# global
-	-:all/0001-cachyos-base-all.patch
 	# flavours
 	bmq:sched/0001-prjc-cachy.patch
 	bore:sched/0001-bore-cachy.patch
@@ -56,23 +57,22 @@ CACHY_PATCH_SPECS=(
 # bad patches that don't apply properly
 # usually these are genpatches that are also included in the cachyos-base-all patch
 # or genpatches that are not rebased yet (common for RCs)
-BAD_PATCHES=()
+BAD_PATCHES=(
+	2004_sign-file-full-functionality-with-modern-LibreSSL.patch
+)
 
-# Kernel version vars
-# KERNEL_BASE  - base linux tarball version
+# Parse Kernel version vars from PV
+# KERNEL_BASE  - base linux version
 # KERNEL_RC    - release candidate patch target
 # KERNEL_PATCH - stable patch target
-# PATCHED_V    - version after patching
+# KERNEL_REL   - _p* version bumped on changes to config/patch vars (0 if unset)
 if [[ "${PV}" == *_rc* ]]; then
 	# release candidate
-	if [[ "${PV}" == 7.0* ]]; then
-		KERNEL_BASE="6.19"
-	else
-		KERNEL_BASE="$(ver_cut 1).$(( $(ver_cut 2) - 1 ))"
-	fi
+	KERNEL_BASE="$(ver_cut 1-2)"
 	KERNEL_RC="${PV##*_rc}"
+	KERNEL_RC="${KERNEL_RC%_p*}"
 	KERNEL_PATCH="0"
-	PATCHED_V="$(ver_cut 1-2)"
+	KERNEL_REL="${PV##*_p}"
 
 	FLAVOURS="cachyos"
 elif [[ "${PV}" == *_pre* ]]; then
@@ -85,22 +85,26 @@ elif [[ "${PV}" == *_pre* ]]; then
 	fi
 	KERNEL_RC="0"
 	KERNEL_PATCH="${PV##*_pre}"
-	PATCHED_V="${KERNEL_BASE}"
+	KERNEL_PATCH="${KERNEL_RC%_p*}"
+	KERNEL_REL="${PV##*_p}"
 
 	FLAVOURS="cachyos"
 else
 	# stable
 	KERNEL_BASE="$(ver_cut 1-2)"
 	KERNEL_RC="0"
-	KERNEL_PATCH="${PV##*.}"
-	PATCHED_V="${KERNEL_BASE}"
+	KERNEL_PATCH="$(ver_cut 3)"
+	KERNEL_REL="${PV##*_p}"
 
 	KEYWORDS="~amd64"
 fi
 
+# default 0 if unset, else whatever is in _p*
+[[ "${PV}" == "${KERNEL_REL}" ]] && KERNEL_REL="0"
+
 # cachy stuff versions
-CONFIG_P="${PN}-${PATCHED_V}-${CONFIG_COMMIT::8}"
-PATCH_P="${PN}-${PATCHED_V}-${PATCH_COMMIT::8}"
+CONFIG_P="${PN}-${KERNEL_BASE}-${CONFIG_COMMIT::8}"
+PATCH_P="${PN}-${KERNEL_BASE}-${PATCH_COMMIT::8}"
 
 DESCRIPTION="Linux kernel built with CachyOS and Gentoo patches"
 HOMEPAGE="
@@ -154,72 +158,15 @@ QA_FLAGS_IGNORED="
 # append a list of kernel sources and incremental patches to SRC_URI
 # and sets S to the correct directory
 kernel_base_env_setup() {
-	local kernel_base_src_uris=""
-	local incr target_incr
-	local cdn_patch our_incr our_patch
-	local -a rc_patches stable_patches
-
-	# everything needs a base tarball
-	kernel_base_src_uris+="
-		https://cdn.kernel.org/pub/linux/kernel/v${KERNEL_BASE%%.*}.x/linux-${KERNEL_BASE}.tar.xz
-	"
+	local base_uri="https://github.com/CachyOS/linux/releases/download"
 
 	if (( KERNEL_RC > 0 )); then
-		# the big RC1 patch is seperate
-		our_patch="1000_linux-${PV%_rc*}-rc1.patch"
-		kernel_base_src_uris+="
-			https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc1/v${KERNEL_BASE}
-				-> ${our_patch}
-		"
-		rc_patches+=( "${our_patch}" )
-
-		# then incremental patches between RCs
-		incr=2
-		target_incr="${KERNEL_RC}"
-		while (( incr <= target_incr )); do
-			# leftpad incr with 0 which allows 1000-1999
-			our_incr="1$(printf '%0*d' 3 "$(( incr - 1 ))")"
-			our_patch="${our_incr}_linux-${PV%_rc*}-rc${incr}.patch"
-			kernel_base_src_uris+="
-				https://git.kernel.org/torvalds/p/v${PV%_rc*}-rc${incr}/v${PV%_rc*}-rc$(( incr - 1 ))
-					-> ${our_patch}
-			"
-			rc_patches+=( "${our_patch}" )
-			incr=$(( incr + 1 ))
-		done
+		SRC_URI+=" ${base_uri}/cachyos-${KERNEL_BASE}-rc${KERNEL_RC}-${CACHY_REL}/cachyos-${KERNEL_BASE}-rc${KERNEL_RC}-${CACHY_REL}.tar.gz"
+		S="${WORKDIR}/cachyos-${KERNEL_BASE}-rc${KERNEL_RC}-${CACHY_REL}"
+	else
+		SRC_URI+=" ${base_uri}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${CACHY_REL}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${CACHY_REL}.tar.gz"
+		S="${WORKDIR}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${CACHY_REL}"
 	fi
-
-	if (( KERNEL_PATCH > 0 )); then
-		# the first x.x.1 patch is seperate
-		cdn_patch="patch-${KERNEL_BASE}.1.xz"
-		our_patch="1000_linux-${KERNEL_BASE}.1.patch.xz"
-		kernel_base_src_uris+="
-			https://cdn.kernel.org/pub/linux/kernel/v${KERNEL_BASE%%.*}.x/${cdn_patch}
-				-> ${our_patch}
-		"
-		stable_patches+=( "${our_patch}" )
-
-		# then incremental patches between minor versions
-		incr=2
-		target_incr="${KERNEL_PATCH}"
-		while (( incr <= target_incr )); do
-			cdn_patch="patch-${KERNEL_BASE}.$(( incr - 1 ))-${incr}.xz"
-			# leftpad incr with 0 which allows 1000-1999
-			our_incr="1$(printf '%0*d' 3 "$(( incr - 1 ))")"
-			our_patch="${our_incr}_linux-${KERNEL_BASE}.${incr}.patch.xz"
-			kernel_base_src_uris+="
-				https://cdn.kernel.org/pub/linux/kernel/v${KERNEL_BASE%%.*}.x/incr/${cdn_patch}
-					-> ${our_patch}
-			"
-			stable_patches+=( "${our_patch}" )
-			incr=$(( incr + 1 ))
-		done
-	fi
-
-	declare -g SRC_URI="${SRC_URI} ${kernel_base_src_uris}"
-	declare -g S="${WORKDIR}/linux-${KERNEL_BASE}"
-	declare -ga RC_PATCHES=( "${rc_patches[@]}" )
-	declare -ga STABLE_PATCHES=( "${stable_patches[@]%.xz}" )
 }
 
 # adds cachyos config sources to SRC_URI
@@ -257,7 +204,7 @@ cachy_patch_env_setup() {
 	local base spec cond patch file
 	local cachy_patch_uris=""
 	base="https://raw.githubusercontent.com/CachyOS/kernel-patches"
-	base+="/${PATCH_COMMIT}/${PATCHED_V}"
+	base+="/${PATCH_COMMIT}/${KERNEL_BASE}"
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
 		IFS=":" read -r cond patch <<<"${spec}"
 		file="${PATCH_P}-${patch##*/}"
@@ -274,9 +221,9 @@ cachy_patch_env_setup() {
 bcachefs_patch_env_setup() {
 	[[ -z "${BCACHEFS_VER}" ]] && return
 
-	declare -g BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v${PATCHED_V}.patch"
+	declare -g BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v${KERNEL_BASE}.patch"
 	declare -g SRC_URI="${SRC_URI} bcachefs? (
-		https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/${PATCHED_V}/${BCACHEFS_PATCH}
+		https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/${KERNEL_BASE}/${BCACHEFS_PATCH}
 	)"
 
 	# enforce bcachefs-tools version on minor-level
@@ -338,20 +285,6 @@ cachy_stage_patches() {
 	local target="${WORKDIR}/patches"
 	einfo "Staging patches to be applied in ${target} ..."
 	mkdir -p "${target}" || die
-
-	# RC patches are not compressed and thus in DISTDIR
-	if [[ -n "${RC_PATCHES[*]}" ]]; then
-		pushd "${DISTDIR}" >/dev/null || die
-		cp -t "${target}" "${RC_PATCHES[@]}" || die
-		popd >/dev/null || die
-	fi
-
-	# stable patches are compressed and thus in WORKDIR
-	if [[ -n "${STABLE_PATCHES[*]}" ]]; then
-		pushd "${WORKDIR}" >/dev/null || die
-		cp -t "${target}" "${STABLE_PATCHES[@]}" || die
-		popd >/dev/null || die
-	fi
 
 	# Gentoo patches live in ${WORKDIR}/${GENTOO_PATCHSET}
 	pushd "${WORKDIR}/${GENTOO_PATCHSET}" >/dev/null || die
@@ -888,15 +821,34 @@ src_prepare() {
 	eapply "${WORKDIR}/patches"
 	eapply_user
 
+	local extraversion
+
+	# keep existing info
+	extraversion="$(grep '^EXTRAVERSION = ' Makefile | sed -e 's:^EXTRAVERSION = \(.*\)$:\1:' || die)"
+
+	# bump everything to our testing version
 	if [[ "${PV}" == *_pre* ]]; then
-		# bump everything to our testing version
 		sed -i -e "s:^\(VERSION =\).*:\1 $(ver_cut 1):" Makefile || die
 		sed -i -e "s:^\(PATCHLEVEL =\).*:\1 $(ver_cut 2):" Makefile || die
 		sed -i -e "s:^\(SUBLEVEL =\).*:\1 0:" Makefile || die
-		sed -i -e "s:^\(EXTRAVERSION =\).*:\1 -pre${PV#*_pre}:" Makefile || die
-	elif [[ "${PV}" == _p* ]]; then
-		# add _pX extraversion
-		sed -i -e "s:^\(EXTRAVERSION =\).*:\1 -p${PV#*_p}:" Makefile || die
+		extraversion+="-pre${KERNEL_PATCH}"
+	fi
+
+	# KERNEL_REL 0 doesn't need extraversion
+	if (( KERNEL_REL > 0 )); then
+		# dist-kernel_PV_to_KV only converts the first "_" to "-"
+		# instead of fighting that we'll just use the
+		# slightly uglier -(rc|pre)*_p*
+		if [[ -z "${extraversion}" ]]; then
+			extraversion+="-p${KERNEL_REL}"
+		else
+			extraversion+="_p${KERNEL_REL}"
+		fi
+	fi
+
+	# add extraversion
+	if [[ -n "${extraversion}" ]]; then
+		sed -i -e "s:^\(EXTRAVERSION =\).*:\1 ${extraversion}:" Makefile || die
 	fi
 
 	# Localversion
