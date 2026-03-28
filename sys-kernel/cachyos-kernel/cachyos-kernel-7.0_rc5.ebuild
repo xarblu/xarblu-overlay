@@ -23,16 +23,16 @@ GENTOO_PATCHSET=linux-gentoo-patches-6.19.6
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=3b9ae1ae5d4ee95e1509d350b65c0777dde97628
+CONFIG_COMMIT=de746a9cd1caa808e95805641a9117029e173b34
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=ac70453c25200f0a30ad38b3caa63020869f0f8a
+PATCH_COMMIT=948e9c61779b0fafdf0c3b1ee6281502ff178fcc
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.37.1
+BCACHEFS_VER=1.37.4_pre20260327202943
 # cachyos tarball release (usually 1)
 # https://github.com/CachyOS/linux
-CACHY_REL=1
+CACHY_REL=2
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -57,7 +57,9 @@ CACHY_PATCH_SPECS=(
 # bad patches that don't apply properly
 # usually these are genpatches that are also included in the cachyos-base-all patch
 # or genpatches that are not rebased yet (common for RCs)
-BAD_PATCHES=()
+BAD_PATCHES=(
+	2004_sign-file-full-functionality-with-modern-LibreSSL.patch
+)
 
 # Parse Kernel version vars from PV
 # KERNEL_BASE  - base linux version
@@ -482,7 +484,7 @@ cachy_use_config() {
 			: "${_tcp_bbr3:=no}"
 			: "${_HZ_ticks:=300}"
 			: "${_tickrate:=idle}"
-			: "${_preempt:=none}"
+			: "${_preempt:=lazy}"
 			: "${_hugepage:=always}"
 			;;
 		*) die "Unknown flavour" ;;
@@ -651,32 +653,19 @@ cachy_use_config() {
 	if [[ "${_cpusched}" != rt* ]]; then
 		case "${_preempt}" in
 			full)
-				kconf set PREEMPT_DYNAMIC
+				kconf unset PREEMPT_DYNAMIC
 				kconf set PREEMPT
-				kconf unset PREEMPT_VOLUNTARY
 				kconf unset PREEMPT_LAZY
-				kconf unset PREEMPT_NONE
 				;;
 			lazy)
-				kconf set PREEMPT_DYNAMIC
+				kconf unset PREEMPT_DYNAMIC
 				kconf unset PREEMPT
-				kconf unset PREEMPT_VOLUNTARY
 				kconf set PREEMPT_LAZY
-				kconf unset PREEMPT_NONE
 				;;
-			voluntary)
-				kconf unset PREEMPT_DYNAMIC
-				kconf unset PREEMPT
-				kconf set PREEMPT_VOLUNTARY
+			dynamic)
+				kconf set PREEMPT_DYNAMIC
+				kconf set PREEMPT
 				kconf unset PREEMPT_LAZY
-				kconf unset PREEMPT_NONE
-				;;
-			none)
-				kconf unset PREEMPT_DYNAMIC
-				kconf unset PREEMPT
-				kconf unset PREEMPT_VOLUNTARY
-				kconf unset PREEMPT_LAZY
-				kconf set PREEMPT_NONE
 				;;
 			*) die "Invalid _preempt value: ${_preempt}" ;;
 		esac

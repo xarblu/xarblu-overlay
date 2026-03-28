@@ -23,13 +23,13 @@ GENTOO_PATCHSET=linux-gentoo-patches-6.19.6
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=f7ce1a650782de6d35e9b7635dce828abde329b3
+CONFIG_COMMIT=de746a9cd1caa808e95805641a9117029e173b34
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=749983abd1d78492ef0b8bc7f23d92540077b62c
+PATCH_COMMIT=948e9c61779b0fafdf0c3b1ee6281502ff178fcc
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.37.2
+BCACHEFS_VER=1.37.3
 # cachyos tarball release (usually 1)
 # https://github.com/CachyOS/linux
 CACHY_REL=1
