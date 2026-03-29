@@ -22,6 +22,7 @@
 		<flag name="initramfs">Build initramfs along with the kernel.</flag>
 		<flag name="rt-bore">Flavour using the BORE scheduler and realtime preemption</flag>
 		<flag name="rust">Pull in dependencies for and enable CONFIG_RUST</flag>
+		<flag name="scx">Pull in dependencies for and enable CONFIG_SCHED_CLASS_EXT (subset of USE=debug)</flag>
 		<flag name="server">Flavour usind the EEVDF scheduler tuned for servers</flag>
 	</use>
 </pkgmetadata>

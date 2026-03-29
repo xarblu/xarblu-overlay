@@ -121,7 +121,7 @@ SRC_URI="
 		-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
 "
 
-IUSE="bcachefs cfi clang debug lto rust ${FLAVOURS/cachyos/+cachyos}"
+IUSE="bcachefs cfi clang debug lto rust scx ${FLAVOURS/cachyos/+cachyos}"
 REQUIRED_USE="
 	^^ ( ${FLAVOURS} )
 	bcachefs? ( rust )
@@ -129,6 +129,13 @@ REQUIRED_USE="
 	clang? ( ${LLVM_REQUIRED_USE} )
 	lto? ( clang )
 	rust? ( ${LLVM_REQUIRED_USE} )
+"
+
+# CONFIG_RUST requires this:
+# (!DEBUG_INFO_BTF || PAHOLE_HAS_LANG_EXCLUDE && !LTO)
+# CONFIG_DEBUG_INFO_BTF and CONFIG_LTO are mutually exclusive
+REQUIRED_USE+="
+	rust? ( lto? ( !debug !scx ) )
 "
 
 # shellcheck disable=SC2016 # we don't want LLVM_SLOT to expand
@@ -144,6 +151,7 @@ BDEPEND="
 		${RUST_DEPEND}
 	)
 	debug? ( dev-util/pahole )
+	scx? ( dev-util/pahole )
 "
 PDEPEND="
 	>=virtual/dist-kernel-${PV}
@@ -738,6 +746,21 @@ cachy_use_config() {
 	fi
 }
 
+scx_kconfig() {
+	kconf set DEBUG_KERNEL
+	kconf set DEBUG_INFO
+	kconf set DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT
+	kconf set DEBUG_INFO_BTF
+	kconf set BPF
+	kconf set BPF_EVENTS
+	kconf set BPF_JIT
+	kconf set BPF_JIT_ALWAYS_ON
+	kconf set BPF_JIT_DEFAULT_ON
+	kconf set BPF_SYSCALL
+	kconf set SCHED_CLASS_EXT
+	kconf set FTRACE
+}
+
 pkg_pretend() {
 	# die instead of just masking/dropping USE
 	# to make extra sure users don't unknowingly lose
@@ -856,9 +879,16 @@ src_prepare() {
 		"${dist_conf_path}/6.12+.config"
 		"${T}/cachy-flavour-defaults.config"
 	)
+
 	use debug || merge_configs+=(
 		"${dist_conf_path}/no-debug.config"
 	)
+
+	# partially reverts no-debug.config so must come after that one
+	if use scx; then
+		scx_kconfig > "${T}/scx.config"
+		merge_configs+=( "${T}/scx.config" )
+	fi
 
 	use secureboot && merge_configs+=(
 		"${dist_conf_path}/secureboot.config"
