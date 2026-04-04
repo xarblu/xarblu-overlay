@@ -581,8 +581,7 @@ cachy_flavour_defaults_kconfig() {
 	# _use_kcfi
 	case "${_use_kcfi}" in
 		yes)
-			kconf set ARCH_SUPPORTS_CFI_CLANG
-			kconf set CFI_CLANG
+			kconf set CFI
 			kconf set CFI_AUTO_DEFAULT
 			;;
 		no) ;;
@@ -646,8 +645,6 @@ cachy_flavour_defaults_kconfig() {
 		full)
 			kconf unset HZ_PERIODIC
 			kconf unset NO_HZ_IDLE
-			kconf unset CONTEXT_TRACKING_FORCE
-			kconf set NO_HZ_FULL_NODEF
 			kconf set NO_HZ_FULL
 			kconf set NO_HZ
 			kconf set NO_HZ_COMMON
@@ -736,7 +733,6 @@ cachy_flavour_defaults_kconfig() {
 	if use bcachefs; then
 		kconf mod BCACHEFS_FS
 		kconf set BCACHEFS_QUOTA
-		kconf set BCACHEFS_POSIX_ACL
 		kconf set BCACHEFS_LOCK_TIME_STATS
 		kconf set BCACHEFS_SIX_OPTIMISTIC_SPIN
 	fi
@@ -755,6 +751,38 @@ scx_kconfig() {
 	kconf set BPF_SYSCALL
 	kconf set SCHED_CLASS_EXT
 	kconf set FTRACE
+}
+
+# verify that provided config snippets exist after make
+cachy_verify_kconfig() {
+	(( ${#} < 1 )) && die "requires at least 1 arg"
+
+	local kconfig="${WORKDIR}/modprep/.config"
+
+	if [[ ! -f "${kconfig}" ]]; then
+		eerror "${kconfig} does not exist"
+		die "Did you call kernel-build_src_configure?"
+	fi
+
+	einfo "Verifying config snippets..."
+
+	local snippet line
+	local bad_config="false"
+	for snippet; do
+		einfo "Checking ${snippet}..."
+		while read -r line; do
+			if ! grep -q -F "${line}" "${kconfig}"; then
+				ewarn "'${line}' provided in ${snippet} but not in ${kconfig}!"
+				bad_config="true"
+			fi
+		done < <(grep -E '^(CONFIG_|# CONFIG_)' "${snippet}")
+	done
+
+	if [[ "${bad_config}" == "true" ]]; then
+		ewarn "Some config snippets did not apply correctly!"
+	else
+		einfo "All config snippets applied correctly!"
+	fi
 }
 
 pkg_pretend() {
@@ -892,6 +920,23 @@ src_prepare() {
 	)
 
 	kernel-build_merge_configs "${merge_configs[@]}"
+}
+
+src_configure() {
+	kernel-build_src_configure
+
+	# Only check our ebuild generated configs.
+	# Users will likely expect these to work
+	# because they're set via USE flags.
+	# The others are to broad to check and throw too
+	# many false positives.
+	local check_configs=(
+		"${T}/cachy-localversion.config"
+		"${T}/cachy-flavour-defaults.config"
+	)
+	use scx && merge_configs+=( "${T}/scx.config" )
+
+	cachy_verify_kconfig "${check_configs[@]}"
 }
 
 pkg_postinst() {
