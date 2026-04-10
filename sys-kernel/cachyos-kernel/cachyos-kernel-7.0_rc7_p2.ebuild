@@ -18,7 +18,7 @@ LLVM_OPTIONAL=1
 
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r1 rust kernel-build
 
-# https://dev.gentoo.org/~mgorny/dist/linux/
+# https://distfiles.gentoo.org/pub/proj/dist-kernel/patchsets/
 GENTOO_PATCHSET=linux-gentoo-patches-6.19.6
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g18
@@ -113,14 +113,6 @@ HOMEPAGE="
 	https://www.kernel.org/
 "
 
-# Gentoo patches and config
-# the rest will be set via helpers below
-SRC_URI="
-	https://dev.gentoo.org/~mgorny/dist/linux/${GENTOO_PATCHSET}.tar.xz
-	https://github.com/projg2/gentoo-kernel-config/archive/${GENTOO_CONFIG_VER}.tar.gz
-		-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
-"
-
 IUSE="bcachefs cfi clang debug lto rust scx ${FLAVOURS/cachyos/+cachyos}"
 REQUIRED_USE="
 	^^ ( ${FLAVOURS} )
@@ -175,6 +167,23 @@ kernel_base_env_setup() {
 		SRC_URI+=" ${base_uri}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${CACHY_REL}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${CACHY_REL}.tar.gz"
 		S="${WORKDIR}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${CACHY_REL}"
 	fi
+}
+
+# Gentoo patches and config
+gentoo_env_setup() {
+	local v
+
+	if [[ "${GENTOO_PATCHSET}" =~ .*-([0-9.]+)(-r[0-9]+)? ]]; then
+		v="${BASH_REMATCH[1]}"
+	else
+		die "Failed to parse version from ${GENTOO_PATCHSET}"
+	fi
+
+	SRC_URI+="
+		https://distfiles.gentoo.org/pub/proj/dist-kernel/patchsets/$(ver_cut 1-2 "${v}")/${GENTOO_PATCHSET}.tar.xz
+		https://github.com/projg2/gentoo-kernel-config/archive/${GENTOO_CONFIG_VER}.tar.gz
+			-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
+	"
 }
 
 # adds cachyos config sources to SRC_URI
@@ -253,6 +262,7 @@ bcachefs_patch_env_setup() {
 
 # env setup helpers
 kernel_base_env_setup
+gentoo_env_setup
 cachy_config_env_setup
 cachy_patch_env_setup
 bcachefs_patch_env_setup
