@@ -20,7 +20,7 @@ KEYWORDS="~amd64"
 
 BDEPEND="$(vala_depend)"
 DEPEND="
-	>=gui-libs/libadwaita-1.5
+	>=gui-libs/libadwaita-1.6
 	app-arch/libarchive
 	dev-libs/appstream-glib
 	dev-libs/glib:2
