@@ -148,7 +148,7 @@ CRATES="
 	zeroize_derive@1.4.2
 "
 
-LLVM_COMPAT=( {19..21} )
+LLVM_COMPAT=( {19..22} )
 PYTHON_COMPAT=( python3_{11..14} )
 RUST_MIN_VER="1.85.0"
 RUST_NEEDS_LLVM=1
@@ -157,9 +157,9 @@ VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/kentoverstreet.asc
 # for _pre* snapshots
 # git -c safe.directory=$PWD -c core.abbrev=12 describe
 # ("v${PV}" if unset)
-#BCH_VERSION=
+BCH_VERSION=v1.38.0-5-g1e20e81fe076
 # matching commit for S
-#COMMIT=
+COMMIT=1e20e81fe07622eb64d1a756d80265ad9a114427
 
 inherit cargo flag-o-matic llvm-r1 python-any-r1 shell-completion toolchain-funcs unpacker verify-sig udev
 
