@@ -9,7 +9,7 @@ EAPI=8
 KERNEL_IUSE_GENERIC_UKI=1
 KERNEL_IUSE_MODULES_SIGN=1
 
-RUST_MIN_VER="1.83.0"
+RUST_MIN_VER="1.85.0"
 RUST_NEEDS_LLVM=1
 RUST_OPTIONAL=1
 RUST_REQ_USE="rust-src"
@@ -19,20 +19,20 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r1 rust kernel-build
 
 # https://distfiles.gentoo.org/pub/proj/dist-kernel/patchsets/
-GENTOO_PATCHSET=linux-gentoo-patches-6.19.6
+GENTOO_PATCHSET=linux-gentoo-patches-7.0.1
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=1c61dfd1c3ad7762faa0db8b06c6af6c59cc4340
+CONFIG_COMMIT=8d016151fa47272075ba46febbc9d30212c8b2fb
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=46476ae2538db486462aef8a9de37d19030cdaf2
+PATCH_COMMIT=9bcd294d660c932f55f732d951ee79ea707f64f3
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.38.1_pre20260424005550
+BCACHEFS_VER=1.38.1_pre20260427131016
 # cachyos tarball release (usually 1)
 # https://github.com/CachyOS/linux
-CACHY_REL=3
+CACHY_REL=2
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
 FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
@@ -57,9 +57,7 @@ CACHY_PATCH_SPECS=(
 # bad patches that don't apply properly
 # usually these are genpatches that are also included in the cachyos-base-all patch
 # or genpatches that are not rebased yet (common for RCs)
-BAD_PATCHES=(
-	2004_sign-file-full-functionality-with-modern-LibreSSL.patch
-)
+BAD_PATCHES=()
 
 # Parse Kernel version vars from PV
 # KERNEL_BASE  - base linux version

@@ -190,6 +190,13 @@ multilib_src_configure() {
 	meson_src_configure
 }
 
+multilib_src_install() {
+	meson_install
+
+	# seems to install a static archive of imgui we don't want
+	rm "${ED}/usr/$(get_libdir)/libimgui.a" || die
+}
+
 multilib_src_install_all() {
 	# extra stuff under data/ (usually controlled by -Dinclude_doc)
 	insinto /usr/share/metainfo
