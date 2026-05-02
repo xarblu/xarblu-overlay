@@ -159,12 +159,12 @@ VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/kentoverstreet.asc
 # for _pre* snapshots
 # git -c safe.directory=$PWD -c core.abbrev=12 describe
 # ("v${PV}" if unset)
-BCH_VERSION=v1.38.0-10-gfb4ad967e379
+#BCH_VERSION=
 # matching commit for S
-COMMIT=fb4ad967e3796036a00d9c3ca5e57b9190d13c96
+#COMMIT=
 
 inherit cargo flag-o-matic linux-mod-r1 llvm-r1 multiprocessing python-any-r1
-inherit shell-completion toolchain-funcs unpacker verify-sig udev
+inherit shell-completion toolchain-funcs unpacker verify-sig udev systemd
 
 DESCRIPTION="Tools for bcachefs"
 HOMEPAGE="https://bcachefs.org/"
@@ -193,9 +193,9 @@ fi
 
 LICENSE="GPL-2"
 # Dependent crate licenses
-LICENSE+=" Apache-2.0 BSD ISC MIT Unicode-DFS-2016"
+LICENSE+=" Apache-2.0 BSD-2 BSD ISC MIT Unicode-DFS-2016"
 SLOT="0"
-IUSE="debug verify-sig +modules"
+IUSE="debug +modules verify-sig"
 
 # manual testing for now:
 # fallocate -l 10G /tmp/bcfs.img
@@ -354,6 +354,9 @@ src_compile() {
 			bcachefs completions "${shell}" > "${shell}.completion" || die
 		done
 	)
+
+	local unit=bcachefs-wait-devices@.service
+	sed -e 's|@sbindir@|/sbin|g' "${unit}".in > "${unit}" || die
 }
 
 src_install() {
@@ -378,6 +381,7 @@ src_install() {
 	use modules && linux-mod-r1_src_install
 
 	udev_dorules udev/64-bcachefs.rules
+	systemd_dounit bcachefs-wait-devices@.service
 }
 
 pkg_postinst() {
