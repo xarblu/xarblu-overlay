@@ -7,8 +7,10 @@
 	</maintainer>
 	<upstream>
 		<remote-id type="github">jellyfin/jellyfin-mpv-shim</remote-id>
+		<remote-id type="pypi">jellyfin-mpv-shim</remote-id>
 	</upstream>
 	<use>
+		<flag name="discord">Enable Discord Rich Presence support</flag>
 		<flag name="systray">Enable systray support</flag>
 		<flag name="shaders">Install the default shader pack</flag>
 	</use>
