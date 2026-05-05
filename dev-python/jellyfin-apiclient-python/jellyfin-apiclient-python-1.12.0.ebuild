@@ -1,10 +1,14 @@
-# Copyright 2025 Gentoo Authors
+# Copyright 2025-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
+
+# shellcheck shell=bash
+# shellcheck disable=SC2034
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{11..13} pypy3_11 )
-inherit python-r1 pypi
+DISTUTILS_USE_PEP517=setuptools
+PYTHON_COMPAT=( python3_{12..14} pypy3_11 )
+inherit distutils-r1 pypi
 
 DESCRIPTION="Python API Client for Jellyfin"
 HOMEPAGE="
@@ -27,7 +31,8 @@ DEPEND="
 RDEPEND="${DEPEND}"
 BDEPEND="${PYTHON_DEPS}"
 
-# doesn't use proper setuptools...
-src_install() {
-	python_foreach_impl python_domodule jellyfin_apiclient_python
-}
+# use some legacy version of dev-python/tox
+# and tries to pip install during test
+RESTRICT="test"
+
+PATCHES=( "${FILESDIR}/1.12.0-fix-pyproject_toml.patch" )

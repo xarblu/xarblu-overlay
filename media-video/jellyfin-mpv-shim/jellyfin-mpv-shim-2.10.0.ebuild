@@ -1,28 +1,34 @@
-# Copyright 2025 Gentoo Authors
+# Copyright 2025-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
+
+# shellcheck shell=bash
+# shellcheck disable=SC2034
 
 EAPI=8
 
-DISTUTILS_USE_PEP517="setuptools"
-PYTHON_COMPAT=( python3_{11..13} )
-inherit distutils-r1 desktop
+DISTUTILS_USE_PEP517=setuptools
+PYTHON_COMPAT=( python3_{12..14} )
+inherit distutils-r1 desktop pypi
 
 DESCRIPTION="MPV Cast Client for Jellyfin"
-HOMEPAGE="https://github.com/jellyfin/jellyfin-mpv-shim"
-SRC_URI="https://github.com/jellyfin/jellyfin-mpv-shim/archive/v${PV}.tar.gz -> ${P}.tar.gz"
+HOMEPAGE="
+	https://github.com/jellyfin/jellyfin-mpv-shim
+	https://pypi.org/project/jellyfin-mpv-shim/
+"
 
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~amd64"
 
-IUSE="shaders +systray"
+IUSE="discord shaders +systray"
 
 DEPEND="
-	>=dev-python/jellyfin-apiclient-python-1.11.0[${PYTHON_USEDEP}]
-	>=dev-python/python-mpv-1.0.7[${PYTHON_USEDEP}]
-	>=dev-python/python-mpv-jsonipc-1.2.0[${PYTHON_USEDEP}]
+	>=dev-python/jellyfin-apiclient-python-1.12.0[${PYTHON_USEDEP}]
+	>=dev-python/python-mpv-1.0.8[${PYTHON_USEDEP}]
+	>=dev-python/python-mpv-jsonipc-1.2.2[${PYTHON_USEDEP}]
 	dev-python/requests[${PYTHON_USEDEP}]
 	media-video/mpv[libmpv]
+	discord? ( dev-python/pypresence[${PYTHON_USEDEP}] )
 	systray? (
 		dev-python/pystray[${PYTHON_USEDEP}]
 		dev-python/pillow[${PYTHON_USEDEP},tk]
@@ -38,28 +44,22 @@ src_prepare() {
 	# so setuptools doesn't install it
 	mv "jellyfin_mpv_shim/integration" "${WORKDIR}" || die
 
-	# package the shaders seperately
-	# only install integrations once
-	sed -i \
-		-e "/jellyfin_mpv_shim\.default_shader_pack/d" \
-		-e "/jellyfin_mpv_shim\.default_shader_pack\.shaders/d" \
-		-e "/jellyfin_mpv_shim\.integration/d" \
-		setup.py || die
-
 	distutils-r1_src_prepare
 }
 
 python_install() {
+	distutils-r1_python_install
+
 	# setup symlink for media-video/jellyfin-mpv-shim-default-shader-pack
 	if use shaders; then
 		dosym -r "/usr/share/jellyfin-mpv-shim-default-shader-pack" \
 			"$(python_get_sitedir)/jellyfin_mpv_shim/default_shader_pack"
 	fi
-
-	distutils-r1_python_install
 }
 
 python_install_all() {
+	distutils-r1_python_install_all
+
 	#Install desktop stuff
 	pushd "${WORKDIR}/integration" || die
 		domenu com.github.iwalton3.jellyfin-mpv-shim.desktop
@@ -72,6 +72,4 @@ python_install_all() {
 		insinto /usr/share/metainfo/
 		doins com.github.iwalton3.jellyfin-mpv-shim.appdata.xml
 	popd || die
-
-	distutils-r1_python_install_all
 }
