@@ -19,17 +19,17 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r1 rust kernel-build
 
 # https://distfiles.gentoo.org/pub/proj/dist-kernel/patchsets/
-GENTOO_PATCHSET=linux-gentoo-patches-6.19.6
+GENTOO_PATCHSET=linux-gentoo-patches-7.0.6
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=4224303b6d7a50dd1cc3ffa78864050cc9536eec
+CONFIG_COMMIT=132e992bc6690b74976a2a609d571d59b35503a1
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=b5e029226df5cc30c103651072d49a7af2878202
+PATCH_COMMIT=f0501e46e937b433d3153a090626d340fa0c04fe
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.37.5
+BCACHEFS_VER=1.38.3
 # cachyos tarball release (usually 1)
 # https://github.com/CachyOS/linux
 CACHY_REL=2
@@ -57,9 +57,7 @@ CACHY_PATCH_SPECS=(
 # bad patches that don't apply properly
 # usually these are genpatches that are also included in the cachyos-base-all patch
 # or genpatches that are not rebased yet (common for RCs)
-BAD_PATCHES=(
-	2004_sign-file-full-functionality-with-modern-LibreSSL.patch
-)
+BAD_PATCHES=()
 
 # Parse Kernel version vars from PV
 # KERNEL_BASE  - base linux version
@@ -85,7 +83,7 @@ elif [[ "${PV}" == *_pre* ]]; then
 	fi
 	KERNEL_RC="0"
 	KERNEL_PATCH="${PV##*_pre}"
-	KERNEL_PATCH="${KERNEL_RC%_p*}"
+	KERNEL_PATCH="${KERNEL_PATCH%_p*}"
 	KERNEL_REL="${PV##*_p}"
 
 	FLAVOURS="cachyos"
@@ -667,19 +665,12 @@ cachy_flavour_defaults_kconfig() {
 	if [[ "${_cpusched}" != rt* ]]; then
 		case "${_preempt}" in
 			full)
-				kconf unset PREEMPT_DYNAMIC
 				kconf set PREEMPT
 				kconf unset PREEMPT_LAZY
 				;;
 			lazy)
-				kconf unset PREEMPT_DYNAMIC
 				kconf unset PREEMPT
 				kconf set PREEMPT_LAZY
-				;;
-			dynamic)
-				kconf set PREEMPT_DYNAMIC
-				kconf set PREEMPT
-				kconf unset PREEMPT_LAZY
 				;;
 			*) die "Invalid _preempt value: ${_preempt}" ;;
 		esac
@@ -748,19 +739,21 @@ cachy_flavour_defaults_kconfig() {
 	fi
 }
 
+# from sys-kernel/scx (with config deps)
 scx_kconfig() {
-	kconf set DEBUG_KERNEL
-	kconf set DEBUG_INFO
-	kconf set DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT
-	kconf set DEBUG_INFO_BTF
 	kconf set BPF
 	kconf set BPF_EVENTS
 	kconf set BPF_JIT
 	kconf set BPF_JIT_ALWAYS_ON
 	kconf set BPF_JIT_DEFAULT_ON
 	kconf set BPF_SYSCALL
-	kconf set SCHED_CLASS_EXT
+	kconf set DEBUG_INFO
+	kconf set DEBUG_INFO_BTF
+	kconf set DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT
+	kconf set DEBUG_KERNEL
 	kconf set FTRACE
+	kconf set KALLSYMS_ALL
+	kconf set SCHED_CLASS_EXT
 }
 
 # verify that provided config snippets exist after make

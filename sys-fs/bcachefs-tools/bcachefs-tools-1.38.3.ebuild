@@ -88,6 +88,7 @@ CRATES="
 	regex-automata@0.4.8
 	regex-syntax@0.8.5
 	regex@1.11.0
+	rustc-demangle@0.1.27
 	rustc-hash@2.1.1
 	rustix@0.38.37
 	rustversion@1.0.17
@@ -148,7 +149,9 @@ CRATES="
 	zeroize_derive@1.4.2
 "
 
-LLVM_COMPAT=( {19..21} )
+LLVM_COMPAT=( {19..22} )
+MODULES_INITRAMFS_IUSE=+initramfs
+MODDULES_KERNEL_MIN=6.16
 PYTHON_COMPAT=( python3_{11..14} )
 RUST_MIN_VER="1.85.0"
 RUST_NEEDS_LLVM=1
@@ -161,7 +164,8 @@ VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/kentoverstreet.asc
 # matching commit for S
 #COMMIT=
 
-inherit cargo flag-o-matic llvm-r1 python-any-r1 shell-completion toolchain-funcs unpacker verify-sig udev
+inherit cargo flag-o-matic linux-mod-r1 llvm-r1 multiprocessing python-any-r1
+inherit shell-completion toolchain-funcs unpacker verify-sig udev systemd
 
 DESCRIPTION="Tools for bcachefs"
 HOMEPAGE="https://bcachefs.org/"
@@ -190,9 +194,17 @@ fi
 
 LICENSE="GPL-2"
 # Dependent crate licenses
-LICENSE+=" Apache-2.0 BSD ISC MIT Unicode-DFS-2016"
+LICENSE+=" Apache-2.0 BSD-2 BSD ISC MIT Unicode-DFS-2016"
 SLOT="0"
-IUSE="verify-sig"
+IUSE="debug llvm-libunwind +modules verify-sig"
+
+# manual testing for now:
+# fallocate -l 10G /tmp/bcfs.img
+# loopdev=$(losetup --find --show /tmp/bcfs.img)
+# bcachefs format $loopdev
+# mkdir -p /tmp/bcfs-mount
+# mount -t bcachefs $loopdev /tmp/bcfs-mount
+# touch /tmp/bcfs-mount/foo
 RESTRICT="test"
 
 DEPEND="
@@ -205,25 +217,31 @@ DEPEND="
 	sys-apps/util-linux
 	virtual/zlib:=
 	virtual/udev
+	llvm-libunwind? ( llvm-runtimes/libunwind )
+	!llvm-libunwind? ( sys-libs/libunwind )
 "
 
-RDEPEND="${DEPEND}"
+# bcachefs-kmod in ::guru provided USE=modules for previous tools versions.
+RDEPEND="
+	${DEPEND}
+	modules? ( !sys-fs/bcachefs-kmod )
+"
 
 # Clang is required for bindgen
-# shellcheck disable=SC2016 # don't want extension
+# shellcheck disable=SC2016 # don't want expansion
 BDEPEND="
-	app-misc/jq
-	virtual/pkgconfig
-	elibc_musl? ( >=sys-libs/musl-1.2.5 )
-	verify-sig? ( >=sec-keys/openpgp-keys-kentoverstreet-20241012 )
+	${PYTHON_DEPS}
 	$(python_gen_any_dep '
 		dev-python/docutils[${PYTHON_USEDEP}]
 	')
+	$(unpacker_src_uri_depends)
 	$(llvm_gen_dep '
 		llvm-core/clang:${LLVM_SLOT}
 	')
-	$(unpacker_src_uri_depends)
-	${PYTHON_DEPS}
+	elibc_musl? ( >=sys-libs/musl-1.2.5 )
+	virtual/pkgconfig
+	modules? ( >=sys-kernel/linux-headers-${MODDULES_KERNEL_MIN}.0 )
+	verify-sig? ( >=sec-keys/openpgp-keys-kentoverstreet-20241012 )
 	${RUST_DEPEND}
 "
 
@@ -241,24 +259,56 @@ pkg_setup() {
 	fi
 
 	llvm-r1_pkg_setup
-	rust_pkg_setup
 	python-any-r1_pkg_setup
+	rust_pkg_setup
+	if use modules; then
+		# grep -r 'depends on\|select ' ${S}/libbcachefs/Kconfig | grep -v '^#'
+		local CONFIG_CHECK="
+			!BCACHEFS_FS
+			BLOCK
+			EXPORTFS
+			CRC32
+			CRC64
+			FS_POSIX_ACL
+			LZ4_COMPRESS
+			LZ4_DECOMPRESS
+			LZ4HC_COMPRESS
+			ZLIB_DEFLATE
+			ZLIB_INFLATE
+			ZSTD_COMPRESS
+			ZSTD_DECOMPRESS
+			CRYPTO_LIB_SHA256
+			CRYPTO_LIB_CHACHA
+			CRYPTO_LIB_POLY1305
+			KEYS
+			RAID6_PQ
+			XOR_BLOCKS
+			XXHASH
+			SYMBOLIC_ERRNAME
+		"
+		use debug && CONFIG_CHECK+="
+			DEBUG_INFO
+			FRAME_POINTER
+			!DEBUG_INFO_REDUCED
+		"
+		linux-mod-r1_pkg_setup
+	fi
 }
 
 src_unpack() {
-	# Upstream signs the uncompressed tarball
-	# Snapshots come from GitHub and thus aren't signed
-	if [[ ${PV} != *_pre* ]] && use verify-sig; then
-		einfo "Unpacking ${P}.tar.zst ..."
-		verify-sig_verify_detached - "${DISTDIR}/${P}.tar.sign" \
-			< <(zstd -fdc "${DISTDIR}/${P}.tar.zst" | tee >(tar -xf -))
-		assert "Unpack failed"
-	fi
-
 	if [[ ${PV} == "9999" ]]; then
 		git-r3_src_unpack
 		S="${S}/rust-src" cargo_live_src_unpack
 	else
+		# Upstream signs the uncompressed tarball
+		# Snapshots come from GitHub and thus aren't signed
+		if [[ ${PV} != *_pre* ]] && use verify-sig; then
+			einfo "Unpacking ${P}.tar.zst ..."
+			verify-sig_verify_detached - "${DISTDIR}/${P}.tar.sign" \
+				< <(zstd -fdc "${DISTDIR}/${P}.tar.zst" | tee >(tar -xf -))
+			assert "Unpack failed"
+		fi
+
 		if [[ ${PV} == *_pre* ]]; then
 			unpacker "${PN}-${BCH_VERSION}.tar.gz"
 		else
@@ -278,23 +328,48 @@ src_prepare() {
 		-i Makefile || die
 	append-lfs-flags
 
+	# llvm-runtimes/libunwind doesn't provide pkgconfig files
+	# so we need to handle it ourself...
+	if use llvm-libunwind; then
+		sed -E \
+			-e '/^PKGCONFIG_LIBS/s/(".*) libunwind(.*")/\1\2/' \
+			-i Makefile || die
+		export EXTRA_LDLIBS="-lunwind"
+	fi
+
 	# generate version.h
 	echo "${BCH_VERSION:-"v${PV}"}" > .version || die
 	emake generate_version
 }
 
-src_compile() {
-	local makeopts=( V=1 )
+src_configure() {
+	cargo_src_configure
+	use modules && emake DESTDIR="${WORKDIR}" PREFIX="/module" install_dkms
+}
 
-	emake "${makeopts[@]}"
+src_compile() {
+	export BUILD_VERBOSE=1
+	local module_s="module/src/${PN%-*}-${BCH_VERSION:-"v${PV}"}"
+	local modlist=( "bcachefs=:../${module_s}:../${module_s}/src/fs/bcachefs" )
+	local modargs=(
+		KDIR="${KV_OUT_DIR}"
+	)
+
+	# Makefile calls `cargo` directly, so make sure we set our rustflags (etc)
+	cargo_env emake "-j$(get_makeopts_jobs)" bcachefs || die
+	use modules && linux-mod-r1_src_compile
 
 	(
 		# shellcheck disable=SC2155
-		export PATH="$(cargo_target_dir)"
+		export PATH="$(cargo_target_dir):${PATH}"
+
 		for shell in bash fish zsh; do
 			bcachefs completions "${shell}" > "${shell}.completion" || die
 		done
 	)
+
+	local unit=bcachefs-wait-devices@.service
+	sed -e 's|@sbindir@|/sbin|g' "${unit}".in > "${unit}" || die
 }
 
 src_install() {
@@ -305,6 +380,7 @@ src_install() {
 	dosym bcachefs /sbin/mkfs.bcachefs
 	dosym bcachefs /sbin/mount.bcachefs
 
+	# Uses a crate-based implementation of FUSE, no dependency on sys-fs/fuse and unconditionally included.
 	dosym bcachefs /sbin/fsck.fuse.bcachefs
 	dosym bcachefs /sbin/mkfs.fuse.bcachefs
 	dosym bcachefs /sbin/mount.fuse.bcachefs
@@ -315,7 +391,10 @@ src_install() {
 
 	doman bcachefs.8
 
+	use modules && linux-mod-r1_src_install
+
 	udev_dorules udev/64-bcachefs.rules
+	systemd_dounit bcachefs-wait-devices@.service
 }
 
 pkg_postinst() {

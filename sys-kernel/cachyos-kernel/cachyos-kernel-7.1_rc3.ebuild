@@ -19,17 +19,17 @@ LLVM_OPTIONAL=1
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r1 rust kernel-build
 
 # https://distfiles.gentoo.org/pub/proj/dist-kernel/patchsets/
-GENTOO_PATCHSET=linux-gentoo-patches-7.0.1
+GENTOO_PATCHSET=linux-gentoo-patches-7.0.6
 # https://github.com/projg2/gentoo-kernel-config
 GENTOO_CONFIG_VER=g18
 # https://github.com/CachyOS/linux-cachyos
-CONFIG_COMMIT=2de2942338b54e89531e7a2c38b3b9f29d93df52
+CONFIG_COMMIT=132e992bc6690b74976a2a609d571d59b35503a1
 # https://github.com/CachyOS/kernel-patches
-PATCH_COMMIT=e80ce8172953b8c199daf6a2850974bb12731ae9
+PATCH_COMMIT=f0501e46e937b433d3153a090626d340fa0c04fe
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.38.3_pre20260504110229
+BCACHEFS_VER=1.38.4_pre20260511132056
 # cachyos tarball release (usually 1)
 # https://github.com/CachyOS/linux
 CACHY_REL=1

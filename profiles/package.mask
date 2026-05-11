@@ -33,6 +33,24 @@
 
 #--- END OF EXAMPLES ---
 
-# Xarblu <xarblu@protonmail.com> (2026-01-02)
-# Release candidate
-=games-util/mangohud-0.8.3*
+# Xarblu <xarblu@protonmail.com> (2026-05-11)
+# Some spring cleaning.
+# These ebuilds have just been sitting here 
+# for a while without any real attention
+# and I don't want to maintain them anymore.
+# Removal in ~1 month.
+acct-group/portcache
+acct-user/portcache
+app-admin/profile-cleaner
+app-editors/cli-hex-editor
+app-editors/kile
+app-misc/e621_downloader
+app-portage/portcache
+games-util/arrpc
+games-util/gamescope-session
+games-util/gamescope-session-steam
+kde-misc/kwin-effects-forceblur
+media-sound/steamdeck-dsp-bin
+net-fs/netdev-automount
+sys-kernel/steamdeck-firmware
+www-misc/profile-sync-daemon
