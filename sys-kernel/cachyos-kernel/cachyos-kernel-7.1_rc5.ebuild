@@ -9,7 +9,7 @@ EAPI=8
 KERNEL_IUSE_GENERIC_UKI=1
 KERNEL_IUSE_MODULES_SIGN=1
 
-RUST_MIN_VER="1.83.0"
+RUST_MIN_VER="1.85.0"
 RUST_NEEDS_LLVM=1
 RUST_OPTIONAL=1
 RUST_REQ_USE="rust-src"
@@ -29,14 +29,13 @@ PATCH_COMMIT=668b466fb461409329425b50c4a9d8d2c022a739
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.38.3
+BCACHEFS_VER=1.38.4_pre20260525004308
 # cachyos tarball release
 # https://github.com/CachyOS/linux
 CACHY_REL=2
 
 # supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
-#FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
-FLAVOURS="cachyos bore deckify eevdf rt-bore server"
+FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
 
 # array of patches in format
 # <use>:<path/to.patch>
@@ -58,7 +57,10 @@ CACHY_PATCH_SPECS=(
 # bad patches that don't apply properly
 # usually these are genpatches that are also included in the cachyos-base-all patch
 # or genpatches that are not rebased yet (common for RCs)
-BAD_PATCHES=()
+BAD_PATCHES=(
+	2007_rxrpc-Use-skb_ensure_writable-before-in-place-decryp.patch
+	2008_Replace-CONST_CAST-with-const_cast.patch
+)
 
 # Parse Kernel version vars from PV
 # KERNEL_BASE  - base linux version
@@ -721,21 +723,21 @@ cachy_flavour_defaults_kconfig() {
 	# handheld only
 	if [[ "$(cachy_flavour)" == deckify ]]; then
 		kconf unset RCU_LAZY_DEFAULT_OFF
-		kconf set AMD_PRIVATE_COLOR
-		kconf mod SENSORS_STEAMDECK
-		kconf mod MFD_STEAMDECK
-		kconf mod SND_SOC_AW87XXX
-		kconf mod HID_ASUS_ALLY
-		kconf mod HID_LENOVO_GO
-		kconf mod HID_LENOVO_GO_S
-		kconf mod HID_MSI_CLAW
-		kconf mod ZOTAC_ZONE_HID
-		kconf mod LEDS_STEAMDECK
-		kconf mod LEDS_VALVE
-		kconf set ACPI_CALL
-		kconf mod ZOTAC_ZONE_PLATFORM
-		kconf mod EXTCON_STEAMDECK
-		kconf mod HID_MSI
+        kconf set AMD_PRIVATE_COLOR
+        kconf mod SENSORS_STEAMDECK
+        kconf mod MFD_STEAMDECK
+        kconf mod SND_SOC_AW87XXX
+        kconf mod HID_ASUS_ALLY
+        kconf mod HID_LENOVO_GO
+        kconf mod HID_LENOVO_GO_S
+        kconf mod HID_MSI_CLAW
+        kconf mod ZOTAC_ZONE_HID
+        kconf mod LEDS_STEAMDECK
+        kconf mod LEDS_VALVE
+        kconf set ACPI_CALL
+        kconf mod ZOTAC_ZONE_PLATFORM
+        kconf mod EXTCON_STEAMDECK
+        kconf mod HID_MSI
 	fi
 
 	# rust
