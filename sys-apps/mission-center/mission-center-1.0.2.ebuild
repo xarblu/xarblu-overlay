@@ -388,7 +388,7 @@ CRATES="
 	zvariant_utils@3.2.0
 "
 
-PYTHON_COMPAT=( python3_{12..13} )
+PYTHON_COMPAT=( python3_{12..14} )
 
 # subprojects/magpie
 MAGPIE_COMMIT="319d95d29cbc3c373ae61cff228e8440fbaadbbb"
