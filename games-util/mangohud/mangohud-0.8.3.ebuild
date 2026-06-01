@@ -6,7 +6,7 @@
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{11..14} )
+PYTHON_COMPAT=( python3_{12..14} )
 
 inherit toolchain-funcs flag-o-matic python-r1 desktop meson-multilib
 
