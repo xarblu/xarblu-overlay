@@ -11,16 +11,15 @@ COMMIT="9deb0733c4e36938cf90e42ddfb7a19a8b2f4641"
 DESCRIPTION="High-performance on-the-fly thumbnailer for mpv "
 HOMEPAGE="https://github.com/po5/thumbfast"
 SRC_URI="https://github.com/po5/${PN}/archive/${COMMIT}.tar.gz -> ${P}.tar.gz"
-
-IUSE="+autoload"
+S="${WORKDIR}/${PN}-${COMMIT}"
 
 LICENSE="MPL-2.0"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 
-RDEPEND="media-video/mpv"
+IUSE="+autoload"
 
-S="${WORKDIR}/${PN}-${COMMIT}"
+RDEPEND="media-video/mpv"
 
 src_install() {
 	# shellcheck disable=SC2155
