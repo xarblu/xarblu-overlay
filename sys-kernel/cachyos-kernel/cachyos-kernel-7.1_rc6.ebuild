@@ -20,7 +20,7 @@ inherit eapi9-pipestatus toolchain-funcs flag-o-matic llvm-r1 rust kernel-build 
 
 # https://distfiles.gentoo.org/pub/proj/dist-kernel/patchsets/
 GENTOO_PATCHSET=linux-gentoo-patches-7.0.11
-# https://github.com/projg2/gentoo-kernel-config
+# https://github.com/gentoo/gentoo-kernel-config
 GENTOO_CONFIG_VER=g19
 # https://github.com/CachyOS/linux-cachyos
 CONFIG_COMMIT=3b72c4b13a0e56fb32bcaa04586e0f04d4db7ec6
@@ -194,7 +194,7 @@ gentoo_env_setup() {
 
 	SRC_URI+="
 		https://distfiles.gentoo.org/pub/proj/dist-kernel/patchsets/$(ver_cut 1-2 "${v}")/${GENTOO_PATCHSET}.tar.xz
-		https://github.com/projg2/gentoo-kernel-config/archive/${GENTOO_CONFIG_VER}.tar.gz
+		https://github.com/gentoo/gentoo-kernel-config/archive/${GENTOO_CONFIG_VER}.tar.gz
 			-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
 	"
 }
@@ -735,21 +735,21 @@ cachy_flavour_defaults_kconfig() {
 	# handheld only
 	if [[ "$(cachy_flavour)" == deckify ]]; then
 		kconf unset RCU_LAZY_DEFAULT_OFF
-        kconf set AMD_PRIVATE_COLOR
-        kconf mod SENSORS_STEAMDECK
-        kconf mod MFD_STEAMDECK
-        kconf mod SND_SOC_AW87XXX
-        kconf mod HID_ASUS_ALLY
-        kconf mod HID_LENOVO_GO
-        kconf mod HID_LENOVO_GO_S
-        kconf mod HID_MSI_CLAW
-        kconf mod ZOTAC_ZONE_HID
-        kconf mod LEDS_STEAMDECK
-        kconf mod LEDS_VALVE
-        kconf set ACPI_CALL
-        kconf mod ZOTAC_ZONE_PLATFORM
-        kconf mod EXTCON_STEAMDECK
-        kconf mod HID_MSI
+		kconf set AMD_PRIVATE_COLOR
+		kconf mod SENSORS_STEAMDECK
+		kconf mod MFD_STEAMDECK
+		kconf mod SND_SOC_AW87XXX
+		kconf mod HID_ASUS_ALLY
+		kconf mod HID_LENOVO_GO
+		kconf mod HID_LENOVO_GO_S
+		kconf mod HID_MSI_CLAW
+		kconf mod ZOTAC_ZONE_HID
+		kconf mod LEDS_STEAMDECK
+		kconf mod LEDS_VALVE
+		kconf set ACPI_CALL
+		kconf mod ZOTAC_ZONE_PLATFORM
+		kconf mod EXTCON_STEAMDECK
+		kconf mod HID_MSI
 	fi
 
 	# rust
