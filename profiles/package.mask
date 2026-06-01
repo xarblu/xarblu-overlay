@@ -33,6 +33,12 @@
 
 #--- END OF EXAMPLES ---
 
+# Xarblu <xarblu@protonmail.com> (2026-06-01)
+# "Development paused indefinitely"
+# Upstream recommends using
+# app-admin/bitwarden-desktop-bin instead
+app-admin/goldwarden
+
 # Xarblu <xarblu@protonmail.com> (2026-05-11)
 # Some spring cleaning.
 # These ebuilds have just been sitting here 
