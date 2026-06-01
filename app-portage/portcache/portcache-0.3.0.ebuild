@@ -305,7 +305,7 @@ CRATES="
 "
 
 RUST_MIN_VERSION="1.85.0"
-PYTHON_COMPAT=( python3_{11..13} pypy3_11 )
+PYTHON_COMPAT=( python3_{11..13}  )
 
 inherit python-single-r1 systemd cargo
 
