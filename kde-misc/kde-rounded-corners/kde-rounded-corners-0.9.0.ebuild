@@ -1,4 +1,4 @@
-# Copyright 2025 Gentoo Authors
+# Copyright 2025-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 # shellcheck shell=bash
@@ -44,8 +44,6 @@ DEPEND="
 "
 RDEPEND="${DEPEND}"
 
-PATCHES=( "${FILESDIR}/qt-6.10.patch" )
-
 # the only test is a post-install check
 # asking kwin if the effect is loaded
 RESTRICT="test"
@@ -72,12 +70,6 @@ pkg_setup() {
 }
 
 src_prepare() {
-	# we need to avoid applying patches twice
-	# eapply_user should fine because it has
-	# ${T}/.portage_user_patches_applied
-	eapply -- "${PATCHES[@]}"
-	unset PATCHES
-
 	multibuild_foreach_variant ecm_src_prepare
 }
 
