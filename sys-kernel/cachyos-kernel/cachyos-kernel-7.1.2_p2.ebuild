@@ -31,7 +31,7 @@ PATCH_COMMIT=f98908d8b5cacc4c24a6039ffd9f41f6a0de4ba2
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.38.7_pre20260629210042
+BCACHEFS_VER=1.38.6
 # cachyos tarball release
 # https://github.com/CachyOS/linux
 CACHY_REL=3
@@ -59,9 +59,7 @@ CACHY_PATCH_SPECS=(
 # bad patches that don't apply properly
 # usually these are genpatches that are also included in the cachyos-base-all patch
 # or genpatches that are not rebased yet (common for RCs)
-BAD_PATCHES=(
-	2008_crypto-nx-fix-nx_crypto_ctx_exit-argument.patch
-)
+BAD_PATCHES=()
 
 # Parse Kernel version vars from PV
 # KERNEL_BASE  - base linux version
