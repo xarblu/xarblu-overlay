@@ -8,4 +8,7 @@
   <upstream>
     <remote-id type="github">GloriousEggroll/proton-ge-custom</remote-id>
   </upstream>
+  <use>
+    <flag name="ntsync">Install module/limit configs for NTSYNC</flag>
+  </use>
 </pkgmetadata>
