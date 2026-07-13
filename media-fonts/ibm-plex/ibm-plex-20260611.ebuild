@@ -51,7 +51,7 @@ setup_fonts() {
 	while IFS=':' read -r font_use font_dir font_family font_types font_hinted font_tier commit; do
 		url="https://github.com/IBM/plex/raw/${commit}/packages/${font_dir}/fonts/complete"
 
-		IFS=',' read -r -a font_types <<<"${font_types}"
+		IFS=',' read -rd '' -a font_types < <(printf '%s' "${font_types}")
 
 		local -a font_variants
 		case "${font_tier}" in
