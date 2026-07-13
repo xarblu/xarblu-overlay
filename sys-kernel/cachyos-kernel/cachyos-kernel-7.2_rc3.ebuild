@@ -229,7 +229,7 @@ cachy_config_env_setup() {
 # and sets up IUSE_PATTERN to check if a flag is in IUSE
 cachy_patch_env_setup() {
 	local -a iuse_arr
-	read -r -a iuse_arr <<<"${IUSE}"
+	read -rd '' -a iuse_arr < <(printf '%s' "${IUSE}")
 	iuse_arr=( "${iuse_arr[@]#+}" )
 	local IFS="|"
 	declare -g IUSE_PATTERN="^(${iuse_arr[*]})$"
@@ -240,7 +240,7 @@ cachy_patch_env_setup() {
 	base="https://raw.githubusercontent.com/CachyOS/kernel-patches"
 	base+="/${PATCH_COMMIT}/${KERNEL_BASE}"
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
-		IFS=":" read -r cond patch <<<"${spec}"
+		IFS=":" read -rd '' cond patch < <(printf '%s' "${spec}")
 		file="${PATCH_P}-${patch##*/}"
 		if [[ "${cond}" == "-" ]]; then
 			cachy_patch_uris+="${base}/${patch} -> ${file} "
