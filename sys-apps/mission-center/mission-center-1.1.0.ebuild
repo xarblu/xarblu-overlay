@@ -392,7 +392,7 @@ CRATES="
 	zvariant_utils@3.2.1
 "
 
-PYTHON_COMPAT=( python3_{12..14} )
+PYTHON_COMPAT=( python3_{12..15} )
 RUST_MIN_VER="1.88"
 
 # subprojects/magpie
@@ -405,7 +405,7 @@ NVTOP_COMMIT="339ee0b10a64ec51f43d27357b0068a40f16e9e4"
 # python-any-r1 for build time python dep
 inherit cargo gnome2 meson python-any-r1
 
-DESCRIPTION="Monitor your CPU, Memory, Disk, Network and GPU usage."
+DESCRIPTION="Monitor your CPU, Memory, Disk, Network and GPU usage"
 HOMEPAGE="https://missioncenter.io/"
 
 SRC_URI="
