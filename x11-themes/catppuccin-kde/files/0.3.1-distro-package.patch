@@ -1,0 +1,48 @@
+commit 8c24accc692c8abe48e1c10590b9fd09afb8d536
+Author: Xarblu <xarblu@protonmail.com>
+Date:   Wed Jul 15 20:09:28 2026 +0200
+
+    drop uneeded stuff for distro packaging
+    
+    Signed-off-by: Xarblu <xarblu@protonmail.com>
+
+diff --git a/install.sh b/install.sh
+index 9021ab5..075746c 100755
+--- a/install.sh
++++ b/install.sh
+@@ -56,6 +56,8 @@ invalid_arg() {
+ }
+ 
+ check_command_exists() {
++    return 0
++
+     command_name="$1"
+ 
+     if ! command -v "$command_name" >/dev/null 2>&1; then
+@@ -442,8 +444,6 @@ BuildSplashScreen() {
+     mkdir -p ./dist/"$SPLASHSCREENNAME"/contents/previews
+     cp ./Resources/splash-previews/"$FLAVOURNAME".png ./dist/"$SPLASHSCREENNAME"/contents/previews/splash.png
+     # cp ./Resources/splash-previews/"$FLAVOURNAME".png ./dist/"$SPLASHSCREENNAME"/contents/previews/preview.png
+-    cp -r ./dist/"$SPLASHSCREENNAME"/contents/splash/ "$LOOKANDFEELDIR"/"$GLOBALTHEMENAME"/contents/
+-    cp -r ./dist/"$SPLASHSCREENNAME"/contents/previews/* "$LOOKANDFEELDIR"/"$GLOBALTHEMENAME"/contents/previews/
+ }
+ 
+ InstallAuroraeTheme() {
+@@ -484,17 +484,6 @@ EOF
+         sleep 1
+     fi
+     log "Installing Global Theme.."
+-    (
+-        cd ./dist || exit
+-        tar -czf "$GLOBALTHEMENAME".tar.gz "$GLOBALTHEMENAME"
+-        if [ "$QUIET" -eq 1 ]; then
+-            kpackagetool6 -t Plasma/LookAndFeel -i "$GLOBALTHEMENAME".tar.gz >/dev/null 2>&1 ||
+-                kpackagetool6 -t Plasma/LookAndFeel -u "$GLOBALTHEMENAME".tar.gz >/dev/null 2>&1
+-        else
+-            kpackagetool6 -t Plasma/LookAndFeel -i "$GLOBALTHEMENAME".tar.gz ||
+-                kpackagetool6 -t Plasma/LookAndFeel -u "$GLOBALTHEMENAME".tar.gz
+-        fi
+-    )
+ 
+     # Build SplashScreen
+     log "Building SplashScreen.."
