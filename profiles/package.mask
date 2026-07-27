@@ -33,6 +33,10 @@
 
 #--- END OF EXAMPLES ---
 
+# Xarblu <xarblu@protonmail.com> (2026-07-27)
+# gtk-4.22 and libadwaita-1.9 aren't packaged yet
+>=sys-apps/mission-center-1.2.0
+
 # Xarblu <xarblu@protonmail.com> (2026-06-01)
 # "Development paused indefinitely"
 # Upstream recommends using
