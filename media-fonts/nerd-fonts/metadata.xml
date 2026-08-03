@@ -10,6 +10,7 @@
 		<flag name="3270">Install 3270 font</flag>
 		<flag name="adwaitamono">Install AdwaitaMono font</flag>
 		<flag name="agave">Install Agave font</flag>
+		<flag name="annotationmono">Install AnnotationMono font</flag>
 		<flag name="anonymouspro">Install AnonymousPro font</flag>
 		<flag name="arimo">Install Arimo font</flag>
 		<flag name="atkinsonhyperlegiblemono">Install AtkinsonHyperlegibleMono font</flag>
@@ -34,6 +35,7 @@
 		<flag name="geistmono">Install GeistMono font</flag>
 		<flag name="go-mono">Install Go-Mono font</flag>
 		<flag name="gohu">Install Gohu font</flag>
+		<flag name="googlesanscode">Install GoogleSansCode font</flag>
 		<flag name="hack">Install Hack font</flag>
 		<flag name="hasklig">Install Hasklig font</flag>
 		<flag name="heavydata">Install HeavyData font</flag>
