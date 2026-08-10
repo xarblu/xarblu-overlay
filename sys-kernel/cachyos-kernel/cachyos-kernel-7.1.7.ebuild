@@ -31,7 +31,7 @@ PATCH_COMMIT=c9ed808e86cc1f5fafdbe208627533ee10499b5b
 # bcachefs backports version
 # https://github.com/koverstreet/bcachefs-tools
 # https://github.com/xarblu/bcachefs-patches
-BCACHEFS_VER=1.39.0-r1
+BCACHEFS_VER=1.39.1
 # cachyos tarball release
 # https://github.com/CachyOS/linux
 CACHY_REL=1
