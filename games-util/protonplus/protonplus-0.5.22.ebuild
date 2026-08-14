@@ -6,13 +6,17 @@
 
 EAPI=8
 
+MY_PN="ProtonPlus"
+MY_P="${MY_PN}-${PV}"
+
 # vala + meson for src_*
 # gnome2 for pkg_{preinst,postinst,postrm}
 inherit vala gnome2 meson
 
 DESCRIPTION="A modern compatibility tools manager"
 HOMEPAGE="https://github.com/Vysp3r/ProtonPlus"
-SRC_URI="https://github.com/Vysp3r/${PN}/archive/refs/tags/v${PV}.tar.gz -> ${P}.gh.tar.gz"
+SRC_URI="https://github.com/Vysp3r/${MY_PN}/archive/refs/tags/v${PV}.tar.gz -> ${P}.gh.tar.gz"
+S="${WORKDIR}/${MY_P}"
 
 LICENSE="GPL-3"
 SLOT="0"
