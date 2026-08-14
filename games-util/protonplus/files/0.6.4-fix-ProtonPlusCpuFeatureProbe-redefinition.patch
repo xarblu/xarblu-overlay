@@ -1,0 +1,110 @@
+From 3d7d85aa53dca0a75669db115a4ce595e7fefc8f Mon Sep 17 00:00:00 2001
+From: Xarblu <xarblu@protonmail.com>
+Date: Fri, 14 Aug 2026 12:00:02 +0200
+Subject: [PATCH] Make ProtonPlusCpuFeatureProbe an opaque type
+
+valac seems to redefine this:
+
+  src/libprotonplus_core.a.p/utils/system.c:206:8: error: redefinition of '_ProtonPlusCpuFeatureProbe'
+    206 | struct _ProtonPlusCpuFeatureProbe {
+        |        ^
+  ../ProtonPlus-0.6.4/src/utils/cpu-probe.h:5:16: note: previous definition is here
+      5 | typedef struct _ProtonPlusCpuFeatureProbe {
+        |                ^
+
+Signed-off-by: Xarblu <xarblu@protonmail.com>
+---
+ src/utils/cpu-probe.c | 33 +++++++++++++++++++++++++++++++++
+ src/utils/cpu-probe.h | 33 +--------------------------------
+ 2 files changed, 34 insertions(+), 32 deletions(-)
+
+diff --git a/src/utils/cpu-probe.c b/src/utils/cpu-probe.c
+index 48ab7fa2..43edd83e 100644
+--- a/src/utils/cpu-probe.c
++++ b/src/utils/cpu-probe.c
+@@ -10,6 +10,39 @@
+ #if (defined(__x86_64__) || defined(_M_X64)) && (defined(__GNUC__) || defined(__clang__))
+ #include <cpuid.h>
+ 
++struct _ProtonPlusCpuFeatureProbe {
++    gboolean available;
++    gboolean cmpxchg16b;
++    gboolean lahf_sahf;
++    gboolean popcnt;
++    gboolean sse3;
++    gboolean sse4_1;
++    gboolean sse4_2;
++    gboolean ssse3;
++    gboolean avx;
++    gboolean avx2;
++    gboolean bmi1;
++    gboolean bmi2;
++    gboolean f16c;
++    gboolean fma;
++    gboolean lzcnt;
++    gboolean movbe;
++    gboolean osxsave;
++    gboolean xcr0_xmm;
++    gboolean xcr0_ymm;
++    gboolean avx512f;
++    gboolean avx512bw;
++    gboolean avx512cd;
++    gboolean avx512dq;
++    gboolean avx512vl;
++    gboolean xcr0_opmask;
++    gboolean xcr0_zmm_hi256;
++    gboolean xcr0_hi16_zmm;
++    gboolean aarch64_crc32;
++    gboolean aarch64_lse_atomics;
++    gboolean aarch64_rdma;
++};
++
+ static uint64_t
+ read_xcr0 (void)
+ {
+diff --git a/src/utils/cpu-probe.h b/src/utils/cpu-probe.h
+index df7af7c0..e0564998 100644
+--- a/src/utils/cpu-probe.h
++++ b/src/utils/cpu-probe.h
+@@ -2,37 +2,6 @@
+ 
+ #include <glib.h>
+ 
+-typedef struct _ProtonPlusCpuFeatureProbe {
+-    gboolean available;
+-    gboolean cmpxchg16b;
+-    gboolean lahf_sahf;
+-    gboolean popcnt;
+-    gboolean sse3;
+-    gboolean sse4_1;
+-    gboolean sse4_2;
+-    gboolean ssse3;
+-    gboolean avx;
+-    gboolean avx2;
+-    gboolean bmi1;
+-    gboolean bmi2;
+-    gboolean f16c;
+-    gboolean fma;
+-    gboolean lzcnt;
+-    gboolean movbe;
+-    gboolean osxsave;
+-    gboolean xcr0_xmm;
+-    gboolean xcr0_ymm;
+-    gboolean avx512f;
+-    gboolean avx512bw;
+-    gboolean avx512cd;
+-    gboolean avx512dq;
+-    gboolean avx512vl;
+-    gboolean xcr0_opmask;
+-    gboolean xcr0_zmm_hi256;
+-    gboolean xcr0_hi16_zmm;
+-    gboolean aarch64_crc32;
+-    gboolean aarch64_lse_atomics;
+-    gboolean aarch64_rdma;
+-} ProtonPlusCpuFeatureProbe;
++typedef struct _ProtonPlusCpuFeatureProbe ProtonPlusCpuFeatureProbe;
+ 
+ void protonplus_cpu_get_feature_probe (ProtonPlusCpuFeatureProbe *out_probe);
+-- 
+2.55.0
+
