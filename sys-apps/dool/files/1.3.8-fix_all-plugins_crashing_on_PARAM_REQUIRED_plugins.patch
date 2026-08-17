@@ -1,0 +1,24 @@
+From 29a3a75804782a5152a70bc107514bcd0ba51f76 Mon Sep 17 00:00:00 2001
+From: Scott Baker <scott@perturb.org>
+Date: Sat, 20 Jun 2026 11:22:34 -0700
+Subject: [PATCH] Fix --all-plugins crashing on PARAM_REQUIRED plugins
+
+---
+ dool | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/dool b/dool
+index a42934f..52183bc 100755
+--- a/dool
++++ b/dool
+@@ -239,7 +239,9 @@ class Options:
+             elif opt in ['-f', '--full']:
+                 self.full = True
+             elif opt in ['--all-plugins']:
+-                self.plugins += plugin_opt_list
++                # Strip the trailing '=' from PARAM_REQUIRED plugins, that
++                # suffix is only meaningful for getopt() parsing.
++                self.plugins += [p[:-1] if p.endswith('=') else p for p in plugin_opt_list]
+             elif opt in ['--bytes']:
+                 self.bits = False
+             elif opt in ['--bits']:
