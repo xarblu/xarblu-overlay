@@ -18,10 +18,10 @@ SRC_URI="
 	https://github.com/scottchiefbaker/dool/archive/refs/tags/v${PV}.tar.gz
 		-> ${P}.tar.gz
 "
-KEYWORDS="~amd64 ~arm64 ~mips ~ppc ~ppc64 ~sparc ~x86 "
 
 LICENSE="GPL-3"
 SLOT="0"
+KEYWORDS="~amd64 ~arm64 ~mips ~ppc ~ppc64 ~sparc ~x86"
 
 PATCHES=(
 	"${FILESDIR}/1.3.8-fix_all-plugins_crashing_on_PARAM_REQUIRED_plugins.patch"
@@ -70,4 +70,3 @@ python_test() {
 	# all plugins (seems very flaky so we'll skip this for now)
 	#"${dool}" -t --all-plugins 1 5 || die
 }
-
