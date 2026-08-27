@@ -20,6 +20,7 @@
 		<flag name="deckify">Default CachyOS flavour with extra tweaks/patches for handhelds</flag>
 		<flag name="eevdf">Flavour using the EEVDF (mainline Linux) scheduler</flag>
 		<flag name="initramfs">Build initramfs along with the kernel.</flag>
+		<flag name="muqss">Patch in the Multiple Queue Skiplist Scheduler (EXPERIMENTAL - might not always apply)</flag>
 		<flag name="rt-bore">Flavour using the BORE scheduler and realtime preemption</flag>
 		<flag name="rust">Pull in dependencies for and enable CONFIG_RUST</flag>
 		<flag name="scx">Pull in dependencies for and enable CONFIG_SCHED_CLASS_EXT (subset of USE=debug)</flag>
