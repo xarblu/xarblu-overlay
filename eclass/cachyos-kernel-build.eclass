@@ -29,6 +29,7 @@
 # without extension from
 # https://distfiles.gentoo.org/pub/proj/dist-kernel/patchsets/X.Y/<value>.tar.xz
 # Any required URL parts are derived from it.
+[[ -z "${GENTOO_PATCHSET}" ]] && die "GENTOO_PATCHSET is not set"
 
 # @ECLASS_VARIABLE: GENTOO_CONFIG_VER
 # @PRE_INHERIT
@@ -38,6 +39,7 @@
 # String containing a Gentoo config release tag.
 # See https://github.com/gentoo/gentoo-kernel-config
 # for available tags.
+[[ -z "${GENTOO_CONFIG_VER}" ]] && die "GENTOO_CONFIG_VER is not set"
 
 # @ECLASS_VARIABLE: CACHY_CONFIG_COMMIT
 # @PRE_INHERIT
@@ -46,6 +48,7 @@
 # @DESCRIPTION:
 # CachyOS kernel config commit from
 # https://github.com/CachyOS/linux-cachyos
+[[ -z "${CACHY_CONFIG_COMMIT}" ]] && die "CACHY_CONFIG_COMMIT is not set"
 
 # @ECLASS_VARIABLE: CACHY_PATCH_COMMIT
 # @PRE_INHERIT
@@ -54,6 +57,7 @@
 # @DESCRIPTION:
 # CachyOS kernel patch commit from
 # https://github.com/CachyOS/kernel-patches
+[[ -z "${CACHY_PATCH_COMMIT}" ]] && die "CACHY_PATCH_COMMIT is not set"
 
 # @ECLASS_VARIABLE: CACHY_TAR_REL
 # @PRE_INHERIT
@@ -62,6 +66,7 @@
 # @DESCRIPTION:
 # CachyOS kernel tarball release revision from
 # https://github.com/CachyOS/linux
+[[ -z "${CACHY_TAR_REL}" ]] && die "CACHY_TAR_REL is not set"
 
 # @ECLASS_VARIABLE: BCACHEFS_VER
 # @PRE_INHERIT
@@ -75,6 +80,25 @@
 # doesn't have their potential root fs
 # (instead of just dropping the IUSE which might be missed).
 : "${BCACHEFS_VER=}"
+
+# @ECLASS_VARIABLE: CACHY_FLAVOURS
+# @DEFAULT_UNSET
+# @REQUIRED
+# @DESCRIPTION:
+# Supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
+[[ -z "${CACHY_FLAVOURS}" ]] && die "CACHY_FLAVOURS is not set"
+
+# @ECLASS_VARIABLE: CACHY_PATCH_SPECS
+# @DEFAULT_UNSET
+# @REQUIRED
+# @DESCRIPTION:
+# Array of patches in format
+# <use>:<path/to.patch> in
+# the CachyOS/kernel-patches repo.
+#
+# Special use "-" always applies a patch.
+# Patches are applied in this order
+[[ -z "${CACHY_PATCH_SPECS}" ]] && die "CACHY_PATCH_SPECS is not set"
 
 # @ECLASS_VARIABLE: BAD_PATCHES
 # @PRE_INHERIT
@@ -125,32 +149,6 @@ inherit llvm-r1 rust kernel-build verify-sig
 
 # --- internal vars ---
 
-# @ECLASS_VARIABLE: FLAVOURS
-# @INTERNAL
-# @DESCRIPTION:
-# Supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
-FLAVOURS="cachyos bmq bore deckify eevdf rt-bore server"
-
-# @ECLASS_VARIABLE: CACHY_PATCH_SPECS
-# @INTERNAL
-# @DESCRIPTION:
-# array of patches in format
-# <use>:<path/to.patch>
-# special use - always applies patch
-# applied in this order
-CACHY_PATCH_SPECS=(
-	# flavours
-	bmq:sched/0001-prjc-cachy.patch
-	bore:sched/0001-bore-cachy.patch
-	deckify:misc/0001-acpi-call.patch
-	deckify:misc/0001-handheld.patch
-	deckify:sched/0001-bore-cachy.patch
-	rt-bore:sched/0001-bore-cachy.patch
-	rt-bore:misc/0001-rt-i915.patch
-	# clang
-	clang:misc/dkms-clang.patch
-)
-
 # @ECLASS_VARIABLE: KERNEL_BASE
 # @INTERNAL
 # @DESCRIPTION:
@@ -187,7 +185,7 @@ if [[ "${PV}" == *_rc* ]]; then
 	KERNEL_PATCH="0"
 	KERNEL_REL="${PV##*_p}"
 
-	FLAVOURS="cachyos"
+	CACHY_FLAVOURS="cachyos"
 elif [[ "${PV}" == *_pre* ]]; then
 	# transitional testing version during merge window
 	# tracks stable releases of the last mainline
@@ -197,7 +195,7 @@ elif [[ "${PV}" == *_pre* ]]; then
 	KERNEL_PATCH="${KERNEL_PATCH%_p*}"
 	KERNEL_REL="${PV##*_p}"
 
-	FLAVOURS="cachyos"
+	CACHY_FLAVOURS="cachyos"
 else
 	# stable
 	KERNEL_BASE="$(ver_cut 1-2)"
@@ -230,9 +228,9 @@ HOMEPAGE="
 	https://www.kernel.org/
 "
 
-IUSE="bcachefs cfi clang debug lto rust scx ${FLAVOURS/cachyos/+cachyos}"
+IUSE="bcachefs cfi clang debug lto rust scx ${CACHY_FLAVOURS/cachyos/+cachyos}"
 REQUIRED_USE="
-	^^ ( ${FLAVOURS} )
+	^^ ( ${CACHY_FLAVOURS} )
 	bcachefs? ( rust )
 	cfi? ( clang )
 	clang? ( ${LLVM_REQUIRED_USE} )
@@ -326,7 +324,7 @@ cachyos-kernel-build_setup_globals() {
 		# RC only has cachyos flavour
 		cachy_config_uris+="${base}/linux-cachyos-rc/config -> ${CACHY_CONFIG_P}-cachyos.config "
 	else
-		for flavour in ${FLAVOURS}; do
+		for flavour in ${CACHY_FLAVOURS}; do
 			file="${CACHY_CONFIG_P}-${flavour}.config"
 			if [[ "${flavour}" == "cachyos" ]]; then
 				cachy_config_uris+="${flavour}? ( ${base}/linux-cachyos/config -> ${file} ) "
@@ -388,10 +386,10 @@ cachyos-kernel-build_setup_globals() {
 # setup globals
 cachyos-kernel-build_setup_globals
 
-# get the selected flavour from FLAVOURS
+# get the selected flavour from CACHY_FLAVOURS
 cachy_flavour() {
 	local flavour
-	for flavour in ${FLAVOURS}; do
+	for flavour in ${CACHY_FLAVOURS}; do
 		if use "${flavour}"; then
 			printf -- "%s" "${flavour}" || die
 			return 0
