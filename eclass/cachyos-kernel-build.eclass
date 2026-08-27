@@ -97,7 +97,9 @@
 # the CachyOS/kernel-patches repo.
 #
 # Special use "-" always applies a patch.
-# Patches are applied in this order
+# Patches are applied in this order.
+#
+# Adds IUSE entries as needed.
 [[ -z "${CACHY_PATCH_SPECS}" ]] && die "CACHY_PATCH_SPECS is not set"
 
 # @ECLASS_VARIABLE: BAD_PATCHES
@@ -184,8 +186,6 @@ if [[ "${PV}" == *_rc* ]]; then
 	KERNEL_RC="${KERNEL_RC%_p*}"
 	KERNEL_PATCH="0"
 	KERNEL_REL="${PV##*_p}"
-
-	CACHY_FLAVOURS="cachyos"
 elif [[ "${PV}" == *_pre* ]]; then
 	# transitional testing version during merge window
 	# tracks stable releases of the last mainline
@@ -194,16 +194,12 @@ elif [[ "${PV}" == *_pre* ]]; then
 	KERNEL_PATCH="${PV##*_pre}"
 	KERNEL_PATCH="${KERNEL_PATCH%_p*}"
 	KERNEL_REL="${PV##*_p}"
-
-	CACHY_FLAVOURS="cachyos"
 else
 	# stable
 	KERNEL_BASE="$(ver_cut 1-2)"
 	KERNEL_RC="0"
 	KERNEL_PATCH="$(ver_cut 3)"
 	KERNEL_REL="${PV##*_p}"
-
-	KEYWORDS="~amd64"
 fi
 
 # default 0 if unset, else whatever is in _p*
@@ -278,31 +274,33 @@ VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/cachyos.asc
 # @DESCRIPTION:
 # Sets up SRC_URI, S, CACHY_BASE_TARBALL
 cachyos-kernel-build_setup_globals() {
+	local archive base
+	local spec cond patch file flavour
+	local in_iuse flag
+	local v
+
 	# --- CachyOS base tarball ---
-	local base_uri="https://github.com/CachyOS/linux/releases/download"
-	local archive
+	base="https://github.com/CachyOS/linux/releases/download"
 
 	if (( KERNEL_RC > 0 )); then
 		archive="cachyos-${KERNEL_BASE}-rc${KERNEL_RC}-${CACHY_TAR_REL}.tar.gz"
 		SRC_URI+="
-			${base_uri}/cachyos-${KERNEL_BASE}-rc${KERNEL_RC}-${CACHY_TAR_REL}/${archive}
-			verify-sig? ( ${base_uri}/cachyos-${KERNEL_BASE}-rc${KERNEL_RC}-${CACHY_TAR_REL}/${archive}.asc )
+			${base}/cachyos-${KERNEL_BASE}-rc${KERNEL_RC}-${CACHY_TAR_REL}/${archive}
+			verify-sig? ( ${base}/cachyos-${KERNEL_BASE}-rc${KERNEL_RC}-${CACHY_TAR_REL}/${archive}.asc )
 		"
 		S="${WORKDIR}/cachyos-${KERNEL_BASE}-rc${KERNEL_RC}-${CACHY_TAR_REL}"
 	else
 		archive="cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${CACHY_TAR_REL}.tar.gz"
 		SRC_URI+="
-			${base_uri}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${CACHY_TAR_REL}/${archive}
-			verify-sig? ( ${base_uri}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${CACHY_TAR_REL}/${archive}.asc )
+			${base}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${CACHY_TAR_REL}/${archive}
+			verify-sig? ( ${base}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${CACHY_TAR_REL}/${archive}.asc )
 		"
 		S="${WORKDIR}/cachyos-${KERNEL_BASE}.${KERNEL_PATCH}-${CACHY_TAR_REL}"
 	fi
 
-	declare -g CACHY_BASE_TARBALL="${archive}"
+	CACHY_BASE_TARBALL="${archive}"
 
 	# --- Gentoo patchset ---
-	local v
-
 	if [[ "${GENTOO_PATCHSET}" =~ .*-([0-9.]+)(-r[0-9]+)? ]]; then
 		v="${BASH_REMATCH[1]}"
 	else
@@ -316,54 +314,55 @@ cachyos-kernel-build_setup_globals() {
 	"
 
 	# --- CachyOS kernel config ---
-	local base spec cond patch file flavour
-	local cachy_config_uris=""
-	base="https://raw.githubusercontent.com/CachyOS/linux-cachyos"
-	base+="/${CACHY_CONFIG_COMMIT}"
+	base="https://raw.githubusercontent.com/CachyOS/linux-cachyos/${CACHY_CONFIG_COMMIT}"
+
 	if [[ ${PV} == *_rc* ]]; then
 		# RC only has cachyos flavour
-		cachy_config_uris+="${base}/linux-cachyos-rc/config -> ${CACHY_CONFIG_P}-cachyos.config "
+		SRC_URI+=" ${base}/linux-cachyos-rc/config -> ${CACHY_CONFIG_P}-cachyos.config "
 	else
 		for flavour in ${CACHY_FLAVOURS}; do
 			file="${CACHY_CONFIG_P}-${flavour}.config"
 			if [[ "${flavour}" == "cachyos" ]]; then
-				cachy_config_uris+="${flavour}? ( ${base}/linux-cachyos/config -> ${file} ) "
+				SRC_URI+=" ${flavour}? ( ${base}/linux-cachyos/config -> ${file} ) "
 			else
-				cachy_config_uris+="${flavour}? ( ${base}/linux-cachyos-${flavour}/config -> ${file} ) "
+				SRC_URI+="${flavour}? ( ${base}/linux-cachyos-${flavour}/config -> ${file} ) "
 			fi
 		done
 	fi
-	declare -g SRC_URI="${SRC_URI} ${cachy_config_uris}"
 
 	# --- CachyOS kernel patches ---
-	local -a iuse_arr
-	read -rd '' -a iuse_arr < <(printf '%s' "${IUSE}")
-	iuse_arr=( "${iuse_arr[@]#+}" )
-	local IFS="|"
-	declare -g IUSE_PATTERN="^(${iuse_arr[*]})$"
-	unset IFS
+	base="https://raw.githubusercontent.com/CachyOS/kernel-patches/${CACHY_PATCH_COMMIT}/${KERNEL_BASE}"
 
-	local base spec cond patch file
-	local cachy_patch_uris=""
-	base="https://raw.githubusercontent.com/CachyOS/kernel-patches"
-	base+="/${CACHY_PATCH_COMMIT}/${KERNEL_BASE}"
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
 		IFS=":" read -rd '' cond patch < <(printf '%s' "${spec}")
 		file="${CACHY_PATCH_P}-${patch##*/}"
-		if [[ "${cond}" == "-" ]]; then
-			cachy_patch_uris+="${base}/${patch} -> ${file} "
-		elif [[ "${cond}" =~ ${IUSE_PATTERN} ]]; then
-			cachy_patch_uris+="${cond}? ( ${base}/${patch} -> ${file} ) "
-		fi
+
+		case "${cond}" in
+			-) SRC_URI+=" ${base}/${patch} -> ${file} " ;;
+			*)
+				# add to IUSE as needed
+				in_iuse=0
+				for flag in ${IUSE}; do
+					if [[ "${flag#+}" == "${cond}" ]]; then
+						in_iuse=1
+					fi
+				done
+				(( in_iuse )) || IUSE+=" ${cond} "
+
+				SRC_URI+=" ${cond}? ( ${base}/${patch} -> ${file} ) "
+				;;
+		esac
+
 	done
-	declare -g SRC_URI="${SRC_URI} ${cachy_patch_uris}"
 
 	# --- bcachefs patch + tools ---
 	if [[ -n "${BCACHEFS_VER}" ]]; then
-		declare -g BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v${KERNEL_BASE}.patch"
-		declare -g SRC_URI="${SRC_URI} bcachefs? (
-			https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/${KERNEL_BASE}/${BCACHEFS_PATCH}
-		)"
+		BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v${KERNEL_BASE}.patch"
+		SRC_URI+="
+			bcachefs? (
+				https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/${KERNEL_BASE}/${BCACHEFS_PATCH}
+			)
+		"
 
 		# enforce bcachefs-tools version on minor-level
 		# to make sure there are no weird kernel/user-space
@@ -432,7 +431,7 @@ cachy_stage_patches() {
 		file="${CACHY_PATCH_P}-${patch##*/}"
 		if [[ "${cond}" == "-" ]]; then
 			:
-		elif [[ "${cond}" =~ ${IUSE_PATTERN} ]] && use "${cond}"; then
+		elif use "${cond}"; then
 			:
 		else
 			continue
