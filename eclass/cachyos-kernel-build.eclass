@@ -275,10 +275,12 @@ QA_FLAGS_IGNORED="
 
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/cachyos.asc
 
-# Append the base cachyos kernel tarball (and its signature) to SRC_URI
-# and sets S to the correct directory
-# The archive name is also set in CACHY_BASE_TARBALL
-kernel_base_env_setup() {
+# @FUNCTION: cachyos-kernel-build_setup_globals
+# @INTERNAL
+# @DESCRIPTION:
+# Sets up SRC_URI, S, CACHY_BASE_TARBALL
+cachyos-kernel-build_setup_globals() {
+	# --- CachyOS base tarball ---
 	local base_uri="https://github.com/CachyOS/linux/releases/download"
 	local archive
 
@@ -299,10 +301,8 @@ kernel_base_env_setup() {
 	fi
 
 	declare -g CACHY_BASE_TARBALL="${archive}"
-}
 
-# Gentoo patches and config
-gentoo_env_setup() {
+	# --- Gentoo patchset ---
 	local v
 
 	if [[ "${GENTOO_PATCHSET}" =~ .*-([0-9.]+)(-r[0-9]+)? ]]; then
@@ -316,10 +316,8 @@ gentoo_env_setup() {
 		https://github.com/gentoo/gentoo-kernel-config/archive/${GENTOO_CONFIG_VER}.tar.gz
 			-> gentoo-kernel-config-${GENTOO_CONFIG_VER}.tar.gz
 	"
-}
 
-# adds cachyos config sources to SRC_URI
-cachy_config_env_setup() {
+	# --- CachyOS kernel config ---
 	local base spec cond patch file flavour
 	local cachy_config_uris=""
 	base="https://raw.githubusercontent.com/CachyOS/linux-cachyos"
@@ -338,11 +336,8 @@ cachy_config_env_setup() {
 		done
 	fi
 	declare -g SRC_URI="${SRC_URI} ${cachy_config_uris}"
-}
 
-# adds cachyos patch sources to SRC_URI
-# and sets up IUSE_PATTERN to check if a flag is in IUSE
-cachy_patch_env_setup() {
+	# --- CachyOS kernel patches ---
 	local -a iuse_arr
 	read -rd '' -a iuse_arr < <(printf '%s' "${IUSE}")
 	iuse_arr=( "${iuse_arr[@]#+}" )
@@ -364,40 +359,34 @@ cachy_patch_env_setup() {
 		fi
 	done
 	declare -g SRC_URI="${SRC_URI} ${cachy_patch_uris}"
-}
 
-# adds bcachefs backport patch to SRC_URI
-bcachefs_patch_env_setup() {
-	[[ -z "${BCACHEFS_VER}" ]] && return
+	# --- bcachefs patch + tools ---
+	if [[ -n "${BCACHEFS_VER}" ]]; then
+		declare -g BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v${KERNEL_BASE}.patch"
+		declare -g SRC_URI="${SRC_URI} bcachefs? (
+			https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/${KERNEL_BASE}/${BCACHEFS_PATCH}
+		)"
 
-	declare -g BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v${KERNEL_BASE}.patch"
-	declare -g SRC_URI="${SRC_URI} bcachefs? (
-		https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/${KERNEL_BASE}/${BCACHEFS_PATCH}
-	)"
+		# enforce bcachefs-tools version on minor-level
+		# to make sure there are no weird kernel/user-space
+		# incompatibilities
+		local bch_tools_min
+		if [[ "${BCACHEFS_VER}" == *_pre* ]]; then
+			bch_tools_min="$(ver_cut 1-2 "${BCACHEFS_VER}").0_pre0"
+		else
+			bch_tools_min="$(ver_cut 1-2 "${BCACHEFS_VER}").0"
+		fi
 
-	# enforce bcachefs-tools version on minor-level
-	# to make sure there are no weird kernel/user-space
-	# incompatibilities
-	local bch_tools_min
-	if [[ "${BCACHEFS_VER}" == *_pre* ]]; then
-		bch_tools_min="$(ver_cut 1-2 "${BCACHEFS_VER}").0_pre0"
-	else
-		bch_tools_min="$(ver_cut 1-2 "${BCACHEFS_VER}").0"
+		RDEPEND+="
+			bcachefs? (
+				>=sys-fs/bcachefs-tools-${bch_tools_min}
+			)
+		"
 	fi
-
-	RDEPEND+="
-		bcachefs? (
-			>=sys-fs/bcachefs-tools-${bch_tools_min}
-		)
-	"
 }
 
-# env setup helpers
-kernel_base_env_setup
-gentoo_env_setup
-cachy_config_env_setup
-cachy_patch_env_setup
-bcachefs_patch_env_setup
+# setup globals
+cachyos-kernel-build_setup_globals
 
 # get the selected flavour from FLAVOURS
 cachy_flavour() {
