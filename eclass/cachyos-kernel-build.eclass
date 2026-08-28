@@ -86,6 +86,9 @@
 # @REQUIRED
 # @DESCRIPTION:
 # Supported linux-cachyos flavours from CachyOS/linux-cachyos (excl. lts/rc)
+#
+# These are added to IUSE as well with 'cachyos'
+# marked as default ('+cachyos') if present
 [[ -z "${CACHY_FLAVOURS}" ]] && die "CACHY_FLAVOURS is not set"
 
 # @ECLASS_VARIABLE: CACHY_PATCH_SPECS
@@ -545,7 +548,6 @@ cachy_flavour_defaults_kconfig() {
 		cachyos)
 			: "${_cachy_config:=yes}"
 			: "${_cpusched:=cachyos}"
-			: "${_cc_harder:=yes}"
 			: "${_per_gov:=no}"
 			: "${_tcp_bbr3:=no}"
 			: "${_HZ_ticks:=1000}"
@@ -556,7 +558,6 @@ cachy_flavour_defaults_kconfig() {
 		bmq)
 			: "${_cachy_config:=yes}"
 			: "${_cpusched:=bmq}"
-			: "${_cc_harder:=yes}"
 			: "${_per_gov:=no}"
 			: "${_tcp_bbr3:=no}"
 			: "${_HZ_ticks:=1000}"
@@ -567,7 +568,6 @@ cachy_flavour_defaults_kconfig() {
 		bore)
 			: "${_cachy_config:=yes}"
 			: "${_cpusched:=bore}"
-			: "${_cc_harder:=yes}"
 			: "${_per_gov:=no}"
 			: "${_tcp_bbr3:=no}"
 			: "${_HZ_ticks:=1000}"
@@ -578,7 +578,6 @@ cachy_flavour_defaults_kconfig() {
 		deckify)
 			: "${_cachy_config:=yes}"
 			: "${_cpusched:=cachyos}"
-			: "${_cc_harder:=yes}"
 			: "${_per_gov:=no}"
 			: "${_tcp_bbr3:=no}"
 			: "${_HZ_ticks:=1000}"
@@ -589,7 +588,6 @@ cachy_flavour_defaults_kconfig() {
 		eevdf)
 			: "${_cachy_config:=yes}"
 			: "${_cpusched:=eevdf}"
-			: "${_cc_harder:=yes}"
 			: "${_per_gov:=no}"
 			: "${_tcp_bbr3:=no}"
 			: "${_HZ_ticks:=1000}"
@@ -600,7 +598,6 @@ cachy_flavour_defaults_kconfig() {
 		rt-bore)
 			: "${_cachy_config:=yes}"
 			: "${_cpusched:=rt-bore}"
-			: "${_cc_harder:=yes}"
 			: "${_per_gov:=no}"
 			: "${_tcp_bbr3:=no}"
 			: "${_HZ_ticks:=1000}"
@@ -611,7 +608,6 @@ cachy_flavour_defaults_kconfig() {
 		server)
 			: "${_cachy_config:=no}"
 			: "${_cpusched:=eevdf}"
-			: "${_cc_harder:=yes}"
 			: "${_per_gov:=no}"
 			: "${_tcp_bbr3:=no}"
 			: "${_HZ_ticks:=300}"
@@ -634,6 +630,13 @@ cachy_flavour_defaults_kconfig() {
 		: "${_use_llvm_lto:=thin}"
 	else
 		: "${_use_llvm_lto:=none}"
+	fi
+
+	# decide default based on CFLAGS
+	if is-flagq '-O3'; then
+		: "${_cc_harder:=yes}"
+	else
+		: "${_cc_harder:=no}"
 	fi
 
 	# print cachy config
