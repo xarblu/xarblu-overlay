@@ -132,7 +132,7 @@ KERNEL_IUSE_GENERIC_UKI=1
 KERNEL_IUSE_MODULES_SIGN=1
 
 # scripts/min-tool-version.sh
-if ver_test -le 7.3; then
+if ver_test -lt 7.4; then
 	# rust.eclass
 	RUST_MIN_VER="1.85.0"
 	BINDGEN_MIN_VER="0.71.1"
