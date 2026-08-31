@@ -82,6 +82,7 @@
 : "${BCACHEFS_VER=}"
 
 # @ECLASS_VARIABLE: CACHY_FLAVOURS
+# @PRE_INHERIT
 # @DEFAULT_UNSET
 # @REQUIRED
 # @DESCRIPTION:
@@ -92,7 +93,7 @@
 [[ -z "${CACHY_FLAVOURS}" ]] && die "CACHY_FLAVOURS is not set"
 
 # @ECLASS_VARIABLE: CACHY_PATCH_SPECS
-# @DEFAULT_UNSET
+# @PRE_INHERIT
 # @REQUIRED
 # @DESCRIPTION:
 # Array of patches in format
@@ -103,7 +104,7 @@
 # Patches are applied in this order.
 #
 # Adds IUSE entries as needed.
-[[ -z "${CACHY_PATCH_SPECS}" ]] && die "CACHY_PATCH_SPECS is not set"
+CACHY_PATCH_SPECS=()
 
 # @ECLASS_VARIABLE: BAD_PATCHES
 # @PRE_INHERIT
@@ -360,7 +361,11 @@ cachyos-kernel-build_setup_globals() {
 
 	# --- bcachefs patch + tools ---
 	if [[ -n "${BCACHEFS_VER}" ]]; then
-		BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v${KERNEL_BASE}.patch"
+		if ver_test "${BCACHEFS_VER}" -le 1.39.4; then
+			BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}-for-v${KERNEL_BASE}.patch"
+		else
+			BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}.patch"
+		fi
 		SRC_URI+="
 			bcachefs? (
 				https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/${KERNEL_BASE}/${BCACHEFS_PATCH}
