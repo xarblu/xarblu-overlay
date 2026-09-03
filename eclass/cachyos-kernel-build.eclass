@@ -104,7 +104,7 @@
 # Patches are applied in this order.
 #
 # Adds IUSE entries as needed.
-CACHY_PATCH_SPECS=()
+[[ -n "${CACHY_PATCH_SPECS[*]}" ]] || CACHY_PATCH_SPECS=()
 
 # @ECLASS_VARIABLE: BAD_PATCHES
 # @PRE_INHERIT
@@ -114,7 +114,7 @@ CACHY_PATCH_SPECS=()
 # properly and should be skipped.
 # Usually these are genpatches that are also included
 # in the cachyos patchset or genpatches that are not rebased yet.
-BAD_PATCHES=()
+[[ -n "${BAD_PATCHES[*]}" ]] || BAD_PATCHES=()
 
 
 case ${EAPI} in
@@ -349,6 +349,7 @@ cachyos-kernel-build_setup_globals() {
 				for flag in ${IUSE}; do
 					if [[ "${flag#+}" == "${cond}" ]]; then
 						in_iuse=1
+						break
 					fi
 				done
 				(( in_iuse )) || IUSE+=" ${cond} "
