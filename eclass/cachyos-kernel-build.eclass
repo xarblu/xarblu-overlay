@@ -280,7 +280,6 @@ VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/cachyos.asc
 cachyos-kernel-build_setup_globals() {
 	local archive base
 	local spec cond patch file flavour
-	local in_iuse flag
 	local v
 
 	# --- CachyOS base tarball ---
@@ -344,15 +343,9 @@ cachyos-kernel-build_setup_globals() {
 		case "${cond}" in
 			-) SRC_URI+=" ${base}/${patch} -> ${file} " ;;
 			*)
-				# add to IUSE as needed
-				in_iuse=0
-				for flag in ${IUSE}; do
-					if [[ "${flag#+}" == "${cond}" ]]; then
-						in_iuse=1
-						break
-					fi
-				done
-				(( in_iuse )) || IUSE+=" ${cond} "
+				# add IUSE as needed
+				# shellcheck disable=SC2086
+				has "${cond}" ${IUSE//+/} || IUSE+=" ${cond} "
 
 				SRC_URI+=" ${cond}? ( ${base}/${patch} -> ${file} ) "
 				;;
