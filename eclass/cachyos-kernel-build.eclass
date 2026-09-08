@@ -579,7 +579,14 @@ cachy_localversion_kconfig() {
 	esac
 }
 
-# config defaults from CachyOS PKGBUILD
+# @FUNCTION: cachy_flavour_defaults_kconfig
+# @DESCRIPTION:
+# Kernel config defaults from CachyOS PKGBUILD
+# based on the selected flavour.
+#
+# Users can override individual options using
+# package.env using the same variable names
+# as the CachyOS PKGBUILD.
 cachy_flavour_defaults_kconfig() {
 	# cachy config vars (only those that make sense in ebuild)
 	# advanced users can override these with package.env
