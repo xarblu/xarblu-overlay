@@ -94,7 +94,6 @@
 
 # @ECLASS_VARIABLE: CACHY_PATCH_SPECS
 # @PRE_INHERIT
-# @REQUIRED
 # @DESCRIPTION:
 # Array of patches in format
 # <use>:<path/to.patch> in
@@ -108,14 +107,20 @@
 
 # @ECLASS_VARIABLE: BAD_PATCHES
 # @PRE_INHERIT
-# @REQUIRED
 # @DESCRIPTION:
-# Bash array if bad patches that don't apply
+# Bash array of bad patches that don't apply
 # properly and should be skipped.
 # Usually these are genpatches that are also included
 # in the cachyos patchset or genpatches that are not rebased yet.
 [[ -n "${BAD_PATCHES[*]}" ]] || BAD_PATCHES=()
 
+# @ECLASS_VARIABLE: EXTRA_KCONF_SNIPPETS
+# @DESCRIPTION:
+# Bash array of extra kernel config snippets
+# to merge. Applied after all standard and USE dependent
+# configs.
+# Create snippets in src_prepare, then call cachyos-kernel-build_src_prepare.
+[[ -n "${EXTRA_KCONF_SNIPPETS[*]}" ]] || EXTRA_KCONF_SNIPPETS=()
 
 case ${EAPI} in
 	8) ;;
@@ -1070,6 +1075,8 @@ cachyos-kernel-build_src_prepare() {
 		"${dist_conf_path}/secureboot.config"
 		"${dist_conf_path}/zboot.config"
 	)
+
+	merge_configs+=( "${EXTRA_KCONF_SNIPPETS[@]}" )
 
 	kernel-build_merge_configs "${merge_configs[@]}"
 }
