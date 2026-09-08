@@ -924,7 +924,14 @@ cachy_flavour_defaults_kconfig() {
 	fi
 }
 
-# from sys-kernel/scx (with config deps)
+# @FUNCTION: scx_kconfig
+# @DESCRIPTION:
+# Print a config snippet containing
+# options required for sched_ext support
+# to stdout.
+#
+# Deps as specified in sys-kernel/scx
+# (along with deps needed to enable the required set)
 scx_kconfig() {
 	kconf set BPF
 	kconf set BPF_EVENTS
