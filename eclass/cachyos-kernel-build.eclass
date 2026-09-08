@@ -504,7 +504,6 @@ cachy_processor_opt() {
 
 # @FUNCTION: kconf
 # @USAGE: <"set"|"unset"|"mod"|"val"> <name> [value]
-# $1 can be one of set, unset, mod or val
 # @DESCRIPTION:
 # Print formatted kernel config line to stdout
 # <name> as in CONFIG_<name>.
