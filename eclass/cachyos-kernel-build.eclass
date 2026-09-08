@@ -493,17 +493,31 @@ cachy_processor_opt() {
 	fi
 
 	# get closest march for others
-	# mostly shameless rip from qt6-build.eclass
-	# shellcheck disable=SC2086 # *FLAGS should split
+	# this is mostly a shamelessly ripped from qt6-build.eclass's _qt6-build_sanitize_cpu_flags
+	# Changes:
+	#  - C++ -> C
+	#  - -march=* -> GENERIC_V*
+	# shellcheck disable=SC2086,SC2155 # *FLAGS should split
 	local march=$(
-		$(tc-getCC) -E -P ${CFLAGS} ${CPPFLAGS} - <<-EOF | tail -n 1
-			default
+		$(tc-getCC) -x c -E -P ${CFLAGS} ${CPPFLAGS} - <<-EOF | sed -n '/^GENERIC_V/p' | tail -n 1
+			/* ignore evex* for >=gcc-16 and >=clang-22 (bug #956750,#969664) */
+			/* TODO: drop this and v4's EVEX* when both compilers been stable for a while */
+			#if (!defined(__clang__) && __GNUC__ >= 16) || __clang_major__ >= 22
+			#  ifndef __EVEX256__
+			#    define __EVEX256__ 1
+			#  endif
+			#  ifndef __EVEX512__
+			#    define __EVEX512__ 1
+			#  endif
+			#endif
+
+			GENERIC_V1
 			#if (__CRC32__ + __LAHF_SAHF__ + __POPCNT__ + __SSE3__ + __SSE4_1__ + __SSE4_2__ + __SSSE3__) == 7
-			x86-64-v2
+			GENERIC_V2
 			#  if (__AVX__ + __AVX2__ + __BMI__ + __BMI2__ + __F16C__ + __FMA__ + __LZCNT__ + __MOVBE__ + __XSAVE__) == 9
-			x86-64-v3
+			GENERIC_V3
 			#    if (__AVX512BW__ + __AVX512CD__ + __AVX512DQ__ + __AVX512F__ + __AVX512VL__ + __EVEX256__ + __EVEX512__) == 7
-			x86-64-v4
+			GENERIC_V4
 			#    endif
 			#  endif
 			#endif
@@ -511,10 +525,7 @@ cachy_processor_opt() {
 		pipestatus || die
 	)
 	case "${march}" in
-		default) printf "GENERIC_V1";;
-		x86-64-v2) printf "GENERIC_V2";;
-		x86-64-v3) printf "GENERIC_V3";;
-		x86-64-v4) printf "GENERIC_V4";;
+		GENERIC_V?) printf "%s" "${march}";;
 		*) die "Got unknown march: ${march}";;
 	esac
 }
