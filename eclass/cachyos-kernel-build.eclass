@@ -567,7 +567,12 @@ kconf() {
 	esac
 }
 
+# @FUNCTION: cachy_localversion_kconfig
+# @DESCRIPTION:
+# Print a CONFIG_LOCALVERSION variant
+# based on the selected flavour to stdout.
 cachy_localversion_kconfig() {
+	# shellcheck disable=SC2155
 	local flavour="$(cachy_flavour)"
 	case "${flavour}" in
 		cachyos)
