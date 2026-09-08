@@ -1093,7 +1093,10 @@ cachyos-kernel-build_src_configure() {
 		"${T}/cachy-localversion.config"
 		"${T}/cachy-flavour-defaults.config"
 	)
-	use scx && merge_configs+=( "${T}/scx.config" )
+
+	use scx && check_configs+=( "${T}/scx.config" )
+
+	check_configs+=( "${EXTRA_KCONF_SNIPPETS[@]}" )
 
 	cachy_verify_kconfig "${check_configs[@]}"
 }
