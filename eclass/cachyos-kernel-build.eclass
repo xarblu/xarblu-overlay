@@ -278,6 +278,14 @@ QA_FLAGS_IGNORED="
 
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/cachyos.asc
 
+# @ECLASS_VARIABLE: CACHY_BASE_TARBALL
+# @OUTPUT_VARIABLE
+# @INTERNAL
+# @DESCRIPTION:
+# Filename of the kernel source tarball from CachyOS.
+#
+# Set by cachyos-kernel-build_setup_globals.
+
 # @FUNCTION: cachyos-kernel-build_setup_globals
 # @INTERNAL
 # @DESCRIPTION:
