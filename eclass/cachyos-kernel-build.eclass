@@ -392,7 +392,9 @@ cachyos-kernel-build_setup_globals() {
 # setup globals
 cachyos-kernel-build_setup_globals
 
-# get the selected flavour from CACHY_FLAVOURS
+# @FUNCTION: cachy_flavour
+# @DESCRIPTION:
+# Get the selected flavour from CACHY_FLAVOURS
 cachy_flavour() {
 	local flavour
 	for flavour in ${CACHY_FLAVOURS}; do
@@ -404,13 +406,19 @@ cachy_flavour() {
 	die "Could not get selected flavour"
 }
 
-# get the config file name
+# @FUNCTION: cachy_base_config
+# @DESCRIPTION:
+# Get the base config file name
 cachy_base_config() {
 	printf -- "%s-%s.config" "${CACHY_CONFIG_P}" "$(cachy_flavour)" || die
 }
 
-# move required patches to ${WORKDIR}/patches
+# @FUNCTION: cachy_stage_patches
+# @DESCRIPTION:
+# Move required patches to ${WORKDIR}/patches
 # and ensure they get applied in correct order
+# by prefixing them accordingly.
+# Then clean up patches listed in BAD_PATCHES.
 cachy_stage_patches() {
 	local target="${WORKDIR}/patches"
 	einfo "Staging patches to be applied in ${target} ..."
@@ -460,7 +468,16 @@ cachy_stage_patches() {
 	done
 }
 
-# auto-detect closest march value
+# @FUNCTION: cachy_processor_opt
+# @DESCRIPTION:
+# Auto-detect closest march value based on CFLAGS
+# and print the corresponding CONFIG_X86_64_VERSION
+# value to stdout.
+# On non-amd64 this will always print "GENERIC".
+# -march=native is preserved as "NATIVE".
+#
+# This is based on _qt6-build_sanitize_cpu_flags()
+# from qt6-build.eclass
 cachy_processor_opt() {
 	# not supported but in case someone
 	# builds on non amd64 return default
