@@ -902,7 +902,13 @@ scx_kconfig() {
 	kconf set SCHED_CLASS_EXT
 }
 
-# verify that provided config snippets exist after make
+# @FUNCTION: cachy_verify_kconfig
+# @USAGE: <configs...>
+# @DESCRIPTION:
+# Verify that provided config snippets exist after make
+# has been called. Note that this is more of a QA check
+# for the ebuild defaults as user configs from
+# /etc/kernel/config.d/ can override the defaults.
 cachy_verify_kconfig() {
 	(( ${#} < 1 )) && die "requires at least 1 arg"
 
