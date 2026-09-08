@@ -497,10 +497,18 @@ cachy_processor_opt() {
 	esac
 }
 
-# print formatted kernel config line
+# @FUNCTION: kconf
+# @USAGE: <"set"|"unset"|"mod"|"val"> <name> [value]
 # $1 can be one of set, unset, mod or val
-# $2 config name as in CONFIG_<name>
-# $3 if $1 is val set val as a config string
+# @DESCRIPTION:
+# Print formatted kernel config line to stdout
+# <name> as in CONFIG_<name>.
+#
+# [value] is required for "val" and
+# needs to be quoted accordingly
+# by the caller.
+# For example string values should call an equivalent of:
+# kconf val FOO "\"bar\""
 kconf() {
 	if (( $# < 2 )); then
 		die "kconf needs at least 2 args"
