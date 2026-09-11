@@ -429,25 +429,13 @@ cachy_base_config() {
 # Then clean up patches listed in BAD_PATCHES.
 cachy_stage_patches() {
 	local target="${WORKDIR}/patches"
+	local -i incr=1000
+
 	einfo "Staging patches to be applied in ${target} ..."
 	mkdir -p "${target}" || die
 
-	# Gentoo patches live in ${WORKDIR}/${GENTOO_PATCHSET}
-	pushd "${WORKDIR}/${GENTOO_PATCHSET}" >/dev/null || die
-	local incr=2000
-	local file
-	for file in *.patch; do
-		cp "${file}" "${target}/${incr}_${file#????-}" || die
-		incr=$(( incr + 1 ))
-
-		# everything after *Add-Gentoo-Linux-support-config-settings*
-		# used to be USE=experimental in gentoo-kernel but I guess
-		# not anymore since 7.0.1 (according to git bisect)?
-	done
-	popd >/dev/null || die
-
-	# cachy patches need to be prefixed starting at 6000
-	local incr=6000
+	# CachyOS patches are always first
+	# on collision we'll rather drop the incompatible Gentoo patch
 	local spec cond patch file
 	for spec in "${CACHY_PATCH_SPECS[@]}"; do
 		IFS=":" read -r cond patch <<<"${spec}" || die
@@ -459,14 +447,25 @@ cachy_stage_patches() {
 		else
 			continue
 		fi
-		cp "${DISTDIR}/${file}" "${target}/${incr}_${file}" || die
-		incr=$(( incr + 1 ))
+		cp "${DISTDIR}/${file}" "${target}/$(( incr++ ))_${file}" || die
 	done
 
-	# bcachefs backport patch is 6500
+	# Gentoo patches
+	pushd "${WORKDIR}/${GENTOO_PATCHSET}" >/dev/null || die
+	local file
+	for file in *.patch; do
+		cp "${file}" "${target}/$(( incr++ ))_${file#*-}" || die
+
+		# everything after *Add-Gentoo-Linux-support-config-settings*
+		# used to be USE=experimental in gentoo-kernel but I guess
+		# not anymore since 7.0.1 (according to git bisect)?
+	done
+	popd >/dev/null || die
+
+	# bcachefs patch
 	if use bcachefs; then
 		cp "${DISTDIR}/${BCACHEFS_PATCH}" \
-			"${target}/6500_${BCACHEFS_PATCH}" || die
+			"${target}/$(( incr++ ))_${BCACHEFS_PATCH}" || die
 	fi
 
 	# remove problematic patches
