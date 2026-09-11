@@ -333,8 +333,8 @@ cachyos-kernel-build_setup_globals() {
 	base="https://raw.githubusercontent.com/CachyOS/linux-cachyos/${CACHY_CONFIG_COMMIT}"
 
 	if [[ ${PV} == *_rc* ]]; then
-		# RC only has cachyos flavour
-		SRC_URI+=" ${base}/linux-cachyos-rc/config -> ${CACHY_CONFIG_P}-cachyos.config "
+		# RC has no flavours
+		SRC_URI+=" ${base}/linux-cachyos-rc/config -> ${CACHY_CONFIG_P}-rc.config "
 	else
 		for flavour in ${CACHY_FLAVOURS}; do
 			file="${CACHY_CONFIG_P}-${flavour}.config"
@@ -418,7 +418,14 @@ cachy_flavour() {
 # @DESCRIPTION:
 # Get the base config file name
 cachy_base_config() {
-	printf -- "%s-%s.config" "${CACHY_CONFIG_P}" "$(cachy_flavour)" || die
+	case "${PV}" in
+		*_rc*)
+			printf -- "%s-rc.config" "${CACHY_CONFIG_P}" || die
+			;;
+		*)
+			printf -- "%s-%s.config" "${CACHY_CONFIG_P}" "$(cachy_flavour)" || die
+			;;
+	esac
 }
 
 # @FUNCTION: cachy_stage_patches
