@@ -447,7 +447,7 @@ NVTOP_COMMIT="3d4a953da02bc18886734613bb9f60ff80669de7"
 # cargo + meson for src_* (explicit)
 # gnome2 for pkg_{preinst,postinst,postrm} (implicit)
 # python-any-r1 for build time python dep
-inherit cargo gnome2 meson python-any-r1
+inherit cargo gnome2 meson python-any-r1 udev
 
 DESCRIPTION="Monitor your CPU, Memory, Disk, Network and GPU usage"
 HOMEPAGE="https://missioncenter.io/"
@@ -495,6 +495,7 @@ DEPEND="
 RDEPEND="
 	net-analyzer/nethogs
 	sys-apps/dmidecode
+	sys-apps/lm-sensors
 	${DEPEND}
 "
 BDEPEND="
@@ -569,4 +570,23 @@ src_test() {
 
 src_install() {
 	cargo_env meson_src_install
+
+	# udev rule from
+	# subprojects/magpie/platform-linux/bin/missioncenter-magpie-setup-linux
+	udev_newrules - 99-powercap.rules \
+		<<<'SUBSYSTEM=="powercap", KERNEL=="intel-rapl*", RUN+="/usr/bin/chmod a+r /sys/%p/energy_uj"'
+}
+
+pkg_preinst() {
+	gnome2_pkg_preinst
+}
+
+pkg_postinst() {
+	gnome2_pkg_postinst
+	udev_reload
+}
+
+pkg_postrm() {
+	gnome2_pkg_postrm
+	udev_reload
 }
