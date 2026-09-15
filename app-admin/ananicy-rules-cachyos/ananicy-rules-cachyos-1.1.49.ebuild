@@ -17,6 +17,8 @@ LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~amd64"
 
+src_compile() { :; }
+
 src_install() {
 	insinto /etc/ananicy.d/
 	doins -r \
