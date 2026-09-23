@@ -871,14 +871,16 @@ src_test() {
 
 src_install() {
 	einfo "Installing schedulers"
+
 	local sched
 	for sched in scheds/rust/scx_*; do
-		einfo "Installing ${sched#scheds/rust/}"
-		dobin "target/$(usex debug debug release)/${sched#scheds/rust}"
+		sched="${sched#scheds/rust/}"
+		einfo "Installing ${sched}"
+		dobin "$(cargo_target_dir)/${sched}"
 	done
 
 	einfo "Installing tools"
-	dobin target/"$(usex debug debug release)"/{scxtop,vmlinux_docify}
+	dobin "$(cargo_target_dir)"/{scxtop,vmlinux_docify}
 
 	dodoc README.md
 
