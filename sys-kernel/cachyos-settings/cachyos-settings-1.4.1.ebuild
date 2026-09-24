@@ -52,12 +52,13 @@ src_install() {
 
 			case "${file}" in
 				# === skipped ===
-				# points to CachyOS/Arch resources (servers, wiki, etc.)
-				usr/lib/systemd/timesyncd.conf.d/10-timesyncd.conf) ;&
+				# points to CachyOS/Arch resources/branding (servers, wiki, etc.)
+				etc/debuginfod/cachyos.urls) ;&
 				usr/bin/cachyos-bugreport.sh) ;&
 				usr/bin/paste-cachyos) ;&
-				etc/debuginfod/cachyos.urls) ;&
+				usr/lib/systemd/timesyncd.conf.d/10-timesyncd.conf) ;&
 				usr/share/glib-2.0/schemas/*) ;&
+				usr/share/icons/*) ;&
 				# repo metadata
 				CODE_OF_CONDUCT.md) ;&
 				CONTRIBUTING.md) ;&
