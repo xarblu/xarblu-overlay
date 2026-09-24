@@ -6,6 +6,7 @@
 		<name>Xarblu</name>
 	</maintainer>
 	<use>
+		<flag name="wifi">Automatically set wireless regularity domain via <pkg>net-wireless/iw</pkg></flag>
 		<flag name="zram">Enable ZRAM configs via <pkg>sys-apps/zram-generator</pkg></flag>
 	</use>
 	<upstream>
