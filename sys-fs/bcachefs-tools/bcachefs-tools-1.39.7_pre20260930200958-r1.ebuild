@@ -488,7 +488,7 @@ src_install() {
 	# (unconditional: small and doesn't force
 	# installation of stuff to initramfs with
 	# hostonly unless rootfs is bcachefs)
-	insinto /usr/lib/dracut/modules.d
+	insinto /usr/lib/dracut/modules.d/90bcachefs
 	doins dracut/90bcachefs/module-setup.sh
 }
 
