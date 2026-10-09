@@ -678,7 +678,7 @@ cachy_flavour_defaults_kconfig() {
 			: "${_HZ_ticks:=300}"
 			: "${_tickrate:=idle}"
 			: "${_preempt:=lazy}"
-			: "${_hugepage:=always}"
+			: "${_hugepage:=madvise}"
 			;;
 		*) die "Unknown flavour" ;;
 	esac
