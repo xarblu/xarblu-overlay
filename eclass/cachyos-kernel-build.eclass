@@ -130,34 +130,6 @@ esac
 if [[ ! ${_CACHYOS_KERNEL_BUILD_ECLASS} ]]; then
 _CACHYOS_KERNEL_BUILD_ECLASS=1
 
-# --- setup for inherited eclasses ---
-
-# kernel-install.eclass
-KERNEL_IUSE_GENERIC_UKI=1
-KERNEL_IUSE_MODULES_SIGN=1
-
-# scripts/min-tool-version.sh
-if ver_test -lt 7.4; then
-	# rust.eclass
-	RUST_MIN_VER="1.85.0"
-	BINDGEN_MIN_VER="0.71.1"
-else
-	die "Check scripts/min-tool-version.sh for new tool requirements"
-fi
-
-# rust.eclass
-RUST_NEEDS_LLVM=1
-RUST_OPTIONAL=1
-RUST_REQ_USE="rust-src"
-
-# llvm-r1.eclass
-# migrate to -r2 once rust.eclass has
-LLVM_COMPAT=( {19..23} )
-LLVM_OPTIONAL=1
-
-inherit eapi9-pipestatus toolchain-funcs flag-o-matic
-inherit llvm-r1 rust kernel-build verify-sig
-
 # --- internal vars ---
 
 # @ECLASS_VARIABLE: KERNEL_BASE
@@ -226,6 +198,59 @@ CACHY_CONFIG_P="${PN}-${KERNEL_BASE}-${CACHY_CONFIG_COMMIT::8}"
 # P for the cachyos kernel patches
 CACHY_PATCH_P="${PN}-${KERNEL_BASE}-${CACHY_PATCH_COMMIT::8}"
 
+# --- setup for inherited eclasses ---
+
+# kernel-install.eclass
+KERNEL_IUSE_GENERIC_UKI=1
+KERNEL_IUSE_MODULES_SIGN=1
+
+# @ECLASS_VARIABLE: BINDGEN_MIN_VER
+# @DESCRIPTION:
+# Lowest compatible dev-util/bindgen version.
+# Adds BINDGEN_DEPEND >=dev-util/bindgen-<version>
+#
+# Default value is selected by the eclass based on the
+# kernel version (KERNEL_BASE).
+
+# @ECLASS_VARIABLE: BINDGEN_MAX_VER
+# @DESCRIPTION:
+# Highest compatible dev-util/bindgen version
+# at "minor" granularity.
+# Adds BINDGEN_DEPEND <dev-util/bindgen-<major>.<minor + 1>
+#
+# Default value is selected by the eclass based on the
+# kernel version (KERNEL_BASE).
+
+# @ECLASS_VARIABLE: BCH_BINDGEN_MAX_VER
+# @DESCRIPTION:
+# Same as BINDGEN_MAX_VER but guarded behind
+# bcachefs? (...)
+
+# scripts/min-tool-version.sh
+if ver_test "${KERNEL_BASE}" -lt 7.4; then
+	# rust.eclass
+	: "${RUST_MIN_VER=1.85.0}"
+
+	# ours
+	: "${BINDGEN_MIN_VER=0.71.1}"
+	: "${BINDGEN_MAX_VER=}"
+else
+	die "Check scripts/min-tool-version.sh for new tool requirements for KERNEL_BASE=${KERNEL_BASE@Q}"
+fi
+
+# rust.eclass
+RUST_NEEDS_LLVM=1
+RUST_OPTIONAL=1
+RUST_REQ_USE="rust-src"
+
+# llvm-r1.eclass
+# migrate to -r2 once rust.eclass has
+LLVM_COMPAT=( {19..23} )
+LLVM_OPTIONAL=1
+
+inherit eapi9-pipestatus toolchain-funcs flag-o-matic
+inherit llvm-r1 rust kernel-build verify-sig
+
 DESCRIPTION="Linux kernel built with CachyOS and Gentoo patches"
 HOMEPAGE="
 	https://cachyos.org/
@@ -250,6 +275,16 @@ REQUIRED_USE+="
 	rust? ( lto? ( !debug !scx ) )
 "
 
+# @ECLASS_VARIABLE: BINDGEN_DEPEND
+# @INTERNAL
+# @DESCRIPTION:
+# dev-util/bindgen dependency string.
+# Can be gated via {BCH_,}BINDGEN_{MIN,MAX}_VER
+BINDGEN_DEPEND="dev-util/bindgen"
+[[ -n "${BINDGEN_MIN_VER}" ]] && BINDGEN_DEPEND+=" >=dev-util/bindgen-${BINDGEN_MIN_VER}"
+[[ -n "${BINDGEN_MAX_VER}" ]] && BINDGEN_DEPEND+=" <dev-util/bindgen-$(ver_cut 1 "${BINDGEN_MAX_VER}").$(( $(ver_cut 2 "${BINDGEN_MAX_VER}") + 1 ))"
+[[ -n "${BCH_BINDGEN_MAX_VER}" ]] && BINDGEN_DEPEND+=" bcachefs? ( <dev-util/bindgen-$(ver_cut 1 "${BCH_BINDGEN_MAX_VER}").$(( $(ver_cut 2 "${BCH_BINDGEN_MAX_VER}") + 1 )) )"
+
 # shellcheck disable=SC2016 # we don't want LLVM_SLOT to expand
 BDEPEND="
 	clang? ( $(llvm_gen_dep '
@@ -259,13 +294,14 @@ BDEPEND="
 	') )
 	rust? (
 		$(llvm_gen_dep 'llvm-core/clang:${LLVM_SLOT}=')
-		>=dev-util/bindgen-${BINDGEN_MIN_VER}
+		${BINDGEN_DEPEND}
 		${RUST_DEPEND}
 	)
 	debug? ( dev-util/pahole )
 	scx? ( dev-util/pahole )
 	verify-sig? ( >=sec-keys/openpgp-keys-cachyos-20260615 )
 "
+
 PDEPEND="
 	>=virtual/dist-kernel-${PV}
 "
