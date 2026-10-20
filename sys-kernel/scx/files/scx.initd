@@ -1,0 +1,10 @@
+#!/sbin/openrc-run
+# Copyright 2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+supervisor=supervise-daemon
+
+name="scx service"
+description="Service for sched_ext schedulers"
+command="${SCX_SCHEDULER_OVERRIDE:-$SCX_SCHEDULER}"
+command_args="${SCX_FLAGS_OVERRIDE:-$SCX_FLAGS}"
