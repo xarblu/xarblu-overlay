@@ -409,11 +409,16 @@ cachyos-kernel-build_setup_globals() {
 		else
 			BCACHEFS_PATCH="bcachefs-v${BCACHEFS_VER}.patch"
 		fi
-		SRC_URI+="
-			bcachefs? (
-				https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/${KERNEL_BASE}/${BCACHEFS_PATCH}
-			)
-		"
+
+		# XXX: fold this once all ebuilds moved to >1.39.8_pre20261018115454;
+		base="https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/"
+		if ver_test "${BCACHEFS_VER}" -le 1.39.8_pre20261008135417; then
+			base="${base}/${KERNEL_BASE}"
+		else
+			base="${base}/patches"
+		fi
+
+		SRC_URI+=" bcachefs? ( ${base}/${BCACHEFS_PATCH} )"
 
 		# enforce bcachefs-tools version on minor-level
 		# to make sure there are no weird kernel/user-space
@@ -425,11 +430,7 @@ cachyos-kernel-build_setup_globals() {
 			bch_tools_min="$(ver_cut 1-2 "${BCACHEFS_VER}").0"
 		fi
 
-		RDEPEND+="
-			bcachefs? (
-				>=sys-fs/bcachefs-tools-${bch_tools_min}
-			)
-		"
+		RDEPEND+=" bcachefs? ( >=sys-fs/bcachefs-tools-${bch_tools_min} )"
 	fi
 }
 
