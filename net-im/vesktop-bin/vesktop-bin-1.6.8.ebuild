@@ -88,6 +88,11 @@ src_prepare() {
 	pushd locales >/dev/null || die
 		chromium_remove_language_paks
 	popd >/dev/null || die
+
+	sed -e "s|@@EXE@@|/usr/bin/${MY_PN}|" \
+		-e "s|@@ICON@@|${XDG_PN}|" \
+		"${FILESDIR}/${PN}-r1.desktop" \
+		> "${T}/${XDG_PN}.desktop" || die
 }
 
 src_install() {
@@ -121,10 +126,10 @@ src_install() {
 	fowners root "${dest}/chrome-sandbox"
 	fperms 4711 "${dest}/chrome-sandbox"
 
-	dosym "../../${dest}/${MY_PN}" "/usr/bin/${PN}"
-
-	newicon -s scalable "${DISTDIR}/${P}.svg" "${PN}.svg"
-	domenu "${FILESDIR}/${PN}.desktop"
+	# integration
+	dosym "../../${dest}/${MY_PN}" "/usr/bin/${MY_PN}"
+	newicon -s scalable "${DISTDIR}/${P}.svg" "${XDG_PN}.svg"
+	domenu "${T}/${XDG_PN}.desktop"
 	insinto /usr/share/metainfo
 	newins "${DISTDIR}/${P}.metainfo.xml" "${XDG_PN}.metainfo.xml"
 
