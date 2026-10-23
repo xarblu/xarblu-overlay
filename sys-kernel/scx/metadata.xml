@@ -10,4 +10,24 @@
 		<changelog>https://github.com/sched-ext/scx/releases</changelog>
 		<bugs-to>https://github.com/sched-ext/scx/issues</bugs-to>
 	</upstream>
+	<use>
+		<flag name="scx-beerland">Build and install the scx_beerland scheduler</flag>
+		<flag name="scx-bpfland">Build and install the scx_bpfland scheduler</flag>
+		<flag name="scx-cake">Build and install the scx_cake scheduler</flag>
+		<flag name="scx-chaos">Build and install the scx_chaos scheduler</flag>
+		<flag name="scx-cosmos">Build and install the scx_cosmos scheduler</flag>
+		<flag name="scx-eevdf">Build and install the scx_eevdf scheduler</flag>
+		<flag name="scx-flash">Build and install the scx_flash scheduler</flag>
+		<flag name="scx-forge">Build and install the scx_forge scheduler</flag>
+		<flag name="scx-lavd">Build and install the scx_lavd scheduler</flag>
+		<flag name="scx-layered">Build and install the scx_layered scheduler</flag>
+		<flag name="scx-mitosis">Build and install the scx_mitosis scheduler</flag>
+		<flag name="scx-p2dq">Build and install the scx_p2dq scheduler</flag>
+		<flag name="scx-pandemonium">Build and install the scx_pandemonium scheduler</flag>
+		<flag name="scx-rustland">Build and install the scx_rustland scheduler</flag>
+		<flag name="scx-rusty">Build and install the scx_rusty scheduler</flag>
+		<flag name="scx-tickless">Build and install the scx_tickless scheduler</flag>
+		<flag name="scxtop">Build and install the scxtop tool</flag>
+		<flag name="scxtui">Build and install the scxtui tool</flag>
+	</use>
 </pkgmetadata>
