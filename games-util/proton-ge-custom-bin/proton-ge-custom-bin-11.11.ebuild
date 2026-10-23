@@ -33,8 +33,10 @@ IUSE="+ntsync"
 # (Potentially via UMU in the future but that isn't packaged yet.)
 RDEPEND="games-util/steam-launcher[steamruntime(+)]"
 
-# all prebuilt
+# prebuilt binary meant for the steam runtime container
+# so we don't actually require any system libs
 QA_PREBUILT="*"
+REQUIRES_EXCLUDE="*"
 
 # we will install Proton with this name
 # to avoid conflicting with other installs
