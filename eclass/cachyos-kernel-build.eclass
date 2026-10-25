@@ -411,7 +411,7 @@ cachyos-kernel-build_setup_globals() {
 		fi
 
 		# XXX: fold this once all ebuilds moved to >1.39.8_pre20261018115454;
-		base="https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main/"
+		base="https://raw.githubusercontent.com/xarblu/bcachefs-patches/refs/heads/main"
 		if ver_test "${BCACHEFS_VER}" -le 1.39.8_pre20261008135417; then
 			base="${base}/${KERNEL_BASE}"
 		else
