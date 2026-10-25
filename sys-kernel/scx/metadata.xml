@@ -27,6 +27,15 @@
 		<flag name="scx-rustland">Build and install the scx_rustland scheduler</flag>
 		<flag name="scx-rusty">Build and install the scx_rusty scheduler</flag>
 		<flag name="scx-tickless">Build and install the scx_tickless scheduler</flag>
+		<flag name="scx-flow">(EXPERIMENTAL) Build and install the scx_flow scheduler</flag>
+		<flag name="scx-mavd">(EXPERIMENTAL) Build and install the scx_mavd scheduler</flag>
+		<flag name="scx-mlfq">(EXPERIMENTAL) Build and install the scx_mlfq scheduler</flag>
+		<flag name="scx-nitosis">(EXPERIMENTAL) Build and install the scx_nitosis scheduler</flag>
+		<flag name="scx-rburst">(EXPERIMENTAL) Build and install the scx_rburst scheduler</flag>
+		<flag name="scx-reevdf">(EXPERIMENTAL) Build and install the scx_reevdf scheduler</flag>
+		<flag name="scx-rlfifo">(EXPERIMENTAL) Build and install the scx_rlfifo scheduler</flag>
+		<flag name="scx-rlocal">(EXPERIMENTAL) Build and install the scx_rlocal scheduler</flag>
+		<flag name="scx-rvtime">(EXPERIMENTAL) Build and install the scx_rvtime scheduler</flag>
 		<flag name="scxtop">Build and install the scxtop tool</flag>
 		<flag name="scxtui">Build and install the scxtui tool</flag>
 	</use>
