@@ -1,0 +1,41 @@
+From a2988a55d63e6036ce07d11fd3e3f60b2aaa2bbf Mon Sep 17 00:00:00 2001
+From: Xarblu <xarblu@protonmail.com>
+Date: Tue, 27 Oct 2026 11:42:58 +0100
+Subject: [PATCH] linux: stub for LLVM's libunwind
+
+Signed-off-by: Xarblu <xarblu@protonmail.com>
+---
+ linux/stacktrace.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/linux/stacktrace.c b/linux/stacktrace.c
+index e36adc25c..ee606c67d 100644
+--- a/linux/stacktrace.c
++++ b/linux/stacktrace.c
+@@ -26,6 +26,23 @@
+ 
+ #define BT_SIGNAL	SIGRTMIN
+ 
++/*
++ * LLVM's libunwind doesn't have unw_get_proc_name_by_ip
++ * so treat it as no-info
++ */
++#ifdef HAVE_LLVM_LIBUNWIND
++static inline int unw_get_proc_name_by_ip(
++	unw_addr_space_t as,
++	unw_word_t ip,
++	char *buf,
++	size_t buf_len,
++	unw_word_t *offp,
++	void *arg
++) {
++	return -UNW_ENOINFO;
++}
++#endif
++
+ struct bt_request {
+ 	unsigned long	*store;
+ 	unsigned int	size;
+-- 
+2.56.0
+
