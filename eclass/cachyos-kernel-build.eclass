@@ -971,7 +971,6 @@ cachy_flavour_defaults_kconfig() {
 		kconf mod BCACHEFS_FS
 		kconf set BCACHEFS_QUOTA
 		kconf set BCACHEFS_LOCK_TIME_STATS
-		kconf set BCACHEFS_SIX_OPTIMISTIC_SPIN
 	fi
 }
 
