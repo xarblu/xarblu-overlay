@@ -227,7 +227,7 @@ KERNEL_IUSE_MODULES_SIGN=1
 # bcachefs? (...)
 
 # scripts/min-tool-version.sh
-if ver_test "${KERNEL_BASE}" -lt 7.4; then
+if ver_test "${KERNEL_BASE}" -lt 7.5; then
 	# rust.eclass
 	: "${RUST_MIN_VER=1.85.0}"
 
