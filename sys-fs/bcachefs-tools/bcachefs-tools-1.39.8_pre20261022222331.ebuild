@@ -218,7 +218,7 @@ VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/kentoverstreet.asc
 # ("v${PV}" if unset)
 BCH_VERSION=v1.39.7-1060-gb999a7bec58d
 
-inherit cargo flag-o-matic linux-mod-r1 llvm-r1 multiprocessing python-any-r1
+inherit cargo flag-o-matic linux-mod-r1 llvm-r2 multiprocessing python-any-r1
 inherit shell-completion toolchain-funcs unpacker verify-sig udev systemd
 
 DESCRIPTION="Tools for bcachefs"
@@ -321,7 +321,7 @@ pkg_setup() {
 		llvm_prepend_path "${LLVM_SLOT}"
 	fi
 
-	llvm-r1_pkg_setup
+	llvm-r2_pkg_setup
 	python-any-r1_pkg_setup
 	rust_pkg_setup
 	if use modules; then

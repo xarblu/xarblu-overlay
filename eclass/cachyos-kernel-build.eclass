@@ -243,13 +243,12 @@ RUST_NEEDS_LLVM=1
 RUST_OPTIONAL=1
 RUST_REQ_USE="rust-src"
 
-# llvm-r1.eclass
-# migrate to -r2 once rust.eclass has
+# llvm-r2.eclass
 LLVM_COMPAT=( {19..23} )
 LLVM_OPTIONAL=1
 
 inherit eapi9-pipestatus toolchain-funcs flag-o-matic
-inherit llvm-r1 rust kernel-build verify-sig
+inherit llvm-r2 rust kernel-build verify-sig
 
 DESCRIPTION="Linux kernel built with CachyOS and Gentoo patches"
 HOMEPAGE="
@@ -1076,7 +1075,7 @@ cachyos-kernel-build_pkg_setup() {
 	fi
 
 	if use clang || use rust; then
-		llvm-r1_pkg_setup
+		llvm-r2_pkg_setup
 	fi
 
 	if use rust; then

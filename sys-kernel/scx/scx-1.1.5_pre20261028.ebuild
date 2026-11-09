@@ -784,9 +784,9 @@ LLVM_COMPAT=( {22..23} )
 RUST_MIN_VER="1.95.0"
 RUST_NEEDS_LLVM=1
 
-# stuck on llvm-r1 until rust.eclass upgrades
+# stuck on llvm-r2 until rust.eclass upgrades
 # its transitive inherit
-inherit cargo llvm-r1 linux-info systemd
+inherit cargo llvm-r2 linux-info systemd
 
 DESCRIPTION="sched_ext schedulers and tools"
 HOMEPAGE="https://github.com/sched-ext/scx"
@@ -935,7 +935,7 @@ pkg_setup() {
 	[[ "${MERGE_TYPE}" == binary ]] || llvm_prepend_path -b "${LLVM_SLOT}"
 
 	linux-info_pkg_setup
-	llvm-r1_pkg_setup
+	llvm-r2_pkg_setup
 	rust_pkg_setup
 }
 
