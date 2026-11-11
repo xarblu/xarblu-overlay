@@ -281,12 +281,6 @@ DEPEND="
 	!llvm-libunwind? ( sys-libs/libunwind:= )
 "
 
-# bcachefs-kmod in ::guru provided USE=modules for previous tools versions.
-RDEPEND="
-	${DEPEND}
-	modules? ( !sys-fs/bcachefs-kmod )
-"
-
 # Clang is required for bindgen
 # shellcheck disable=SC2016 # don't want expansion
 BDEPEND="
