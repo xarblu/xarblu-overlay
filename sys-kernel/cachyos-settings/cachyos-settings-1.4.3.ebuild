@@ -38,10 +38,12 @@ src_prepare() {
 	# move to more FHS appropriate /usr/libexec
 	mkdir -p usr/libexec || die
 	mv usr/lib/iw-set-regdomain usr/libexec/iw-set-regdomain || die
-	sed -i -e 's|usr/lib/iw-set-regdomain|usr/libexec/iw-set-regdomain|g' usr/lib/systemd/system/cachyos-iw-set-regdomain.service || die
+	sed -i -e 's|usr/lib/iw-set-regdomain|usr/libexec/iw-set-regdomain|g' \
+		usr/lib/systemd/system/cachyos-iw-set-regdomain.service || die
 
 	mv usr/lib/udev/audio-pm-ctl usr/libexec/audio-pm-ctl || die
-	sed -i -e 's|usr/lib/udev/audio-pm-ctl|usr/libexec/audio-pm-ctl|g' usr/lib/udev/rules.d/20-audio-pm.rules || die
+	sed -i -e 's|usr/lib/udev/audio-pm-ctl|usr/libexec/audio-pm-ctl|g' \
+		usr/lib/udev/rules.d/20-audio-pm.rules || die
 }
 
 src_install() {
