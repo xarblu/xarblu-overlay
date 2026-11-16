@@ -110,6 +110,8 @@
 # @DESCRIPTION:
 # Bash array of bad patches that don't apply
 # properly and should be skipped.
+# Globs are supported but keep in mind that
+# they need to be quoted inside the array.
 # Usually these are genpatches that are also included
 # in the cachyos patchset or genpatches that are not rebased yet.
 [[ -n "${BAD_PATCHES[*]}" ]] || BAD_PATCHES=()
@@ -514,7 +516,8 @@ cachy_stage_patches() {
 	# remove problematic patches
 	local patch
 	for patch in "${BAD_PATCHES[@]}"; do
-		rm "${target}/${patch}" || die
+		# shellcheck disable=SC2086 # globs are allowed
+		rm "${target}/"${patch} || die
 	done
 }
 
