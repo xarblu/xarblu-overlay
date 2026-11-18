@@ -47,6 +47,10 @@ FONT_SPECS=(
 )
 
 setup_fonts() {
+	# generate source uris and list of all possible files in DISTDIR
+	SRC_URI=""
+	FONT_FILES=()
+
 	local font_use font_dir font_family font_types font_hinted font_tier commit
 	local url
 	while IFS=':' read -r font_use font_dir font_family font_types font_hinted font_tier commit; do
@@ -78,23 +82,30 @@ setup_fonts() {
 		fi
 
 		# generate final urls
-		local font_type font_variant
+		local font_type font_variant font_file
 		for font_type in "${font_types[@]}"; do
 			for font_variant in "${font_variants[@]}"; do
 				if [[ "${font_hinted}" == *"${font_type}"* ]]; then
+					font_file="${font_family// /_}-${font_variant}-Hinted-${commit::8}.${font_type}"
 					SRC_URI+=" ${font_type}? (
 						${url}/${font_type}/hinted/${font_family// /%20}-${font_variant}.${font_type}
-							-> ${font_family// /_}-${font_variant}-Hinted-${commit::8}.${font_type}
+							-> ${font_file}
 					) "
+					FONT_FILES+=( "${font_file}" )
+
+					font_file="${font_family// /_}-${font_variant}-Unhinted-${commit::8}.${font_type}"
 					SRC_URI+=" ${font_type}? (
 						${url}/${font_type}/unhinted/${font_family// /%20}-${font_variant}.${font_type}
 							-> ${font_family// /_}-${font_variant}-Unhinted-${commit::8}.${font_type}
 					) "
+					FONT_FILES+=( "${font_file}" )
 				else
+					font_file="${font_family// /_}-${font_variant}-${commit::8}.${font_type}"
 					SRC_URI+=" ${font_type}? (
 						${url}/${font_type}/${font_family// /%20}-${font_variant}.${font_type}
 							-> ${font_family// /_}-${font_variant}-${commit::8}.${font_type}
 					) "
+					FONT_FILES+=( "${font_file}" )
 				fi
 			done
 		done
@@ -122,23 +133,16 @@ REQUIRED_USE="
 src_prepare() {
 	default
 
-	local src dest file ext shopt
+	local file
+	for file in "${FONT_FILES[@]}"; do
+		# some fonts might be missing from DISTDIR due
+		# to USE-flags which is expected
+		[[ -f "${DISTDIR}/${file}" ]] || continue
 
-	shopt="$(shopt -p nullglob)"
-	shopt -s nullglob
-
-	# move into S and remove changing commit
-	for src in "${DISTDIR}"/*.{otf,ttf}; do
 		# <font>-<commit[8]>.<ext> -> <font>.<ext>
-		file="${src##*/}"
-		ext="${file##*.}"
-		file="${file%.*}"
-		file="${file%-????????}.${ext}"
-		dest="${S}/${file}"
-		cp --verbose --no-clobber --dereference "${src}" "${dest}" || die
+		cp --verbose --no-clobber --dereference \
+			"${DISTDIR}/${file}" "${S}/${file%-????????.*}.${file##*.}" || die
 	done
-
-	${shopt}
 }
 
 src_install() {
