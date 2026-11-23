@@ -32,9 +32,7 @@
 		<flag name="scx-panda">(EXPERIMENTAL) Build and install the scx_panda scheduler</flag>
 		<flag name="scx-rburst">(EXPERIMENTAL) Build and install the scx_rburst scheduler</flag>
 		<flag name="scx-reevdf">(EXPERIMENTAL) Build and install the scx_reevdf scheduler</flag>
-		<flag name="scx-rlfifo">(EXPERIMENTAL) Build and install the scx_rlfifo scheduler</flag>
 		<flag name="scx-rlocal">(EXPERIMENTAL) Build and install the scx_rlocal scheduler</flag>
-		<flag name="scx-rustland">(EXPERIMENTAL) Build and install the scx_rustland scheduler</flag>
 		<flag name="scx-rvtime">(EXPERIMENTAL) Build and install the scx_rvtime scheduler</flag>
 		<flag name="scx-tickless">(EXPERIMENTAL) Build and install the scx_tickless scheduler</flag>
 		<flag name="scxcli">Build and install the scxcli tool</flag>
