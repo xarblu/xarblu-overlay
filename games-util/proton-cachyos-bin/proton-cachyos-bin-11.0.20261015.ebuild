@@ -94,7 +94,7 @@ REQUIRES_EXCLUDE="*"
 
 # we will install Proton with this name
 # to avoid conflicting with other installs
-INST_P="${MY_PN}-portage"
+INST_P="${PN%-bin}-portage"
 
 pkg_setup() {
 	if use ntsync; then
@@ -112,7 +112,7 @@ src_unpack() {
 }
 
 src_prepare() {
-	sed -i -e "s/${MY_PN}-[^\"]*/${INST_P}/g" compatibilitytool.vdf || die
+	sed -i -e "s/${MY_PN}[^\"]*/${INST_P}/g" compatibilitytool.vdf || die
 
 	default
 }
