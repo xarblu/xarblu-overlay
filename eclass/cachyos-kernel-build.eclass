@@ -960,19 +960,31 @@ cachy_flavour_defaults_kconfig() {
 		kconf mod EXTCON_STEAMDECK
 		kconf mod HID_MSI
 	fi
+}
 
-	# rust
-	if use rust; then
-		kconf set RUST
-	else
-		kconf unset RUST
-	fi
-
-	# bcachefs defaults
+# @FUNCTION: bcachefs_kconfig
+# @DESCRIPTION:
+# Print a config snippet containing
+# options for built-in (module) bcachefs support
+# to stdout.
+bcachefs_kconfig() {
 	if use bcachefs; then
 		kconf mod BCACHEFS_FS
 		kconf set BCACHEFS_QUOTA
 		kconf set BCACHEFS_LOCK_TIME_STATS
+	fi
+}
+
+# @FUNCTION: rust_kconfig
+# @DESCRIPTION:
+# Print a config snippet containing
+# options required for rust support
+# to stdout.
+rust_kconfig() {
+	if use rust; then
+		kconf set RUST
+	else
+		kconf unset RUST
 	fi
 }
 
@@ -985,19 +997,21 @@ cachy_flavour_defaults_kconfig() {
 # Deps as specified in sys-kernel/scx
 # (along with deps needed to enable the required set)
 scx_kconfig() {
-	kconf set BPF
-	kconf set BPF_EVENTS
-	kconf set BPF_JIT
-	kconf set BPF_JIT_ALWAYS_ON
-	kconf set BPF_JIT_DEFAULT_ON
-	kconf set BPF_SYSCALL
-	kconf set DEBUG_INFO
-	kconf set DEBUG_INFO_BTF
-	kconf set DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT
-	kconf set DEBUG_KERNEL
-	kconf set FTRACE
-	kconf set KALLSYMS_ALL
-	kconf set SCHED_CLASS_EXT
+	if use scx; then
+		kconf set BPF
+		kconf set BPF_EVENTS
+		kconf set BPF_JIT
+		kconf set BPF_JIT_ALWAYS_ON
+		kconf set BPF_JIT_DEFAULT_ON
+		kconf set BPF_SYSCALL
+		kconf set DEBUG_INFO
+		kconf set DEBUG_INFO_BTF
+		kconf set DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT
+		kconf set DEBUG_KERNEL
+		kconf set FTRACE
+		kconf set KALLSYMS_ALL
+		kconf set SCHED_CLASS_EXT
+	fi
 }
 
 # @FUNCTION: cachy_verify_kconfig
@@ -1007,6 +1021,8 @@ scx_kconfig() {
 # has been called. Note that this is more of a QA check
 # for the ebuild defaults as user configs from
 # /etc/kernel/config.d/ can override the defaults.
+#
+# returns success when all snippets are present, else failure
 cachy_verify_kconfig() {
 	(( ${#} < 1 )) && die "requires at least 1 arg"
 
@@ -1016,8 +1032,6 @@ cachy_verify_kconfig() {
 		eerror "${kconfig} does not exist"
 		die "Did you call kernel-build_src_configure?"
 	fi
-
-	einfo "Verifying config snippets..."
 
 	local snippet line
 	local bad_config="false"
@@ -1033,8 +1047,9 @@ cachy_verify_kconfig() {
 
 	if [[ "${bad_config}" == "true" ]]; then
 		ewarn "Some config snippets did not apply correctly!"
+		return 1
 	else
-		einfo "All config snippets applied correctly!"
+		return 0
 	fi
 }
 
@@ -1169,11 +1184,16 @@ cachyos-kernel-build_src_prepare() {
 		"${dist_conf_path}/no-debug.config"
 	)
 
-	# partially reverts no-debug.config so must come after that one
-	if use scx; then
-		scx_kconfig > "${T}/scx.config" || die
-		merge_configs+=( "${T}/scx.config" )
-	fi
+	rust_kconfig > "${T}/rust.config" || die
+	merge_configs+=( "${T}/rust.config" )
+
+	# depends on rust so merged after rust.config
+	bcachefs_kconfig > "${T}/bcachefs.config" || die
+	merge_configs+=( "${T}/bcachefs.config" )
+
+	# partially reverts no-debug.config so merged after it
+	scx_kconfig > "${T}/scx.config" || die
+	merge_configs+=( "${T}/scx.config" )
 
 	use secureboot && merge_configs+=(
 		"${dist_conf_path}/secureboot.config"
@@ -1188,21 +1208,30 @@ cachyos-kernel-build_src_prepare() {
 cachyos-kernel-build_src_configure() {
 	kernel-build_src_configure
 
-	# Only check our ebuild generated configs.
-	# Users will likely expect these to work
-	# because they're set via USE flags.
-	# The others are to broad to check and throw too
-	# many false positives.
-	local check_configs=(
+	# Check that our ebuild generated configs
+	# survived make.
+	# Only warn for cachyos defaults that
+	# users are likely to touch.
+	# Configs requested via USE-flags are expected and
+	# fatal if missing.
+
+	local check_configs_warn=(
 		"${T}/cachy-localversion.config"
 		"${T}/cachy-flavour-defaults.config"
 	)
 
-	use scx && check_configs+=( "${T}/scx.config" )
+	# shellcheck disable=SC2207
+	local check_configs_fatal=(
+		$(usev bcachefs "${T}/bcachefs.config")
+		$(usev rust "${T}/rust.config")
+		$(usev scx "${T}/scx.config")
+		"${EXTRA_KCONF_SNIPPETS[@]}"
+	)
 
-	check_configs+=( "${EXTRA_KCONF_SNIPPETS[@]}" )
-
-	cachy_verify_kconfig "${check_configs[@]}"
+	einfo "Verifying config snippets..."
+	cachy_verify_kconfig "${check_configs_warn[@]}"
+	cachy_verify_kconfig "${check_configs_fatal[@]}" || die "Could not set all configs requested via USE-flags"
+	einfo "All config snippets applied correctly!"
 }
 
 cachyos-kernel-build_pkg_postinst() {
