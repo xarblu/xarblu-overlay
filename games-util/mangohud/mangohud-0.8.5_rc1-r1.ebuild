@@ -8,7 +8,7 @@ EAPI=8
 
 PYTHON_COMPAT=( python3_{13..15} )
 
-inherit toolchain-funcs flag-o-matic python-r1 meson-multilib
+inherit systemd toolchain-funcs flag-o-matic python-r1 meson-multilib
 
 DESCRIPTION="Vulkan and OpenGL overlay for monitoring FPS, sensors, system load and more"
 HOMEPAGE="https://github.com/flightlessmango/MangoHud"
@@ -272,6 +272,10 @@ multilib_src_install_all() {
 	# Gentoo FHS
 	dodoc "${ED}"/usr/share/doc/mangohud/* || die
 	rm -r "${ED}"/usr/share/doc/mangohud || die
+
+	systemd_douserunit "${ED}"/usr/share/systemd/user/*
+	rm -r "${ED}"/usr/share/systemd || die
+
 	einstalldocs
 }
 
