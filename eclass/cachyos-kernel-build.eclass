@@ -1230,7 +1230,9 @@ cachyos-kernel-build_src_configure() {
 
 	einfo "Verifying config snippets..."
 	cachy_verify_kconfig "${check_configs_warn[@]}"
-	cachy_verify_kconfig "${check_configs_fatal[@]}" || die "Could not set all configs requested via USE-flags"
+	if (( ${#check_configs_fatal[@]} )); then
+		cachy_verify_kconfig "${check_configs_fatal[@]}" || die "Could not set all configs requested via USE-flags"
+	fi
 	einfo "All config snippets applied correctly!"
 }
 
