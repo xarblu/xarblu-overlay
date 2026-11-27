@@ -142,6 +142,8 @@ PATCHES=(
 	"${FILESDIR}/${PV}-0001-classic-fix-libcxx-atomic-shared_ptr.patch"
 	"${FILESDIR}/${PV}-0002-classic-fix-libcxx-atomic-shared_ptr.patch"
 	"${FILESDIR}/${PV}-0003-next-fix-libcxx-atomic-shared_ptr.patch"
+	"${FILESDIR}/${PV}-0004-shim-deps.patch"
+	"${FILESDIR}/${PV}-0005-fix-libcxx-regex.patch"
 )
 
 python_check_deps() {

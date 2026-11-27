@@ -1,0 +1,29 @@
+From 8939e71d2aba4b8dcdcab757958b5bace4eea9c3 Mon Sep 17 00:00:00 2001
+From: Xarblu <xarblu@protonmail.com>
+Date: Fri, 27 Nov 2026 18:51:37 +0100
+Subject: [PATCH] next: fix regex compatibility
+
+LLVM's libc++ rejects this regex with
+"The expression contained mismatched ( and )."
+
+Signed-off-by: Xarblu <xarblu@protonmail.com>
+---
+ mangohud-next/utils/file_utils.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mangohud-next/utils/file_utils.cpp b/mangohud-next/utils/file_utils.cpp
+index acff5b63..c06d57bb 100644
+--- a/mangohud-next/utils/file_utils.cpp
++++ b/mangohud-next/utils/file_utils.cpp
+@@ -238,7 +238,7 @@ std::string remove_parentheses(const std::string& text) {
+ }
+ 
+ std::string clean_gpu_name(const std::string& text) {
+-    std::regex pattern("(\\([^)]*\\)|\\[[^]]*\\])");
++    std::regex pattern("(\\([^)]*\\)|\\[[^\\]]*\\])");
+     return trim_copy(std::regex_replace(text, pattern, ""));
+ }
+ 
+-- 
+2.56.1
+

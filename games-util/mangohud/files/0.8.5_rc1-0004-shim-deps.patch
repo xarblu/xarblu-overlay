@@ -1,0 +1,566 @@
+From 24c1d20f49ae85c19f7e242281ebfb454b3c6646 Mon Sep 17 00:00:00 2001
+From: flightlessmango <flightlessmangoyt@gmail.com>
+Date: Fri, 27 Nov 2026 18:06:59 +0100
+Subject: [PATCH] Move Wayland color tracking out of shim
+
+---
+ src/gl/wayland_shim.c          | 190 +++++++++++++++++++++++++++++++++
+ src/mangohud.version           |   2 +
+ src/meson.build                |  29 +++--
+ src/vulkan.cpp                 |   3 +-
+ src/{gl => }/wayland_color.cpp | 114 +++++---------------
+ src/wayland_color.h            |  12 ++-
+ src/wayland_hook.h             |   2 +-
+ src/wayland_keybinds.cpp       |  21 ++--
+ 8 files changed, 252 insertions(+), 121 deletions(-)
+ create mode 100644 src/gl/wayland_shim.c
+ rename src/{gl => }/wayland_color.cpp (59%)
+
+diff --git a/src/gl/wayland_shim.c b/src/gl/wayland_shim.c
+new file mode 100644
+index 00000000..807f0335
+--- /dev/null
++++ b/src/gl/wayland_shim.c
+@@ -0,0 +1,190 @@
++#include <dlfcn.h>
++#include <stdarg.h>
++#include <stdatomic.h>
++#include <stdint.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include "real_dlsym.h"
++
++#ifdef HAVE_WAYLAND_COLOR_TRACKING
++#include <wayland-client.h>
++static _Atomic(void*) color_library;
++static _Thread_local int loading_color_library;
++
++static void* color_hook(const char* name)
++{
++    void* library = atomic_load(&color_library);
++    if (!library && !loading_color_library) {
++        loading_color_library = 1;
++        Dl_info info = {0};
++        if (dladdr(&color_library, &info) && info.dli_fname) {
++            char* path = realpath(info.dli_fname, NULL);
++            char* slash = path ? strrchr(path, '/') : NULL;
++            if (slash) {
++                *slash = '\0';
++                char* target = NULL;
++                if (asprintf(&target, "%s/libMangoHud.so", path) >= 0) {
++                    library = real_dlopen(target, RTLD_NOW | RTLD_LOCAL);
++                    free(target);
++                }
++            }
++            free(path);
++        }
++        if (library) {
++            void* expected = NULL;
++            if (!atomic_compare_exchange_strong(&color_library, &expected, library)) {
++                dlclose(library);
++                library = expected;
++            }
++        }
++        loading_color_library = 0;
++    }
++    return library ? real_dlsym(library, name) : NULL;
++}
++
++static uint32_t proxy_version(struct wl_proxy* proxy)
++{
++    uint32_t (*real)(struct wl_proxy*) = real_dlsym(RTLD_NEXT, "wl_proxy_get_version");
++    return real(proxy);
++}
++
++static struct wl_proxy* marshal_array(struct wl_proxy* proxy, uint32_t opcode,
++    const struct wl_interface* interface, uint32_t version, uint32_t flags, union wl_argument* args)
++{
++    typedef struct wl_proxy* (*fn)(struct wl_proxy*, uint32_t, const struct wl_interface*,
++                                   uint32_t, uint32_t, union wl_argument*);
++    fn hook = color_hook("mangohud_wl_marshal_array");
++    fn real = hook ? hook : (fn)real_dlsym(RTLD_NEXT, "wl_proxy_marshal_array_flags");
++    return real(proxy, opcode, interface, version, flags, args);
++}
++
++static struct wl_proxy* marshal_va(struct wl_proxy* proxy, uint32_t opcode,
++    const struct wl_interface* interface, uint32_t version, uint32_t flags, va_list args)
++{
++    typedef struct wl_proxy* (*fn)(struct wl_proxy*, uint32_t, const struct wl_interface*,
++                                   uint32_t, uint32_t, va_list);
++    fn hook = color_hook("mangohud_wl_marshal_va");
++    if (hook)
++        return hook(proxy, opcode, interface, version, flags, args);
++
++    const struct wl_interface* (*get_interface)(struct wl_proxy*) =
++        real_dlsym(RTLD_NEXT, "wl_proxy_get_interface");
++    const struct wl_interface* source = get_interface(proxy);
++    if (!source || opcode >= (uint32_t)source->method_count)
++        return NULL;
++    union wl_argument values[20] = {0};
++    size_t count = 0;
++    for (const char* sig = source->methods[opcode].signature; *sig; ++sig) {
++        if ((*sig >= '0' && *sig <= '9') || *sig == '?')
++            continue;
++        if (count == sizeof(values) / sizeof(values[0]))
++            return NULL;
++        switch (*sig) {
++        case 'i': values[count].i = va_arg(args, int); break;
++        case 'u': values[count].u = va_arg(args, unsigned int); break;
++        case 'f': values[count].f = va_arg(args, wl_fixed_t); break;
++        case 's': values[count].s = va_arg(args, const char*); break;
++        case 'o': case 'n': values[count].o = va_arg(args, void*); break;
++        case 'a': values[count].a = va_arg(args, struct wl_array*); break;
++        case 'h': values[count].h = va_arg(args, int); break;
++        default: return NULL;
++        }
++        ++count;
++    }
++    return marshal_array(proxy, opcode, interface, version, flags, values);
++}
++
++struct wl_proxy* wl_proxy_marshal_flags(struct wl_proxy* proxy, uint32_t opcode,
++    const struct wl_interface* interface, uint32_t version, uint32_t flags, ...)
++{
++    va_list args;
++    va_start(args, flags);
++    struct wl_proxy* result = marshal_va(proxy, opcode, interface, version, flags, args);
++    va_end(args);
++    return result;
++}
++
++struct wl_proxy* wl_proxy_marshal_array_flags(struct wl_proxy* proxy, uint32_t opcode,
++    const struct wl_interface* interface, uint32_t version, uint32_t flags, union wl_argument* args)
++{
++    return marshal_array(proxy, opcode, interface, version, flags, args);
++}
++
++void wl_proxy_marshal(struct wl_proxy* proxy, uint32_t opcode, ...)
++{
++    va_list args;
++    va_start(args, opcode);
++    marshal_va(proxy, opcode, NULL, proxy_version(proxy), 0, args);
++    va_end(args);
++}
++
++void wl_proxy_marshal_array(struct wl_proxy* proxy, uint32_t opcode, union wl_argument* args)
++{
++    marshal_array(proxy, opcode, NULL, proxy_version(proxy), 0, args);
++}
++
++struct wl_proxy* wl_proxy_marshal_constructor(struct wl_proxy* proxy, uint32_t opcode,
++    const struct wl_interface* interface, ...)
++{
++    va_list args;
++    va_start(args, interface);
++    struct wl_proxy* result = marshal_va(proxy, opcode, interface, proxy_version(proxy), 0, args);
++    va_end(args);
++    return result;
++}
++
++struct wl_proxy* wl_proxy_marshal_constructor_versioned(struct wl_proxy* proxy, uint32_t opcode,
++    const struct wl_interface* interface, uint32_t version, ...)
++{
++    va_list args;
++    va_start(args, version);
++    struct wl_proxy* result = marshal_va(proxy, opcode, interface, version, 0, args);
++    va_end(args);
++    return result;
++}
++
++struct wl_proxy* wl_proxy_marshal_array_constructor(struct wl_proxy* proxy, uint32_t opcode,
++    union wl_argument* args, const struct wl_interface* interface)
++{
++    return marshal_array(proxy, opcode, interface, proxy_version(proxy), 0, args);
++}
++
++struct wl_proxy* wl_proxy_marshal_array_constructor_versioned(struct wl_proxy* proxy, uint32_t opcode,
++    union wl_argument* args, const struct wl_interface* interface, uint32_t version)
++{
++    return marshal_array(proxy, opcode, interface, version, 0, args);
++}
++
++#define FORWARD(ret, name, params, args) \
++    ret name params { \
++        ret (*real) params = color_hook("mangohud_" #name); \
++        if (!real) real = real_dlsym(RTLD_NEXT, #name); \
++        return real args; \
++    }
++FORWARD(void, wl_proxy_destroy, (struct wl_proxy* proxy), (proxy))
++FORWARD(void*, wl_proxy_create_wrapper, (void* proxy), (proxy))
++FORWARD(void, wl_proxy_wrapper_destroy, (void* proxy), (proxy))
++FORWARD(void, wl_display_disconnect, (struct wl_display* display), (display))
++#undef FORWARD
++
++void* mangohud_find_wayland_ptr(const char* name);
++void* mangohud_find_wayland_ptr(const char* name)
++{
++#define HOOK(fn) if (!strcmp(name, #fn)) return (void*)fn
++    HOOK(wl_proxy_marshal_flags);
++    HOOK(wl_proxy_marshal_array_flags);
++    HOOK(wl_proxy_marshal);
++    HOOK(wl_proxy_marshal_array);
++    HOOK(wl_proxy_marshal_constructor);
++    HOOK(wl_proxy_marshal_constructor_versioned);
++    HOOK(wl_proxy_marshal_array_constructor);
++    HOOK(wl_proxy_marshal_array_constructor_versioned);
++    HOOK(wl_proxy_destroy);
++    HOOK(wl_proxy_create_wrapper);
++    HOOK(wl_proxy_wrapper_destroy);
++    HOOK(wl_display_disconnect);
++#undef HOOK
++    return NULL;
++}
++#endif
+diff --git a/src/mangohud.version b/src/mangohud.version
+index f408f655..291c686d 100644
+--- a/src/mangohud.version
++++ b/src/mangohud.version
+@@ -1,6 +1,8 @@
+ # in base
+ {
+   global:
++    mangohud_wl_*;
++    mangohud_wayland_surface_color;
+     overlay_GetInstanceProcAddr;
+     overlay_GetDeviceProcAddr;
+     vkNegotiateLoaderLayerInterfaceVersion;
+diff --git a/src/meson.build b/src/meson.build
+index 77f9b95c..a36d951d 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -175,10 +175,20 @@ link_args = cc.get_supported_link_arguments(['-Wl,-Bsymbolic-functions', '-Wl,-z
+ # meson fails to check version-script so just force add
+ link_args += '-Wl,--version-script,@0@'.format(join_paths(meson.current_source_dir(), 'mangohud.version'))
+ 
++if is_unixy and get_option('with_wayland').enabled() and dep_wayland_client.version().version_compare('>=1.24')
++  pre_args += '-DHAVE_WAYLAND_COLOR_TRACKING'
++  vulkan_color_files = files('wayland_color.cpp')
++  shim_wayland_dep = dep_wayland_client.partial_dependency(compile_args: true, includes: true)
++else
++  vulkan_color_files = []
++  shim_wayland_dep = declare_dependency()
++endif
++
+ mangohud_static_lib = static_library(
+   'MangoHud',
+   mangohud_version,
+   files('vulkan.cpp'),
++  vulkan_color_files,
+   util_files,
+   vk_enum_to_str,
+   vk_dispatch_table,
+@@ -190,6 +200,7 @@ mangohud_static_lib = static_library(
+     vulkan_wsi_args
+     ],
+   cpp_args : [
++    '-DMANGOHUD_VULKAN_COLOR_TRACKING',
+     pre_args,
+     vulkan_wsi_args
+     ],
+@@ -307,29 +318,17 @@ mangoapp = executable(
+ )
+ endif
+ if is_unixy
+-  shim_files = []
+-  shim_deps = [dep_dl]
+-  shim_args = pre_args
+-  if get_option('with_wayland').enabled() and dep_wayland_client.version().version_compare('>=1.24')
+-    shim_files += files('gl/wayland_color.cpp')
+-    shim_args += '-DHAVE_WAYLAND_COLOR_TRACKING'
+-    shim_deps += [dep_wayland_client, dep_pthread, spdlog_dep,
+-                  dearimgui_dep.partial_dependency(compile_args: true, includes: true)]
+-  endif
+   mangohud_shim = shared_library(
+     'MangoHud_shim',
+     files(
+       'gl/shim.c',
++      'gl/wayland_shim.c',
+       '../mangohud-next/client/real_dlsym.c',
+       'elfhacks.c'
+     ),
+-    shim_files,
+-    dependencies : shim_deps,
++    dependencies : [dep_dl, shim_wayland_dep],
+     c_args : [
+-      shim_args
+-    ],
+-    cpp_args : [
+-      shim_args
++      pre_args
+     ],
+     include_directories : [inc_common, next_client_inc],
+     install_dir : libdir_mangohud,
+diff --git a/src/vulkan.cpp b/src/vulkan.cpp
+index 81cc01a8..a3c8f8ca 100644
+--- a/src/vulkan.cpp
++++ b/src/vulkan.cpp
+@@ -1371,8 +1371,7 @@ static void update_swapchain_colors(struct swapchain_data* data)
+       data->transfer_function = SRGB;
+ #ifdef VK_USE_PLATFORM_WAYLAND_KHR
+    else if (data->colorspace == VK_COLOR_SPACE_PASS_THROUGH_EXT) {
+-      const auto transfer = wayland_surface_color((void*)data->surface);
+-      data->hdr_state = transfer == NONE ? HDR::State::Unknown : HDR::State::On;
++      const auto transfer = wayland_surface_color((void*)data->surface, data->hdr_state);
+       if (transfer != NONE)
+          data->transfer_function = transfer;
+    }
+diff --git a/src/gl/wayland_color.cpp b/src/wayland_color.cpp
+similarity index 59%
+rename from src/gl/wayland_color.cpp
+rename to src/wayland_color.cpp
+index 021c6079..94d41c9f 100644
+--- a/src/gl/wayland_color.cpp
++++ b/src/wayland_color.cpp
+@@ -1,10 +1,15 @@
+-#include "../wayland_color.h"
+-#include "../../mangohud-next/client/hooks_helper.h"
+-#include "../../mangohud-next/server/common/helpers.hpp"
++#include "wayland_color.h"
++#include "../mangohud-next/client/hooks_helper.h"
++#include "../mangohud-next/server/common/helpers.hpp"
+ #include <string>
+ #include <mutex>
+ 
+ namespace {
++void* wayland_symbol(const char* name)
++{
++    static void* library = real_dlopen("libwayland-client.so.0", RTLD_NOW | RTLD_LOCAL);
++    return library ? real_dlsym(library, name) : nullptr;
++}
+ struct Proxy {
+     wl_proxy* proxy = nullptr;
+     wl_display* display = nullptr;
+@@ -39,7 +44,7 @@ wl_proxy* marshal_wayland(wl_proxy* proxy, uint32_t opcode,
+                           const wl_interface* interface, uint32_t version,
+                           uint32_t flags, wl_argument* args)
+ {
+-    auto real = wl_marshal_real_array_flags();
++    static auto real = reinterpret_cast<marshal_array_flags_fn>(wayland_symbol("wl_proxy_marshal_array_flags"));
+     if (!real)
+         return nullptr;
+     auto& s = state();
+@@ -91,74 +96,21 @@ static wl_proxy* marshal_wayland_va(wl_proxy* proxy, uint32_t opcode,
+     return marshal_wayland(proxy, opcode, interface, version, flags, count ? args.data() : nullptr);
+ }
+ 
+-EXPORT_C_(wl_proxy*) wl_proxy_marshal_flags(wl_proxy* proxy, uint32_t opcode,
+-                                            const wl_interface* interface,
+-                                            uint32_t version, uint32_t flags, ...)
++EXPORT_C_(wl_proxy*) mangohud_wl_marshal_va(wl_proxy* proxy, uint32_t opcode,
++    const wl_interface* interface, uint32_t version, uint32_t flags, va_list args)
+ {
+-    va_list args;
+-    va_start(args, flags);
+-    auto* result = marshal_wayland_va(proxy, opcode, interface, version, flags, args);
+-    va_end(args);
+-    return result;
++    return marshal_wayland_va(proxy, opcode, interface, version, flags, args);
+ }
+ 
+-EXPORT_C_(wl_proxy*) wl_proxy_marshal_array_flags(wl_proxy* proxy, uint32_t opcode,
+-                                                  const wl_interface* interface,
+-                                                  uint32_t version, uint32_t flags,
+-                                                  wl_argument* args)
++EXPORT_C_(wl_proxy*) mangohud_wl_marshal_array(wl_proxy* proxy, uint32_t opcode,
++    const wl_interface* interface, uint32_t version, uint32_t flags, wl_argument* args)
+ {
+     return marshal_wayland(proxy, opcode, interface, version, flags, args);
+ }
+ 
+-EXPORT_C_(void) wl_proxy_marshal(wl_proxy* proxy, uint32_t opcode, ...)
+-{
+-    va_list args;
+-    va_start(args, opcode);
+-    marshal_wayland_va(proxy, opcode, nullptr, wl_proxy_get_version(proxy), 0, args);
+-    va_end(args);
+-}
+-
+-EXPORT_C_(void) wl_proxy_marshal_array(wl_proxy* proxy, uint32_t opcode, wl_argument* args)
+-{
+-    marshal_wayland(proxy, opcode, nullptr, wl_proxy_get_version(proxy), 0, args);
+-}
+-
+-EXPORT_C_(wl_proxy*) wl_proxy_marshal_constructor(wl_proxy* proxy, uint32_t opcode,
+-                                                  const wl_interface* interface, ...)
++EXPORT_C_(void) mangohud_wl_proxy_destroy(wl_proxy* proxy)
+ {
+-    va_list args;
+-    va_start(args, interface);
+-    auto* result = marshal_wayland_va(proxy, opcode, interface, wl_proxy_get_version(proxy), 0, args);
+-    va_end(args);
+-    return result;
+-}
+-
+-EXPORT_C_(wl_proxy*) wl_proxy_marshal_constructor_versioned(wl_proxy* proxy, uint32_t opcode,
+-    const wl_interface* interface, uint32_t version, ...)
+-{
+-    va_list args;
+-    va_start(args, version);
+-    auto* result = marshal_wayland_va(proxy, opcode, interface, version, 0, args);
+-    va_end(args);
+-    return result;
+-}
+-
+-EXPORT_C_(wl_proxy*) wl_proxy_marshal_array_constructor(wl_proxy* proxy, uint32_t opcode,
+-    wl_argument* args, const wl_interface* interface)
+-{
+-    return marshal_wayland(proxy, opcode, interface, wl_proxy_get_version(proxy), 0, args);
+-}
+-
+-EXPORT_C_(wl_proxy*) wl_proxy_marshal_array_constructor_versioned(wl_proxy* proxy, uint32_t opcode,
+-    wl_argument* args, const wl_interface* interface, uint32_t version)
+-{
+-    return marshal_wayland(proxy, opcode, interface, version, 0, args);
+-}
+-
+-
+-EXPORT_C_(void) wl_proxy_destroy(wl_proxy* proxy)
+-{
+-    static auto real = reinterpret_cast<decltype(&wl_proxy_destroy)>(real_dlsym(RTLD_NEXT, "wl_proxy_destroy"));
++    static auto real = reinterpret_cast<decltype(&wl_proxy_destroy)>(wayland_symbol("wl_proxy_destroy"));
+     auto& s = state();
+     std::lock_guard lock(s.mutex);
+     if (s.original(proxy) == proxy)
+@@ -167,9 +119,9 @@ EXPORT_C_(void) wl_proxy_destroy(wl_proxy* proxy)
+     real(proxy);
+ }
+ 
+-EXPORT_C_(void*) wl_proxy_create_wrapper(void* proxy)
++EXPORT_C_(void*) mangohud_wl_proxy_create_wrapper(void* proxy)
+ {
+-    static auto real = reinterpret_cast<decltype(&wl_proxy_create_wrapper)>(real_dlsym(RTLD_NEXT, "wl_proxy_create_wrapper"));
++    static auto real = reinterpret_cast<decltype(&wl_proxy_create_wrapper)>(wayland_symbol("wl_proxy_create_wrapper"));
+     auto& s = state();
+     std::lock_guard lock(s.mutex);
+     auto* wrapper = static_cast<wl_proxy*>(real(proxy));
+@@ -183,18 +135,18 @@ EXPORT_C_(void*) wl_proxy_create_wrapper(void* proxy)
+     return wrapper;
+ }
+ 
+-EXPORT_C_(void) wl_proxy_wrapper_destroy(void* proxy)
++EXPORT_C_(void) mangohud_wl_proxy_wrapper_destroy(void* proxy)
+ {
+-    static auto real = reinterpret_cast<decltype(&wl_proxy_wrapper_destroy)>(real_dlsym(RTLD_NEXT, "wl_proxy_wrapper_destroy"));
++    static auto real = reinterpret_cast<decltype(&wl_proxy_wrapper_destroy)>(wayland_symbol("wl_proxy_wrapper_destroy"));
+     auto& s = state();
+     std::lock_guard lock(s.mutex);
+     s.proxies.remove(&Proxy::proxy, static_cast<wl_proxy*>(proxy));
+     real(proxy);
+ }
+ 
+-EXPORT_C_(void) wl_display_disconnect(wl_display* display)
++EXPORT_C_(void) mangohud_wl_display_disconnect(wl_display* display)
+ {
+-    static auto real = reinterpret_cast<decltype(&wl_display_disconnect)>(real_dlsym(RTLD_NEXT, "wl_display_disconnect"));
++    static auto real = reinterpret_cast<decltype(&wl_display_disconnect)>(wayland_symbol("wl_display_disconnect"));
+     auto& s = state();
+     std::lock_guard lock(s.mutex);
+     while (auto item = s.proxies.fetch_any(&Proxy::display, display)) {
+@@ -207,28 +159,10 @@ EXPORT_C_(void) wl_display_disconnect(wl_display* display)
+     real(display);
+ }
+ 
+-EXPORT_C_(int) mangohud_wayland_surface_color(const void* surface)
++EXPORT_C_(int) mangohud_wayland_surface_color(const void* surface, int* hdr_status)
+ {
+     auto& s = state();
+     std::lock_guard lock(s.mutex);
++    *hdr_status = static_cast<int>(s.colors.status(surface));
+     return static_cast<int>(s.colors.color(surface));
+ }
+-
+-EXPORT_C_(void*) mangohud_find_wayland_ptr(const char* name)
+-{
+-#define HOOK(fn) if (strcmp(name, #fn) == 0) return reinterpret_cast<void*>(fn)
+-    HOOK(wl_proxy_marshal_flags);
+-    HOOK(wl_proxy_marshal_array_flags);
+-    HOOK(wl_proxy_marshal);
+-    HOOK(wl_proxy_marshal_array);
+-    HOOK(wl_proxy_marshal_constructor);
+-    HOOK(wl_proxy_marshal_constructor_versioned);
+-    HOOK(wl_proxy_marshal_array_constructor);
+-    HOOK(wl_proxy_marshal_array_constructor_versioned);
+-    HOOK(wl_proxy_destroy);
+-    HOOK(wl_proxy_create_wrapper);
+-    HOOK(wl_proxy_wrapper_destroy);
+-    HOOK(wl_display_disconnect);
+-#undef HOOK
+-    return nullptr;
+-}
+diff --git a/src/wayland_color.h b/src/wayland_color.h
+index 9e938472..02fbb0ac 100644
+--- a/src/wayland_color.h
++++ b/src/wayland_color.h
+@@ -1,6 +1,14 @@
+ #pragma once
+ 
++#include <cstdarg>
+ #include "../mangohud-next/client/wayland_color.h"
+ 
+-extern "C" int mangohud_wayland_surface_color(const void* surface);
+-extern "C" void* mangohud_find_wayland_ptr(const char* name);
++extern "C" {
++int mangohud_wayland_surface_color(const void* surface, int* hdr_status);
++wl_proxy* mangohud_wl_marshal_va(wl_proxy*, uint32_t, const wl_interface*, uint32_t, uint32_t, va_list);
++wl_proxy* mangohud_wl_marshal_array(wl_proxy*, uint32_t, const wl_interface*, uint32_t, uint32_t, wl_argument*);
++void mangohud_wl_proxy_destroy(wl_proxy*);
++void* mangohud_wl_proxy_create_wrapper(void*);
++void mangohud_wl_proxy_wrapper_destroy(void*);
++void mangohud_wl_display_disconnect(wl_display*);
++}
+diff --git a/src/wayland_hook.h b/src/wayland_hook.h
+index c522e0d0..9018a530 100644
+--- a/src/wayland_hook.h
++++ b/src/wayland_hook.h
+@@ -14,6 +14,6 @@ extern void* wl_handle;
+ bool has_wayland_display(struct wl_display *display);
+ bool wayland_has_keys_pressed(const std::vector<KeySym>& keys);
+ void init_wayland_data(struct wl_display *display, void *vk_surface, struct wl_surface* surface = nullptr);
+-overlay_transfer_function wayland_surface_color(void* vk_surface);
++overlay_transfer_function wayland_surface_color(void* vk_surface, HDR::State& hdr_status);
+ void wayland_data_unref(struct wl_display *display, void *vk_surface);
+ void update_wl_queue();
+diff --git a/src/wayland_keybinds.cpp b/src/wayland_keybinds.cpp
+index 57e0cac6..1006b70b 100644
+--- a/src/wayland_keybinds.cpp
++++ b/src/wayland_keybinds.cpp
+@@ -220,10 +220,9 @@ void update_wl_queue()
+         wl_display_dispatch_queue_pending(display.first, display.second.queue);
+ }
+ 
+-overlay_transfer_function wayland_surface_color(void* vk_surface)
++overlay_transfer_function wayland_surface_color(void* vk_surface, HDR::State& hdr_status)
+ {
+-    using Query = int (*)(const void*);
+-    static auto query = reinterpret_cast<Query>(real_dlsym(RTLD_DEFAULT, "mangohud_wayland_surface_color"));
++    hdr_status = HDR::State::Unknown;
+     std::shared_lock<std::shared_mutex> lock(displays_mutex);
+     wl_surface* surface = nullptr;
+     for (const auto& display : displays) {
+@@ -235,14 +234,14 @@ overlay_transfer_function wayland_surface_color(void* vk_surface)
+     }
+     if (!surface)
+         return NONE;
+-    if (!query) {
+-        static std::once_flag warning;
+-        std::call_once(warning, [] {
+-            SPDLOG_WARN("Cannot detect pass-through color space; use mangohud %command% to enable Wayland color detection.");
+-        });
+-        return NONE;
+-    }
+-    return static_cast<overlay_transfer_function>(query(surface));
++#if defined(HAVE_WAYLAND_COLOR_TRACKING) && defined(MANGOHUD_VULKAN_COLOR_TRACKING)
++    int status;
++    const auto transfer = mangohud_wayland_surface_color(surface, &status);
++    hdr_status = static_cast<HDR::State>(status);
++    return static_cast<overlay_transfer_function>(transfer);
++#else
++    return NONE;
++#endif
+ }
+ 
+ // Track vk_surface for reference counting
+-- 
+2.56.1
+
