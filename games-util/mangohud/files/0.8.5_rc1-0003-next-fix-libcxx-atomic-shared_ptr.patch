@@ -1,0 +1,62 @@
+From a461dc9c36269b16bb9d303c8528c49120c8ef3d Mon Sep 17 00:00:00 2001
+From: flightlessmango <flightlessmangoyt@gmail.com>
+Date: Fri, 27 Nov 2026 14:34:11 +0100
+Subject: [PATCH] next: protect focused seats with a mutex
+
+---
+ mangohud-next/ipc/ipc_client.cpp |  4 ++--
+ mangohud-next/ipc/ipc_client.h   | 10 +++++-----
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/mangohud-next/ipc/ipc_client.cpp b/mangohud-next/ipc/ipc_client.cpp
+index 5abb6cc13a..45a1b1608c 100644
+--- a/mangohud-next/ipc/ipc_client.cpp
++++ b/mangohud-next/ipc/ipc_client.cpp
+@@ -508,7 +508,7 @@ int IPCClient::push_queue() {
+             SPDLOG_ERROR("IPC sample queue overflow: dropped {} samples (capacity {})",
+                          dropped, samples_pending->size());
+ 
+-        auto focused_seats = this->focused_seats.load();
++        const auto focused_seats = snapshot(this->focused_seats, focused_seats_mtx);
+         sd_bus_message* m = nullptr;
+ 
+         int r = sd_bus_message_new_signal(bus, &m, kObjPath, kIface, "frame_samples");
+@@ -533,7 +533,7 @@ int IPCClient::push_queue() {
+             return r;
+         }
+ 
+-        for (const auto& seat : *focused_seats) {
++        for (const auto& seat : focused_seats) {
+             r = sd_bus_message_append(m, "s", seat.c_str());
+             if (r < 0) {
+                 SPDLOG_ERROR("push_queue: append focused seat {} ({})", r, strerror(-r));
+diff --git a/mangohud-next/ipc/ipc_client.h b/mangohud-next/ipc/ipc_client.h
+index e3df2dc0b7..d7c94d1578 100644
+--- a/mangohud-next/ipc/ipc_client.h
++++ b/mangohud-next/ipc/ipc_client.h
+@@ -90,11 +90,11 @@ class IPCClient {
+     std::atomic<bool> x11_focused{false};
+ 
+     bool set_focused_seats(std::vector<std::string> seats) {
+-        auto current = focused_seats.load();
+-        if (current && *current == seats)
++        std::lock_guard lock(focused_seats_mtx);
++        if (focused_seats == seats)
+             return false;
+ 
+-        focused_seats.store(std::make_shared<const std::vector<std::string>>(std::move(seats)));
++        focused_seats = std::move(seats);
+         return true;
+     }
+ 
+@@ -156,8 +156,8 @@ class IPCClient {
+     std::atomic<int> samples_count{0};
+     std::atomic<uint64_t> samples_dropped{0};
+     std::shared_mutex samples_mtx;
+-    std::atomic<std::shared_ptr<const std::vector<std::string>>> focused_seats{
+-        std::make_shared<const std::vector<std::string>>()};
++    std::mutex focused_seats_mtx;
++    std::vector<std::string> focused_seats;
+     std::mutex sync_mtx;
+     std::chrono::steady_clock::time_point last_hud_frame{};
+     std::atomic<bool> stop_wait {false};

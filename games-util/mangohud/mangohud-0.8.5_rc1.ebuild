@@ -6,7 +6,7 @@
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{12..15} )
+PYTHON_COMPAT=( python3_{13..15} )
 
 inherit toolchain-funcs flag-o-matic python-r1 meson-multilib
 
@@ -23,6 +23,8 @@ SUBPROJECTS=(
 	'imgui;-;https://github.com/ocornut/imgui/archive/v@@rev@@.tar.gz;imgui-@@rev@@;1.91.6'
 	'implot;-;https://github.com/epezent/implot/archive/refs/tags/v@@rev@@.tar.gz;implot-@@rev@@;0.16'
 	'implot_meson;-;https://github.com/mesonbuild/wrapdb/releases/download/implot_@@rev@@/implot_@@rev@@_patch.zip;implot-@@rev@@;0.16-1'
+	'spdlog;-;https://github.com/gabime/spdlog/archive/refs/tags/v@@rev@@.tar.gz;spdlog-@@rev@@;1.14.1'
+	'spdlog_meson;-;https://github.com/mesonbuild/wrapdb/releases/download/spdlog_@@rev@@/spdlog_@@rev@@_patch.zip;spdlog-@@rev@@;1.14.1-1'
 	'vulkan-headers;-;https://github.com/KhronosGroup/Vulkan-Headers/archive/v@@rev@@.tar.gz;Vulkan-Headers-@@rev@@;1.4.346'
 	'vulkan-utility-libraries;-;https://github.com/KhronosGroup/Vulkan-Utility-Libraries/archive/v@@rev@@.tar.gz;Vulkan-Utility-Libraries-@@rev@@;1.4.346'
 
@@ -70,6 +72,7 @@ IUSE="+dbus debug mangoapp mangohud-next mangoplot test systemd wayland video_ca
 REQUIRED_USE="
 	|| ( X wayland )
 	mangoapp? ( X )
+	mangohud-next? ( dbus )
 	xnvctrl? ( video_cards_nvidia X )
 	${PYTHON_REQUIRED_USE}
 "
@@ -96,7 +99,6 @@ BDEPEND="
 "
 
 DEPEND="
-	dev-libs/spdlog:=[${MULTILIB_USEDEP}]
 	dev-util/glslang[${MULTILIB_USEDEP}]
 	media-libs/libglvnd[${MULTILIB_USEDEP}]
 	media-libs/vulkan-loader[${MULTILIB_USEDEP}]
@@ -139,6 +141,7 @@ RDEPEND="
 PATCHES=(
 	"${FILESDIR}/${PV}-0001-classic-fix-libcxx-atomic-shared_ptr.patch"
 	"${FILESDIR}/${PV}-0002-classic-fix-libcxx-atomic-shared_ptr.patch"
+	"${FILESDIR}/${PV}-0003-next-fix-libcxx-atomic-shared_ptr.patch"
 )
 
 python_check_deps() {
@@ -146,14 +149,6 @@ python_check_deps() {
 }
 
 pkg_setup() {
-	if [[ "${MERGE_TYPE}" != binary && "$(tc-get-cxx-stdlib)" == libc++ ]]; then
-		if use mangohud-next; then
-			eerror "mangohud-next uses std::atomic<shared_ptr<T>> which libc++ does not support yet."
-			eerror "See https://github.com/flightlessmango/MangoHud/issues/2231"
-			die "mangohud-next broken on libc++"
-		fi
-	fi
-
 	python_setup
 }
 
@@ -205,9 +200,6 @@ src_prepare() {
 	sed -i -e "/^project('MangoHud',$/,/^)$/s/version : '.*'/version : '${MY_PV}${MY_PV_REV}'/" \
 		meson.build || die
 
-	# we expect system spdlog so disallow the fallback to bundled
-	sed -i -e '/^spdlog_dep/s/required: false/required: true/' meson.build || die
-
 	# don't statically link GCC libstdc++
 	# this is likely done to avoid ABI issues with the Steam runtime
 	# (which I could not find) but breaks the build on LLVM libc++ systems entirely
@@ -226,7 +218,11 @@ src_prepare() {
 # shellcheck disable=SC2207
 multilib_src_configure() {
 	local emesonargs=(
-		-Duse_system_spdlog=enabled
+		# mangohud-next references spdlog's bundled libfmt
+		# which dev-libs/spdlog doesn't have as it uses
+		# dev-libs/libfmt - easier to just use the bundled one
+		-Duse_system_spdlog=disabled
+
 		-Dappend_libdir_mangohud=false
 		$(meson_feature video_cards_nvidia with_nvml)
 		$(meson_feature xnvctrl with_xnvctrl)
@@ -234,10 +230,11 @@ multilib_src_configure() {
 		$(meson_feature wayland with_wayland)
 		$(meson_feature dbus with_dbus)
 		$(meson_feature test tests)
+
 		# no extra deps but afaik only relevant on arm64
 		$(meson_use arm64 with_fex)
 
-		# mangohud-next
+		# mangohud-next client lib and vulkan layer
 		$(meson_use mangohud-next with_mangohud_next)
 	)
 
@@ -246,12 +243,14 @@ multilib_src_configure() {
 	if multilib_is_native_abi; then
 		emesonargs+=(
 			-Dinclude_doc=true
+
+			# mangoapp and its control tool mangohudctl
 			$(meson_use mangoapp mangoapp)
-			# mangohudctl only makes sense with mangoapp
 			$(meson_use mangoapp mangohudctl)
+
 			$(meson_feature mangoplot mangoplot)
 
-			# mangohud-next
+			# mangohud-next server binary
 			$(meson_use mangohud-next with_server)
 		)
 	else
