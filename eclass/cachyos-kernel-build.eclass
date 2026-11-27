@@ -1022,9 +1022,10 @@ scx_kconfig() {
 # for the ebuild defaults as user configs from
 # /etc/kernel/config.d/ can override the defaults.
 #
-# returns success when all snippets are present, else failure
+# returns success when all snippets are present, else failure.
+# Successful no-op if no snippets are passed.
 cachy_verify_kconfig() {
-	(( ${#} < 1 )) && die "requires at least 1 arg"
+	(( ${#} > 0 )) || return 0
 
 	local kconfig="${WORKDIR}/modprep/.config"
 
