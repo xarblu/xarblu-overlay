@@ -11,6 +11,7 @@
 	</upstream>
 	<use>
 		<flag name="mangoapp">Build MangoApp for use with <pkg>gui-wm/gamescope</pkg></flag>
+		<flag name="mangohud-next">Build mangohud-next (BETA)</flag>
 		<flag name="mangoplot">Install MangoPlot and its dependencies</flag>
 		<flag name="xnvctrl">Use XNVctrl as fall back for older Nvidia devices</flag>
 	</use>
